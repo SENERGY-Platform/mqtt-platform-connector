@@ -1,0 +1,24 @@
+{
+  "Protocol":"mqtt",
+  "ZookeeperUrl":"zk:2181",
+  "KafkaResponseTopic":"response",
+  "KafkaEventTopic":"eventfilter",
+  "KafkaTimeout": 60,
+  "SaramaLog":"false",
+  "IotRepoUrl":"http://iot-repo:8080",
+
+  "AuthClientId": "mqttconnector",
+  "AuthClientSecret": "",
+  "AuthExpirationTimeBuffer": 2,
+  "AuthEndpoint": "http://keycloak:8080",
+  "JwtExpiration": 30,
+  "JwtIssuer":   "mqttconnector",
+
+  "LogProduce": "true",
+
+  "MqttBroker": "mqtt:1883",
+  "MqttClientId": "sepl_mqtt_connector_1",
+  "MqttGroupId": "sepl_mqtt_connector",
+  "Qos": 2,
+  "MqttLogLevel": "warn"
+}
