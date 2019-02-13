@@ -19,7 +19,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/SENERGY-Platform/platform-connector-lib"
 	"log"
 	"os"
 	"reflect"
@@ -29,7 +28,6 @@ import (
 )
 
 type ConfigStruct struct {
-	platform_connector_lib.Config
 	MqttBroker   string
 	MqttClientId string
 	MqttGroupId  string

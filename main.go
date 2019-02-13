@@ -54,14 +54,18 @@ func main() {
 		paho.DEBUG = log.New(os.Stdout, "[paho] ", log.LstdFlags)
 	}
 
-	connector, err := platform_connector_lib.Init(Config.Config, func(endpoint string, protocolParts map[string]string) (responseParts map[string]string, err error) {
+	libConfig, err := platform_connector_lib.LoadConfig(*configLocation)
+	if err != nil {
+		log.Fatalln("ERROR: unable to load connector lib config", err)
+	}
+	connector, err := platform_connector_lib.Init(libConfig, func(endpoint string, protocolParts map[string]string) (responseParts map[string]string, err error) {
 		responseParts = map[string]string{}
 		err = MqttPublish(endpoint, protocolParts["payload"])
 		return
 	})
 
 	if err != nil {
-		log.Fatal("ERROR: unable to init connector lib", err)
+		log.Fatalln("ERROR: unable to init connector lib", err)
 	}
 
 	defer connector.Stop()
@@ -70,7 +74,7 @@ func main() {
 
 	err = MqttStart()
 	if err != nil {
-		log.Fatal("ERROR: unable to start mqtt connection", err)
+		log.Fatalln("ERROR: unable to start mqtt connection", err)
 	}
 	defer MqttClose()
 
