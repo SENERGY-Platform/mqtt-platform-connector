@@ -61,7 +61,7 @@ func main() {
 	})
 
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("ERROR: unable to init connector lib", err)
 	}
 
 	defer connector.Stop()
@@ -70,7 +70,7 @@ func main() {
 
 	err = MqttStart()
 	if err != nil {
-		panic(err)
+		log.Fatal("ERROR: unable to start mqtt connection", err)
 	}
 	defer MqttClose()
 
