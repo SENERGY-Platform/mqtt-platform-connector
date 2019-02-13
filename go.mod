@@ -1,6 +1,6 @@
-module github.com/SmartEnergyPlatform/mqtt-platform-connector
+module github.com/SENERGY-Platform/mqtt-platform-connector
 
 require (
-	github.com/SmartEnergyPlatform/platform-connector-lib v0.0.0-20190208080553-7d7f30c7dae0
+	github.com/SENERGY-Platform/platform-connector-lib v0.0.0-20190213122813-8474a482fe60
 	github.com/eclipse/paho.mqtt.golang v1.1.1
 )

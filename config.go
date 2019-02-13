@@ -19,7 +19,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/SmartEnergyPlatform/platform-connector-lib"
+	"github.com/SENERGY-Platform/platform-connector-lib"
 	"log"
 	"os"
 	"reflect"

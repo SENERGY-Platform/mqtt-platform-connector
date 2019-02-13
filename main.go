@@ -24,7 +24,7 @@ import (
 	"syscall"
 
 	paho "github.com/eclipse/paho.mqtt.golang"
-	"github.com/SmartEnergyPlatform/platform-connector-lib"
+	"github.com/SENERGY-Platform/platform-connector-lib"
 )
 
 func main() {
