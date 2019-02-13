@@ -91,6 +91,7 @@ func AuthWebhooks(connector *platform_connector_lib.Connector) {
 		if msg.Username != Config.AuthClientId {
 			token, err := connector.GetUserToken(msg.Username)
 			if err != nil {
+				log.Println("ERROR: AuthWebhooks::subscribe::GetUserToken", err)
 				http.Error(writer, err.Error(), http.StatusUnauthorized)
 				return
 			}

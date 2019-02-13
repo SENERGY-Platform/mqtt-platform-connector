@@ -1,8 +1,8 @@
 {
   "Protocol":"mqtt",
   "ZookeeperUrl":"zk:2181",
-  "KafkaResponseTopic":"response",
-  "KafkaEventTopic":"eventfilter",
+  "ResponseTopic":"response",
+  "EventTopic":"eventfilter",
   "KafkaTimeout": 60,
   "SaramaLog":"false",
   "IotRepoUrl":"http://iot-repo:8080",
