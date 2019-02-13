@@ -8,6 +8,8 @@ github.com/SENERGY-Platform/iot-broker-client-lib v0.0.0-20190208074750-ac832f94
 github.com/SENERGY-Platform/iot-broker-client-lib v0.0.0-20190208074750-ac832f94c68b/go.mod h1:c2+PT+rqvtKyVr/D27uHYJnvwUE4bljC/hjBTB0YVX8=
 github.com/SENERGY-Platform/platform-connector-lib v0.0.0-20190213122813-8474a482fe60 h1:dbb85keFZQ6h5WdOlat5OjVd+w5hGyGN9ZSC815bjwg=
 github.com/SENERGY-Platform/platform-connector-lib v0.0.0-20190213122813-8474a482fe60/go.mod h1:tKy/g4at05djgfZfWS+cgPCo1nO8Qv+NUzZK1gxT2Rc=
+github.com/SENERGY-Platform/platform-connector-lib v0.0.0-20190213130042-cd58cdf34728 h1:zJsqflJpsDtvOPkIkAf9hggbCJyjgGkZrLup6/RJ/0U=
+github.com/SENERGY-Platform/platform-connector-lib v0.0.0-20190213130042-cd58cdf34728/go.mod h1:tKy/g4at05djgfZfWS+cgPCo1nO8Qv+NUzZK1gxT2Rc=
 github.com/Shopify/sarama v1.19.0 h1:9oksLxC6uxVPHPVYUmq6xhr1BOF/hHobWH2UzO67z1s=
 github.com/Shopify/sarama v1.19.0/go.mod h1:FVkBWblsNy7DGZRfXLU0O9RCGt5g3g3yEuWXgklEdEo=
 github.com/Shopify/toxiproxy v2.1.4+incompatible h1:TKdv8HiTLgE5wdJuEML90aBgNWsokNbMijUGhmcoBJc=
