@@ -1,4 +1,4 @@
-module github.com/SmartEnergyPlatform/mqtt-platform-connector
+module github.com/SENERGY-Platform/mqtt-platform-connector
 
 require (
 	github.com/SENERGY-Platform/platform-connector-lib v0.0.0-20190214125719-eb010b3d7d39
