@@ -22,5 +22,6 @@
   "Qos": 2,
   "MqttLogLevel": "warn",
 
-  "AmqpUrl": "amqp://user:pw@rabbitmq:5672/"
+  "AmqpUrl": "amqp://user:pw@rabbitmq:5672/",
+  "AmqpPrefetchCount": 10
 }
