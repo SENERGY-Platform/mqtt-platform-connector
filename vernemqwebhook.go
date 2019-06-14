@@ -65,16 +65,21 @@ func AuthWebhooks(connector *platform_connector_lib.Connector) {
 				http.Error(writer, err.Error(), http.StatusUnauthorized)
 				return
 			}
-			token, err := connector.GetUserToken(msg.Username)
+			token, err := connector.Security().GetCachedUserToken(msg.Username)
 			if err != nil {
 				log.Println("ERROR: AuthWebhooks::publish::GetUserToken", err)
 				http.Error(writer, err.Error(), http.StatusUnauthorized)
 				return
 			}
-			connector.HandleEventWithAuthToken(token, msg.Topic, map[string]string{
+			_, _, _, err = connector.HandleEndpointEventWithAuthToken(token, msg.Topic, map[string]string{
 				"topic":   msg.Topic,
 				"payload": string(payload),
 			})
+			if err != nil {
+				log.Println("ERROR: AuthWebhooks::publish::HandleEndpointEventWithAuthToken", err)
+				http.Error(writer, err.Error(), http.StatusUnauthorized)
+				return
+			}
 		}
 		fmt.Fprintf(writer, `{"result": "ok"}`)
 	})
@@ -89,13 +94,13 @@ func AuthWebhooks(connector *platform_connector_lib.Connector) {
 			return
 		}
 		if msg.Username != Config.AuthClientId {
-			token, err := connector.GetUserToken(msg.Username)
+			token, err := connector.Security().GetCachedUserToken(msg.Username)
 			if err != nil {
 				http.Error(writer, err.Error(), http.StatusUnauthorized)
 				return
 			}
 			for _, topic := range msg.Topics {
-				err = connector.CheckEndpointAuth(token, topic.Topic)
+				err = connector.Iot().CheckEndpointAuth(token, topic.Topic)
 				if err != nil {
 					log.Println("ERROR: AuthWebhooks::subscribe::CheckEndpointAuth", err)
 					http.Error(writer, err.Error(), http.StatusUnauthorized)
@@ -116,13 +121,13 @@ func AuthWebhooks(connector *platform_connector_lib.Connector) {
 			return
 		}
 		if msg.Username != Config.AuthClientId {
-			token, err := connector.GetOpenidPasswordToken(msg.Username, msg.Password)
+			token, err := connector.Security().GetUserToken(msg.Username, msg.Password)
 			if err != nil {
 				log.Println("ERROR: AuthWebhooks::login::GetOpenidPasswordToken", err, msg)
 				http.Error(writer, err.Error(), http.StatusUnauthorized)
 				return
 			}
-			if token.AccessToken == "" {
+			if token == "" {
 				http.Error(writer, "access denied", http.StatusUnauthorized)
 				return
 			}

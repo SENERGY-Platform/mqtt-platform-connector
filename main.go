@@ -59,12 +59,12 @@ func main() {
 		log.Fatal(err)
 	}
 
-	connector := platform_connector_lib.Init(libConf, func(endpoint string, protocolParts map[string]string) (responseParts map[string]string, err error) {
-		responseParts = map[string]string{}
-		err = MqttPublish(endpoint, protocolParts["payload"])
+	connector := platform_connector_lib.New(libConf)
+	connector.SetEndpointCommandHandler(func(endpoint string, requestMsg platform_connector_lib.CommandRequestMsg) (responseMsg platform_connector_lib.CommandResponseMsg, err error) {
+		responseMsg = map[string]string{}
+		err = MqttPublish(endpoint, responseMsg["payload"])
 		return
 	})
-
 	defer connector.Stop()
 
 	go AuthWebhooks(connector)
