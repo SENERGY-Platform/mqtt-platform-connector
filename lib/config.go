@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package main
+package lib
 
 import (
 	"encoding/json"
@@ -38,6 +38,8 @@ type ConfigStruct struct {
 	Qos byte
 
 	MqttLogLevel string // critical || error || warn || debug
+
+	WebhookPort string
 }
 
 type ConfigType *ConfigStruct

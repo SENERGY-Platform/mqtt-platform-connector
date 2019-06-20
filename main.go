@@ -18,6 +18,7 @@ package main
 
 import (
 	"flag"
+	"github.com/SENERGY-Platform/mqtt-platform-connector/lib"
 	"log"
 	"os"
 	"os/signal"
@@ -32,12 +33,12 @@ func main() {
 	configLocation := flag.String("config", "config.json", "configuration file")
 	flag.Parse()
 
-	err := LoadConfig(*configLocation)
+	err := lib.LoadConfig(*configLocation)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	switch Config.MqttLogLevel {
+	switch lib.Config.MqttLogLevel {
 	case "critical":
 		paho.CRITICAL = log.New(os.Stderr, "[paho] ", log.LstdFlags)
 	case "error":
@@ -62,18 +63,18 @@ func main() {
 	connector := platform_connector_lib.New(libConf)
 	connector.SetEndpointCommandHandler(func(endpoint string, requestMsg platform_connector_lib.CommandRequestMsg) (responseMsg platform_connector_lib.CommandResponseMsg, err error) {
 		responseMsg = map[string]string{}
-		err = MqttPublish(endpoint, responseMsg["payload"])
+		err = lib.MqttPublish(endpoint, responseMsg["payload"])
 		return
 	})
 	defer connector.Stop()
 
-	go AuthWebhooks(connector)
+	go lib.AuthWebhooks(connector)
 
-	err = MqttStart()
+	err = lib.MqttStart()
 	if err != nil {
 		panic(err)
 	}
-	defer MqttClose()
+	defer lib.MqttClose()
 
 	shutdown := make(chan os.Signal, 1)
 	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL)

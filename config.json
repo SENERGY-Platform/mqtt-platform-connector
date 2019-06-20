@@ -20,5 +20,7 @@
   "MqttClientId": "sepl_mqtt_connector_1",
   "MqttGroupId": "sepl_mqtt_connector",
   "Qos": 2,
-  "MqttLogLevel": "warn"
+  "MqttLogLevel": "warn",
+
+  "WebhookPort": "8080"
 }

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package main
+package lib
 
 import (
 	"encoding/base64"
@@ -72,7 +72,6 @@ func AuthWebhooks(connector *platform_connector_lib.Connector) {
 				return
 			}
 			_, _, _, err = connector.HandleEndpointEventWithAuthToken(token, msg.Topic, map[string]string{
-				"topic":   msg.Topic,
 				"payload": string(payload),
 			})
 			if err != nil {
@@ -135,5 +134,5 @@ func AuthWebhooks(connector *platform_connector_lib.Connector) {
 		fmt.Fprintf(writer, `{"result": "ok"}`)
 	})
 
-	log.Fatal(http.ListenAndServe(":8080", http.DefaultServeMux))
+	log.Fatal(http.ListenAndServe(":"+Config.WebhookPort, http.DefaultServeMux))
 }
