@@ -4,18 +4,27 @@ import (
 	"bytes"
 	"errors"
 	platform_connector_lib "github.com/SENERGY-Platform/platform-connector-lib"
+	"github.com/SENERGY-Platform/platform-connector-lib/model"
 	"strings"
 	"text/template"
+	"time"
 )
 
-func CommandHandler(deviceId string, deviceUri string, serviceId string, serviceUri string, requestMsg platform_connector_lib.CommandRequestMsg) (responseMsg platform_connector_lib.CommandResponseMsg, err error) {
-	responseMsg = map[string]string{}
+func CommandHandler(commandRequest model.ProtocolMsg, requestMsg platform_connector_lib.CommandRequestMsg, t time.Time) (err error) {
 	endpoint := ""
-	endpoint, err = CreateActuatorTopic(Config.ActuatorTopicPattern, deviceId, deviceUri, serviceId, serviceUri)
+	endpoint, err = CreateActuatorTopic(Config.ActuatorTopicPattern, commandRequest.DeviceInstanceId, commandRequest.DeviceUrl, commandRequest.ServiceId, commandRequest.ServiceUrl)
 	if err != nil {
 		return
 	}
-	err = MqttPublish(endpoint, responseMsg["payload"])
+	err = MqttPublish(endpoint, getProtocolPartMap(commandRequest.ProtocolParts)["payload"])
+	return
+}
+
+func getProtocolPartMap(protocolParts []model.ProtocolPart) (result map[string]string) {
+	result = map[string]string{}
+	for _, pp := range protocolParts {
+		result[pp.Name] = pp.Value
+	}
 	return
 }
 

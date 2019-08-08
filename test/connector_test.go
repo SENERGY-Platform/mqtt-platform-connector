@@ -22,7 +22,10 @@ import (
 	platform_connector_lib "github.com/SENERGY-Platform/platform-connector-lib"
 	"github.com/SENERGY-Platform/platform-connector-lib/kafka"
 	"github.com/SENERGY-Platform/platform-connector-lib/model"
+	"github.com/eclipse/paho.mqtt.golang"
 	"log"
+	"os"
+	"sync"
 	"testing"
 	"time"
 )
@@ -50,15 +53,58 @@ func testEvent(t *testing.T, connector *platform_connector_lib.Connector) {
 		log.Println("DEBUG: eventconsumer", string(msg))
 		return json.Unmarshal(msg, &envelope)
 	}, func(err error, consumer *kafka.Consumer) {
-		t.Error(err)
+
 	})
 	defer eventConsumer.Stop()
 
 	time.Sleep(10 * time.Second)
 
-	token := mqtt.Publish("event/foo/sepl_get", 0, false, `{"level": 42}`)
+	token := mqttClient.Publish("event/foo/sepl_get", 2, false, `{"level": 42}`)
 	if token.Wait() && token.Error() != nil {
 		t.Fatal(token.Error())
+	}
+
+	var testState float64
+	mux := sync.Mutex{}
+	mqttClient.Subscribe("cmd/foo/exact", 2, func(client mqtt.Client, message mqtt.Message) {
+		msg := map[string]interface{}{}
+		err := json.Unmarshal(message.Payload(), &msg)
+		if err != nil {
+			log.Println("ERROR: unable to decode request payload", string(message.Payload()), err)
+			return
+		}
+		mux.Lock()
+		defer mux.Unlock()
+		testState = msg["level"].(float64)
+	})
+
+	producer, err := kafka.PrepareProducer(config.ZookeeperUrl, true, true)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	producer.Log(log.New(os.Stdout, "[TEST-KAFKA] ", 0))
+
+	testCommand, err := createTestCommandMsg(connector.Config, "foo", "exact", map[string]interface{}{
+		"level":      9,
+		"title":      "level",
+		"updateTime": 42,
+	})
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	testCommandMsg, err := json.Marshal(testCommand)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	err = producer.Produce(config.Protocol, string(testCommandMsg))
+	if err != nil {
+		t.Error(err)
+		return
 	}
 
 	time.Sleep(20 * time.Second)
@@ -68,4 +114,9 @@ func testEvent(t *testing.T, connector *platform_connector_lib.Connector) {
 	if envelope.Value["metrics"]["level"].(float64) != float64(42) {
 		t.Fatal(envelope.Value)
 	}
+
+	if testState != float64(9) {
+		t.Fatal(testState)
+	}
+
 }

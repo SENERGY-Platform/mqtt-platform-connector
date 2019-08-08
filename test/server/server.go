@@ -307,7 +307,7 @@ func New(startConfig platform_connector_lib.Config) (connector *platform_connect
 	}
 
 
-	connector.SetDeviceCommandHandler(lib.CommandHandler)
+	connector.SetAsyncCommandHandler(lib.CommandHandler)
 
 	err = connector.Start()
 	if err != nil {

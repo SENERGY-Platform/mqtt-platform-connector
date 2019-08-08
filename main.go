@@ -61,7 +61,7 @@ func main() {
 	}
 
 	connector := platform_connector_lib.New(libConf)
-	connector.SetDeviceCommandHandler(lib.CommandHandler)
+	connector.SetAsyncCommandHandler(lib.CommandHandler)
 	defer connector.Stop()
 
 	go lib.AuthWebhooks(connector)
