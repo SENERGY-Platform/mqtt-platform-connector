@@ -40,6 +40,9 @@ type ConfigStruct struct {
 	MqttLogLevel string // critical || error || warn || debug
 
 	WebhookPort string
+
+	ActuatorTopicPattern string
+	SensorTopicPattern   string
 }
 
 type ConfigType *ConfigStruct

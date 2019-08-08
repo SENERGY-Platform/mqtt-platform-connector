@@ -22,5 +22,8 @@
   "Qos": 2,
   "MqttLogLevel": "warn",
 
-  "WebhookPort": "8080"
+  "WebhookPort": "8080",
+
+  "ActuatorTopicPattern": "cmd/{{.LocalDeviceId}}/{{.LocalServiceId}}",
+  "SensorTopicPattern": "event/{{.LocalDeviceId}}/{{.LocalServiceId}}"
 }

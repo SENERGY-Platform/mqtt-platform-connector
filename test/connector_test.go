@@ -18,69 +18,25 @@ package test
 
 import (
 	"encoding/json"
+	"github.com/SENERGY-Platform/mqtt-platform-connector/test/server"
+	platform_connector_lib "github.com/SENERGY-Platform/platform-connector-lib"
 	"github.com/SENERGY-Platform/platform-connector-lib/kafka"
-	"github.com/SmartEnergyPlatform/iot-device-repository/lib/model"
-	"strings"
+	"github.com/SENERGY-Platform/platform-connector-lib/model"
+	"log"
 	"testing"
 	"time"
 )
 
-func TestPublish(t *testing.T) {
-	token := mqtt.Publish("foo/bar", 0, false, `{"foo1": "bar"}`)
-	if token.Wait() && token.Error() != nil {
-		t.Fatal(token.Error())
-	}
-	time.Sleep(20 * time.Second)
-	endpoints, err := connector.Iot().GetInEndpoints(usertoken, "foo/bar")
+func testEvent(t *testing.T, connector *platform_connector_lib.Connector) {
+	typeId, serviceTopic, err := server.CreateDeviceType(connector.Config, "payload")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(endpoints) != 1 {
-		ds, err := connector.Iot().GetDevices(usertoken, 100, 0)
-		t.Log(ds, err)
-		dt, _ := connector.Iot().GetDeviceType(ds[0].DeviceType, usertoken)
-		b, _ := json.Marshal(dt)
-		t.Log(string(b))
-		ep, _ := connector.Iot().GetOutEndpoint(usertoken, ds[0].Id, dt.Services[0].Id)
-		b, _ = json.Marshal(ep)
-		t.Log(string(b))
-		t.Fatal(endpoints)
-	}
-	endpoint := endpoints[0]
-	device, err := connector.Iot().GetDevice(endpoint.Device, usertoken)
+
+	device := model.Device{}
+	err = server.AdminJwt.PostJSON(connector.Config.DeviceManagerUrl+"/devices", model.Device{LocalId: "foo", DeviceTypeId: typeId, Name: "foo"}, &device)
 	if err != nil {
 		t.Fatal(err)
-	}
-	if device.Url != "foo/bar" {
-		t.Fatal(device)
-	}
-	dt, err := connector.Iot().GetDeviceType(device.DeviceType, usertoken)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(dt.Services) != 1 {
-		t.Fatal(dt.Services)
-	}
-	service := dt.Services[0]
-	if service.EndpointFormat != "{{device_uri}}" {
-		t.Fatal(service)
-	}
-	if len(service.Output) != 1 {
-		t.Fatal(service.Output)
-	}
-	output := service.Output[0]
-	if output.Type.BaseType != model.StructBaseType {
-		t.Fatal(output.Type.BaseType)
-	}
-	if len(output.Type.Fields) != 1 {
-		t.Fatal(output.Type.Fields)
-	}
-	field := output.Type.Fields[0]
-	if field.Name != "foo1" {
-		t.Fatal(field)
-	}
-	if field.Type.BaseType != model.XsdString {
-		t.Fatal(field.Type.BaseType)
 	}
 
 	type EventTestType struct {
@@ -90,23 +46,26 @@ func TestPublish(t *testing.T) {
 	}
 	envelope := EventTestType{}
 	//kafka consumer to ensure no timouts on webhook because topics had to be created
-	eventConsumer, err := kafka.NewConsumer(config.ZookeeperUrl, "test_client", strings.Replace(endpoints[0].Service, "#", "_", 1), func(topic string, msg []byte) error {
-		json.Unmarshal(msg, &envelope)
-		return nil
+	eventConsumer, err := kafka.NewConsumer(connector.Config.ZookeeperUrl, "test_client", serviceTopic, func(topic string, msg []byte, t time.Time) error {
+		log.Println("DEBUG: eventconsumer", string(msg))
+		return json.Unmarshal(msg, &envelope)
 	}, func(err error, consumer *kafka.Consumer) {
 		t.Error(err)
 	})
 	defer eventConsumer.Stop()
 
-	token = mqtt.Publish("foo/bar", 0, false, `{"foo1": "bar"}`)
+	time.Sleep(10 * time.Second)
+
+	token := mqtt.Publish("event/foo/sepl_get", 0, false, `{"level": 42}`)
 	if token.Wait() && token.Error() != nil {
 		t.Fatal(token.Error())
 	}
+
 	time.Sleep(20 * time.Second)
-	if envelope.DeviceId != endpoints[0].Device {
-		t.Fatal(envelope)
+	if envelope.DeviceId != device.Id {
+		t.Fatal(device.Id, envelope)
 	}
-	if envelope.Value["payload"]["foo1"] != "bar" {
+	if envelope.Value["metrics"]["level"].(float64) != float64(42) {
 		t.Fatal(envelope.Value)
 	}
 }

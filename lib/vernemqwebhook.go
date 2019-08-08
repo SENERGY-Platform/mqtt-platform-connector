@@ -19,12 +19,24 @@ package lib
 import (
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
 
 	"github.com/SENERGY-Platform/platform-connector-lib"
 )
+
+func sendError(writer http.ResponseWriter, msg string, additionalInfo ...int) {
+	log.Println("DEBUG: send error:", msg)
+	//sendError(writer, fmt.Sprintf(`{"result": { "error": "%s" }}`, msg), statusCode)
+	_, err := fmt.Fprintf(writer, `{"result": { "error": "%s" }}`, msg)
+	//_, err := fmt.Fprintf(writer, `{"result": "next"}`)
+	//_, err := fmt.Fprintf(writer, `{"result": "ok"}`)
+	if err != nil {
+		log.Println("ERROR: unable to send error msg:", err, msg, additionalInfo)
+	}
+}
 
 type PublishWebhookMsg struct {
 	Username string `json:"username"`
@@ -55,28 +67,42 @@ func AuthWebhooks(connector *platform_connector_lib.Connector) {
 		err := json.NewDecoder(request.Body).Decode(&msg)
 		if err != nil {
 			log.Println("ERROR: AuthWebhooks::publish::jsondecoding", err)
-			http.Error(writer, err.Error(), http.StatusUnauthorized)
+			sendError(writer, err.Error(), http.StatusUnauthorized)
 			return
 		}
 		if msg.Username != Config.AuthClientId {
 			payload, err := base64.StdEncoding.DecodeString(msg.Payload)
 			if err != nil {
 				log.Println("ERROR: AuthWebhooks::publish::base64decoding", err)
-				http.Error(writer, err.Error(), http.StatusUnauthorized)
+				sendError(writer, err.Error(), http.StatusUnauthorized)
 				return
 			}
 			token, err := connector.Security().GetCachedUserToken(msg.Username)
 			if err != nil {
 				log.Println("ERROR: AuthWebhooks::publish::GetUserToken", err)
-				http.Error(writer, err.Error(), http.StatusUnauthorized)
+				sendError(writer, err.Error(), http.StatusUnauthorized)
 				return
 			}
-			_, _, _, err = connector.HandleEndpointEventWithAuthToken(token, msg.Topic, map[string]string{
-				"payload": string(payload),
-			})
+			deviceId, localDeviceId, serviceId, localServiceId, err := ParseTopic(Config.SensorTopicPattern, msg.Topic)
 			if err != nil {
-				log.Println("ERROR: AuthWebhooks::publish::HandleEndpointEventWithAuthToken", err)
-				http.Error(writer, err.Error(), http.StatusUnauthorized)
+				log.Println("ERROR: AuthWebhooks::publish::ParseTopic", err)
+				sendError(writer, err.Error(), http.StatusUnauthorized)
+				return
+			}
+			if deviceId != "" {
+				err = connector.HandleDeviceEventWithAuthToken(token, deviceId, serviceId, map[string]string{
+					"payload": string(payload),
+				})
+			}else if localDeviceId != "" {
+				err = connector.HandleDeviceRefEventWithAuthToken(token, localDeviceId, localServiceId, map[string]string{
+					"payload": string(payload),
+				})
+			}else {
+				err = errors.New("unable to identify device from topic")
+			}
+			if err != nil {
+				log.Println("ERROR: AuthWebhooks::publish::HandleEventWithAuthToken", err, deviceId, serviceId,localDeviceId, localServiceId)
+				sendError(writer, err.Error(), http.StatusUnauthorized)
 				return
 			}
 		}
@@ -89,20 +115,32 @@ func AuthWebhooks(connector *platform_connector_lib.Connector) {
 		err := json.NewDecoder(request.Body).Decode(&msg)
 		if err != nil {
 			log.Println("ERROR: AuthWebhooks::subscribe::jsondecoding", err)
-			http.Error(writer, err.Error(), http.StatusUnauthorized)
+			sendError(writer, err.Error(), http.StatusUnauthorized)
 			return
 		}
 		if msg.Username != Config.AuthClientId {
 			token, err := connector.Security().GetCachedUserToken(msg.Username)
 			if err != nil {
-				http.Error(writer, err.Error(), http.StatusUnauthorized)
+				sendError(writer, err.Error(), http.StatusUnauthorized)
 				return
 			}
 			for _, topic := range msg.Topics {
-				err = connector.Iot().CheckEndpointAuth(token, topic.Topic)
+				deviceId, localDeviceId, _, _, err := ParseTopic(Config.ActuatorTopicPattern, topic.Topic)
+				if err != nil {
+					log.Println("ERROR: AuthWebhooks::subscribe::ParseTopic", err)
+					sendError(writer, err.Error(), http.StatusUnauthorized)
+					return
+				}
+				if deviceId != "" {
+					_, err = connector.IotCache.WithToken(token).GetDevice(deviceId)
+				}else if localDeviceId != "" {
+					_, err = connector.IotCache.WithToken(token).GetDeviceByLocalId(localDeviceId)
+				}else {
+					err = errors.New("unable to identify device from topic")
+				}
 				if err != nil {
 					log.Println("ERROR: AuthWebhooks::subscribe::CheckEndpointAuth", err)
-					http.Error(writer, err.Error(), http.StatusUnauthorized)
+					sendError(writer, err.Error(), http.StatusUnauthorized)
 					return
 				}
 			}
@@ -116,18 +154,18 @@ func AuthWebhooks(connector *platform_connector_lib.Connector) {
 		err := json.NewDecoder(request.Body).Decode(&msg)
 		if err != nil {
 			log.Println("ERROR: AuthWebhooks::login::jsondecoding", err)
-			http.Error(writer, err.Error(), http.StatusUnauthorized)
+			sendError(writer, err.Error(), http.StatusUnauthorized)
 			return
 		}
 		if msg.Username != Config.AuthClientId {
 			token, err := connector.Security().GetUserToken(msg.Username, msg.Password)
 			if err != nil {
 				log.Println("ERROR: AuthWebhooks::login::GetOpenidPasswordToken", err, msg)
-				http.Error(writer, err.Error(), http.StatusUnauthorized)
+				sendError(writer, err.Error(), http.StatusUnauthorized)
 				return
 			}
 			if token == "" {
-				http.Error(writer, "access denied", http.StatusUnauthorized)
+				sendError(writer, "access denied", http.StatusUnauthorized)
 				return
 			}
 		}
