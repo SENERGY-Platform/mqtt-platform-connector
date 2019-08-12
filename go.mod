@@ -1,10 +1,15 @@
 module github.com/SENERGY-Platform/mqtt-platform-connector
 
 require (
+	github.com/Azure/go-ansiterm v0.0.0-20170929234023-d6e3b3328b78 // indirect
+	github.com/Microsoft/go-winio v0.4.8 // indirect
+	github.com/Nvveen/Gotty v0.0.0-20120604004816-cd527374f1e5 // indirect
 	github.com/SENERGY-Platform/platform-connector-lib v0.0.0-20190808095711-3689e980e278
-	github.com/SmartEnergyPlatform/iot-device-repository v0.0.0-20181018081528-7297409a5f9f
 	github.com/bradfitz/gomemcache v0.0.0-20180710155616-bc664df96737
-	github.com/cbroglie/mustache v1.0.1 // indirect
+	github.com/cenkalti/backoff v2.0.0+incompatible // indirect
+	github.com/containerd/continuity v0.0.0-20180612233548-246e49050efd // indirect
+	github.com/docker/go-connections v0.3.0 // indirect
+	github.com/docker/go-units v0.3.3 // indirect
 	github.com/eclipse/paho.mqtt.golang v1.2.0
 	github.com/go-stack/stack v1.8.0 // indirect
 	github.com/google/go-cmp v0.3.0 // indirect
@@ -13,8 +18,13 @@ require (
 	github.com/lib/pq v1.2.0 // indirect
 	github.com/onsi/ginkgo v1.8.0 // indirect
 	github.com/onsi/gomega v1.5.0 // indirect
+	github.com/opencontainers/go-digest v1.0.0-rc1 // indirect
+	github.com/opencontainers/image-spec v1.0.1 // indirect
+	github.com/opencontainers/runc v0.1.1 // indirect
 	github.com/ory/dockertest v3.3.2+incompatible
+	github.com/pkg/errors v0.8.0 // indirect
 	github.com/segmentio/kafka-go v0.2.2
+	github.com/sirupsen/logrus v1.0.5 // indirect
 	github.com/streadway/amqp v0.0.0-20180315184602-8e4aba63da9f
 	github.com/tidwall/pretty v1.0.0 // indirect
 	github.com/wvanbergen/kazoo-go v0.0.0-20180202103751-f72d8611297a
