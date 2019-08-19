@@ -66,6 +66,12 @@ func main() {
 		err = lib.MqttPublish(endpoint, responseMsg["payload"])
 		return
 	})
+
+	err = connector.Start()
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	defer connector.Stop()
 
 	go lib.AuthWebhooks(connector)
