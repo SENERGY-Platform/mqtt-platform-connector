@@ -64,6 +64,11 @@ func main() {
 	connector.SetAsyncCommandHandler(lib.CommandHandler)
 	defer connector.Stop()
 
+	err = connector.Start()
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	go lib.AuthWebhooks(connector)
 
 	err = lib.MqttStart()
