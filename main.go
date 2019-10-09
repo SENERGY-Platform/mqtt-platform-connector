@@ -23,12 +23,14 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	paho "github.com/eclipse/paho.mqtt.golang"
 	"github.com/SENERGY-Platform/platform-connector-lib"
 )
 
 func main() {
+	time.Sleep(5 * time.Second) //wait for routing tables in cluster
 
 	configLocation := flag.String("config", "config.json", "configuration file")
 	flag.Parse()
