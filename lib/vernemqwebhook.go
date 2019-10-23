@@ -71,6 +71,7 @@ func AuthWebhooks(connector *platform_connector_lib.Connector) {
 				http.Error(writer, err.Error(), http.StatusUnauthorized)
 				return
 			}
+			log.Println("DEBUG: mqtt publish ", msg.Topic, string(payload))
 			_, _, _, err = connector.HandleEndpointEventWithAuthToken(token, msg.Topic, map[string]string{
 				"payload": string(payload),
 			})
