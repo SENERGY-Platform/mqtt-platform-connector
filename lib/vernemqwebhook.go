@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"runtime/debug"
 
 	"github.com/SENERGY-Platform/platform-connector-lib"
 )
@@ -51,6 +52,12 @@ type EventHandler func(username string, topic string, payload string)
 
 func AuthWebhooks(connector *platform_connector_lib.Connector) {
 	http.HandleFunc("/publish", func(writer http.ResponseWriter, request *http.Request) {
+		defer func() {
+			if r := recover(); r != nil {
+				debug.PrintStack()
+				log.Fatal("FATAL:", r)
+			}
+		}()
 		msg := PublishWebhookMsg{}
 		err := json.NewDecoder(request.Body).Decode(&msg)
 		if err != nil {
@@ -71,7 +78,9 @@ func AuthWebhooks(connector *platform_connector_lib.Connector) {
 				http.Error(writer, err.Error(), http.StatusUnauthorized)
 				return
 			}
-			log.Println("DEBUG: mqtt publish ", msg.Topic, string(payload))
+			if connector.Config.Debug {
+				log.Println("DEBUG: mqtt publish ", msg.Topic, string(payload))
+			}
 			_, _, _, err = connector.HandleEndpointEventWithAuthToken(token, msg.Topic, map[string]string{
 				"payload": string(payload),
 			})
