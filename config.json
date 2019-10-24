@@ -2,7 +2,7 @@
   "Protocol":"mqtt",
   "ZookeeperUrl":"zk:2181",
   "KafkaResponseTopic":"response",
-  "KafkaEventTopic":"eventfilter",
+  "KafkaGroupName": "mqtt-consumer-1",
   "KafkaTimeout": 60,
   "SaramaLog":"false",
   "IotRepoUrl":"http://iot-repo:8080",
@@ -22,5 +22,8 @@
   "Qos": 2,
   "MqttLogLevel": "warn",
 
-  "WebhookPort": "8080"
+  "WebhookPort": "8080",
+
+  "ActuatorTopicPattern": "cmd/{{.LocalDeviceId}}/{{.LocalServiceId}}",
+  "SensorTopicPattern": "event/{{.LocalDeviceId}}/{{.LocalServiceId}}"
 }
