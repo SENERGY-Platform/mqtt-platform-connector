@@ -35,6 +35,7 @@ func TestMqtt(t *testing.T) {
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer stop()
 	time.Sleep(5 * time.Second)
 	options := paho.NewClientOptions().
 		SetPassword("sepl").
@@ -46,12 +47,9 @@ func TestMqtt(t *testing.T) {
 	mqttClient = paho.NewClient(options)
 	if token := mqttClient.Connect(); token.Wait() && token.Error() != nil {
 		log.Println("Error on Client.Connect(): ", token.Error())
-		stop()
-		log.Fatal(token.Error())
+		t.Error(token.Error())
+		return
 	}
-
-	defer stop()
-	defer mqttClient.Disconnect(0)
 
 	t.Run("testEvent", func(t *testing.T) {
 		testEvent(t, connector)
