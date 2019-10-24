@@ -17,12 +17,14 @@
 package lib
 
 import (
+	"context"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/SENERGY-Platform/platform-connector-lib"
 )
@@ -61,8 +63,9 @@ type LoginWebhookMsg struct {
 
 type EventHandler func(username string, topic string, payload string)
 
-func AuthWebhooks(connector *platform_connector_lib.Connector) {
-	http.HandleFunc("/publish", func(writer http.ResponseWriter, request *http.Request) {
+func AuthWebhooks(ctx context.Context, config Config, connector *platform_connector_lib.Connector) {
+	router := http.NewServeMux()
+	router.HandleFunc("/publish", func(writer http.ResponseWriter, request *http.Request) {
 		msg := PublishWebhookMsg{}
 		err := json.NewDecoder(request.Body).Decode(&msg)
 		if err != nil {
@@ -70,7 +73,7 @@ func AuthWebhooks(connector *platform_connector_lib.Connector) {
 			sendError(writer, err.Error(), http.StatusUnauthorized)
 			return
 		}
-		if msg.Username != Config.AuthClientId {
+		if msg.Username != config.AuthClientId {
 			payload, err := base64.StdEncoding.DecodeString(msg.Payload)
 			if err != nil {
 				log.Println("ERROR: AuthWebhooks::publish::base64decoding", err)
@@ -83,7 +86,7 @@ func AuthWebhooks(connector *platform_connector_lib.Connector) {
 				sendError(writer, err.Error(), http.StatusUnauthorized)
 				return
 			}
-			_, deviceId, localDeviceId, serviceId, localServiceId, err := ParseTopic(Config.SensorTopicPattern, msg.Topic)
+			_, deviceId, localDeviceId, serviceId, localServiceId, err := ParseTopic(config.SensorTopicPattern, msg.Topic)
 			if err != nil {
 				log.Println("ERROR: AuthWebhooks::publish::ParseTopic", err)
 				sendError(writer, err.Error(), http.StatusUnauthorized)
@@ -93,15 +96,15 @@ func AuthWebhooks(connector *platform_connector_lib.Connector) {
 				err = connector.HandleDeviceEventWithAuthToken(token, deviceId, serviceId, map[string]string{
 					"payload": string(payload),
 				})
-			}else if localDeviceId != "" {
+			} else if localDeviceId != "" {
 				err = connector.HandleDeviceRefEventWithAuthToken(token, localDeviceId, localServiceId, map[string]string{
 					"payload": string(payload),
 				})
-			}else {
+			} else {
 				err = errors.New("unable to identify device from topic")
 			}
 			if err != nil {
-				log.Println("ERROR: AuthWebhooks::publish::HandleEventWithAuthToken", err, deviceId, serviceId,localDeviceId, localServiceId)
+				log.Println("ERROR: AuthWebhooks::publish::HandleEventWithAuthToken", err, deviceId, serviceId, localDeviceId, localServiceId)
 				sendError(writer, err.Error(), http.StatusUnauthorized)
 				return
 			}
@@ -109,7 +112,7 @@ func AuthWebhooks(connector *platform_connector_lib.Connector) {
 		fmt.Fprintf(writer, `{"result": "ok"}`)
 	})
 
-	http.HandleFunc("/subscribe", func(writer http.ResponseWriter, request *http.Request) {
+	router.HandleFunc("/subscribe", func(writer http.ResponseWriter, request *http.Request) {
 		//{"username":"sepl","mountpoint":"","client_id":"sepl_mqtt_connector_1","topics":[{"topic":"$share/sepl_mqtt_connector/#","qos":2}]}
 		msg := SubscribeWebhookMsg{}
 		err := json.NewDecoder(request.Body).Decode(&msg)
@@ -118,14 +121,14 @@ func AuthWebhooks(connector *platform_connector_lib.Connector) {
 			sendError(writer, err.Error(), http.StatusUnauthorized)
 			return
 		}
-		if msg.Username != Config.AuthClientId {
+		if msg.Username != config.AuthClientId {
 			token, err := connector.Security().GetCachedUserToken(msg.Username)
 			if err != nil {
 				sendError(writer, err.Error(), http.StatusUnauthorized)
 				return
 			}
 			for _, topic := range msg.Topics {
-				_, deviceId, localDeviceId, _, _, err := ParseTopic(Config.ActuatorTopicPattern, topic.Topic)
+				_, deviceId, localDeviceId, _, _, err := ParseTopic(config.ActuatorTopicPattern, topic.Topic)
 				if err != nil {
 					log.Println("ERROR: AuthWebhooks::subscribe::ParseTopic", err)
 					sendError(writer, err.Error(), http.StatusUnauthorized)
@@ -133,9 +136,9 @@ func AuthWebhooks(connector *platform_connector_lib.Connector) {
 				}
 				if deviceId != "" {
 					_, err = connector.IotCache.WithToken(token).GetDevice(deviceId)
-				}else if localDeviceId != "" {
+				} else if localDeviceId != "" {
 					_, err = connector.IotCache.WithToken(token).GetDeviceByLocalId(localDeviceId)
-				}else {
+				} else {
 					err = errors.New("unable to identify device from topic")
 				}
 				if err != nil {
@@ -148,7 +151,7 @@ func AuthWebhooks(connector *platform_connector_lib.Connector) {
 		fmt.Fprintf(writer, `{"result": "ok"}`)
 	})
 
-	http.HandleFunc("/login", func(writer http.ResponseWriter, request *http.Request) {
+	router.HandleFunc("/login", func(writer http.ResponseWriter, request *http.Request) {
 		//{"peer_addr":"172.20.0.30","peer_port":41310,"mountpoint":"","client_id":"sepl_mqtt_connector_1","username":"sepl","password":"sepl","clean_session":true}
 		msg := LoginWebhookMsg{}
 		err := json.NewDecoder(request.Body).Decode(&msg)
@@ -157,7 +160,7 @@ func AuthWebhooks(connector *platform_connector_lib.Connector) {
 			sendError(writer, err.Error(), http.StatusUnauthorized)
 			return
 		}
-		if msg.Username != Config.AuthClientId {
+		if msg.Username != config.AuthClientId {
 			token, err := connector.Security().GetUserToken(msg.Username, msg.Password)
 			if err != nil {
 				log.Println("ERROR: AuthWebhooks::login::GetOpenidPasswordToken", err, msg)
@@ -171,6 +174,43 @@ func AuthWebhooks(connector *platform_connector_lib.Connector) {
 		}
 		fmt.Fprintf(writer, `{"result": "ok"}`)
 	})
+	var handler http.Handler = router
+	if config.Debug {
+		handler = Logger(router)
+	}
+	server := &http.Server{Addr: ":" + config.WebhookPort, Handler: handler, WriteTimeout: 10 * time.Second, ReadTimeout: 2 * time.Second, ReadHeaderTimeout: 2 * time.Second}
+	go func() {
+		log.Println("Listening on ", server.Addr)
+		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Println("ERROR: api server error", err)
+			log.Fatal(err)
+		}
+	}()
+	go func() {
+		<-ctx.Done()
+		log.Println("DEBUG: webhook shutdown", server.Shutdown(context.Background()))
+	}()
+}
 
-	log.Fatal(http.ListenAndServe(":"+Config.WebhookPort, http.DefaultServeMux))
+func Logger(handler http.Handler) *LoggerMiddleWare {
+	return &LoggerMiddleWare{handler: handler}
+}
+
+type LoggerMiddleWare struct {
+	handler http.Handler
+}
+
+func (this *LoggerMiddleWare) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	this.log(r)
+	if this.handler != nil {
+		this.handler.ServeHTTP(w, r)
+	} else {
+		http.Error(w, "Forbidden", 403)
+	}
+}
+
+func (this *LoggerMiddleWare) log(request *http.Request) {
+	method := request.Method
+	path := request.URL
+	log.Printf("[%v] %v \n", method, path)
 }

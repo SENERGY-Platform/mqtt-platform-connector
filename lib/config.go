@@ -18,7 +18,7 @@ package lib
 
 import (
 	"encoding/json"
-	"fmt"
+	"flag"
 	"log"
 	"os"
 	"reflect"
@@ -27,44 +27,71 @@ import (
 	"strings"
 )
 
-type ConfigStruct struct {
-	MqttBroker   string
-	MqttClientId string
-	MqttGroupId  string
+type Config struct {
+	ZookeeperUrl       string `json:"zookeeper_url"`
+	KafkaResponseTopic string `json:"kafka_response_topic"`
+	KafkaGroupName     string `json:"kafka_group_name"`
+	FatalKafkaError    bool   `json:"fatal_kafka_error"`
+	Protocol           string `json:"protocol"`
 
-	AuthClientId     string //keycloak-client; will be used for mqtt-user in subscribe/publish and auth-hook
-	AuthClientSecret string //keycloak-secret; will be used for mqtt-password in subscribe/publish and auth-hook
+	DeviceManagerUrl string `json:"device_manager_url"`
+	DeviceRepoUrl    string `json:"device_repo_url"`
 
-	Qos byte
+	AuthClientId             string  `json:"auth_client_id"`
+	AuthClientSecret         string  `json:"auth_client_secret"`
+	AuthExpirationTimeBuffer float64 `json:"auth_expiration_time_buffer"`
+	AuthEndpoint             string  `json:"auth_endpoint"`
 
-	MqttLogLevel string // critical || error || warn || debug
+	JwtPrivateKey string `json:"jwt_private_key"`
+	JwtExpiration int64  `json:"jwt_expiration"`
+	JwtIssuer     string `json:"jwt_issuer"`
 
-	WebhookPort string
+	DeviceExpiration     int32    `json:"device_expiration"`
+	DeviceTypeExpiration int32    `json:"device_type_expiration"`
+	TokenCacheExpiration int32    `json:"token_cache_expiration"`
+	IotCacheUrl          []string `json:"iot_cache_url"`
+	TokenCacheUrl        []string `json:"token_cache_url"`
+	SyncKafka            bool     `json:"sync_kafka"`
+	SyncKafkaIdempotent  bool     `json:"sync_kafka_idempotent"`
+	Debug                bool     `json:"debug"`
 
-	ActuatorTopicPattern string
-	SensorTopicPattern   string
+	MqttBroker   string `json:"mqtt_broker"`
+	MqttClientId string `json:"mqtt_client_id"`
+	MqttGroupId  string `json:"mqtt_group_id"`
+	Qos          byte   `json:"qos"`
+	MqttLogLevel string `json:"mqtt_log_level"`
+
+	WebhookPort string `json:"webhook_port"`
+
+	ActuatorTopicPattern string `json:"actuator_topic_pattern"`
+	SensorTopicPattern   string `json:"sensor_topic_pattern"`
 }
 
-type ConfigType *ConfigStruct
+func LoadConfig() (result Config, err error) {
+	return LoadConfigFlag("config")
+}
 
-var Config ConfigType
+func LoadConfigFlag(configLocationFlag string) (result Config, err error) {
+	configLocation := flag.String(configLocationFlag, "config.json", "configuration file")
+	flag.Parse()
+	return LoadConfigLocation(*configLocation)
+}
 
-func LoadConfig(location string) error {
-	file, error := os.Open(location)
-	if error != nil {
-		log.Println("error on config load: ", error)
-		return error
+func LoadConfigLocation(location string) (result Config, err error) {
+	file, err := os.Open(location)
+	if err != nil {
+		log.Println("error on config load: ", err)
+		return result, err
 	}
 	decoder := json.NewDecoder(file)
-	configuration := ConfigStruct{}
-	error = decoder.Decode(&configuration)
-	if error != nil {
-		log.Println("invalid config json: ", error)
-		return error
+	err = decoder.Decode(&result)
+	if err != nil {
+		log.Println("invalid config json: ", err)
+		return result, err
 	}
-	HandleEnvironmentVars(&configuration)
-	Config = &configuration
-	return nil
+	log.Println("handle environment variables")
+	handleEnvironmentVars(&result)
+	return
 }
 
 var camel = regexp.MustCompile("(^[^A-Z]*|[A-Z]*)([A-Z][^A-Z]+|$)")
@@ -82,8 +109,7 @@ func fieldNameToEnvName(s string) string {
 	return strings.ToUpper(strings.Join(a, "_"))
 }
 
-// preparations for docker
-func HandleEnvironmentVars(config ConfigType) {
+func handleEnvironmentVars(config interface{}) {
 	configValue := reflect.Indirect(reflect.ValueOf(config))
 	configType := configValue.Type()
 	for index := 0; index < configType.NumField(); index++ {
@@ -91,13 +117,17 @@ func HandleEnvironmentVars(config ConfigType) {
 		envName := fieldNameToEnvName(fieldName)
 		envValue := os.Getenv(envName)
 		if envValue != "" {
-			fmt.Println("use environment variable: ", envName, " = ", envValue)
+			log.Println("use environment variable: ", envName, " = ", envValue)
 			if configValue.FieldByName(fieldName).Kind() == reflect.Int64 {
 				i, _ := strconv.ParseInt(envValue, 10, 64)
 				configValue.FieldByName(fieldName).SetInt(i)
 			}
 			if configValue.FieldByName(fieldName).Kind() == reflect.String {
 				configValue.FieldByName(fieldName).SetString(envValue)
+			}
+			if configValue.FieldByName(fieldName).Kind() == reflect.Bool {
+				b, _ := strconv.ParseBool(envValue)
+				configValue.FieldByName(fieldName).SetBool(b)
 			}
 			if configValue.FieldByName(fieldName).Kind() == reflect.Slice {
 				val := []string{}
@@ -116,6 +146,7 @@ func HandleEnvironmentVars(config ConfigType) {
 				}
 				configValue.FieldByName(fieldName).Set(reflect.ValueOf(value))
 			}
+
 		}
 	}
 }

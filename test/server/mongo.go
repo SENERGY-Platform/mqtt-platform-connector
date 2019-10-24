@@ -18,14 +18,17 @@ package server
 
 import (
 	"context"
-	"github.com/bradfitz/gomemcache/memcache"
 	"github.com/ory/dockertest"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/mongo/readpref"
 	"log"
+	"time"
 )
 
-func Memcached(pool *dockertest.Pool, ctx context.Context) (hostPort string, ipAddress string, err error) {
-	log.Println("start memcached")
-	container, err := pool.Run("memcached", "1.5.12-alpine", []string{})
+func MongoTestServer(pool *dockertest.Pool, ctx context.Context) (hostPort string, ipAddress string, err error) {
+	log.Println("start mongodb")
+	container, err := pool.Run("mongo", "4.1.11", []string{})
 	if err != nil {
 		return "", "", err
 	}
@@ -34,16 +37,12 @@ func Memcached(pool *dockertest.Pool, ctx context.Context) (hostPort string, ipA
 		log.Println("DEBUG: remove container " + container.Container.Name)
 		container.Close()
 	}()
-	hostPort = container.GetPort("11211/tcp")
+	hostPort = container.GetPort("27017/tcp")
 	err = pool.Retry(func() error {
-		log.Println("try memcache connection...")
-		_, err := memcache.New(container.Container.NetworkSettings.IPAddress + ":11211").Get("foo")
-		if err == memcache.ErrCacheMiss {
-			return nil
-		}
-		if err != nil {
-			log.Println(err)
-		}
+		log.Println("try mongodb connection...")
+		ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+		client, err := mongo.Connect(ctx, options.Client().ApplyURI("mongodb://localhost:"+hostPort))
+		err = client.Ping(ctx, readpref.Primary())
 		return err
 	})
 	return hostPort, container.Container.NetworkSettings.IPAddress, err

@@ -1,13 +1,14 @@
 package server
 
 import (
+	"context"
+	"github.com/SENERGY-Platform/mqtt-platform-connector/lib"
 	"github.com/ory/dockertest"
 	"log"
 	"strings"
-	"time"
 )
 
-func Vernemqtt(pool *dockertest.Pool, connecorUrl string) (closer func(), hostPort string, ipAddress string, err error) {
+func Vernemqtt(pool *dockertest.Pool, ctx context.Context, connecorUrl string) (hostPort string, ipAddress string, err error) {
 	log.Println("start vernemqtt")
 	log.Println(strings.Join([]string{
 		"DOCKER_VERNEMQ_LOG__CONSOLE__LEVEL=debug",
@@ -26,7 +27,7 @@ func Vernemqtt(pool *dockertest.Pool, connecorUrl string) (closer func(), hostPo
 		"DOCKER_VERNEMQ_PLUGINS__VMQ_PASSWD=off",
 		"DOCKER_VERNEMQ_PLUGINS__VMQ_ACL=off",
 	}, "\n"))
-	repo, err := pool.Run("erlio/docker-vernemq", "latest", []string{
+	container, err := pool.Run("erlio/docker-vernemq", "latest", []string{
 		"DOCKER_VERNEMQ_LOG__CONSOLE__LEVEL=debug",
 		"DOCKER_VERNEMQ_SHARED_SUBSCRIPTION_POLICY=random",
 		"DOCKER_VERNEMQ_PLUGINS__VMQ_WEBHOOKS=on",
@@ -44,9 +45,25 @@ func Vernemqtt(pool *dockertest.Pool, connecorUrl string) (closer func(), hostPo
 		"DOCKER_VERNEMQ_PLUGINS__VMQ_ACL=off",
 	})
 	if err != nil {
-		return func() {}, "", "", err
+		return "", "", err
 	}
-	hostPort = repo.GetPort("1883/tcp")
-	time.Sleep(2 * time.Second)
-	return func() { repo.Close() }, hostPort, repo.Container.NetworkSettings.IPAddress, err
+	go func() {
+		<-ctx.Done()
+		log.Println("DEBUG: remove container " + container.Container.Name)
+		container.Close()
+	}()
+	hostPort = container.GetPort("1883/tcp")
+	err = pool.Retry(func() error {
+		log.Println("DEBUG: try to connect to vernemq")
+		mqtt, err := lib.NewMqtt(lib.Config{MqttBroker: "tcp://" + container.Container.NetworkSettings.IPAddress + ":1883"})
+		defer mqtt.Close()
+		if err != nil && err.Error() == "Identifier rejected" {
+			return nil
+		}
+		if err != nil {
+			log.Println("DEBUG:", "'"+err.Error()+"'")
+		}
+		return err
+	})
+	return hostPort, container.Container.NetworkSettings.IPAddress, err
 }
