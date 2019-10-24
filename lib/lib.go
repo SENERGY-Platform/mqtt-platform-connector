@@ -12,19 +12,11 @@ import (
 
 func CommandHandler(commandRequest model.ProtocolMsg, requestMsg platform_connector_lib.CommandRequestMsg, t time.Time) (err error) {
 	endpoint := ""
-	endpoint, err = CreateActuatorTopic(Config.ActuatorTopicPattern, commandRequest.DeviceInstanceId, commandRequest.DeviceUrl, commandRequest.ServiceId, commandRequest.ServiceUrl)
+	endpoint, err = CreateActuatorTopic(Config.ActuatorTopicPattern, commandRequest.Metadata.Device.Id, commandRequest.Metadata.Device.LocalId, commandRequest.Metadata.Service.Id, commandRequest.Metadata.Service.LocalId)
 	if err != nil {
 		return
 	}
-	err = MqttPublish(endpoint, getProtocolPartMap(commandRequest.ProtocolParts)["payload"])
-	return
-}
-
-func getProtocolPartMap(protocolParts []model.ProtocolPart) (result map[string]string) {
-	result = map[string]string{}
-	for _, pp := range protocolParts {
-		result[pp.Name] = pp.Value
-	}
+	err = MqttPublish(endpoint, commandRequest.Request.Input["payload"])
 	return
 }
 
