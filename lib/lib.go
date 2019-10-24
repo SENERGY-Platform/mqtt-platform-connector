@@ -12,7 +12,7 @@ import (
 
 func CommandHandler(commandRequest model.ProtocolMsg, requestMsg platform_connector_lib.CommandRequestMsg, t time.Time) (err error) {
 	endpoint := ""
-	endpoint, err = CreateActuatorTopic(Config.ActuatorTopicPattern, commandRequest.Metadata.Device.Id, commandRequest.Metadata.Device.LocalId, commandRequest.Metadata.Service.Id, commandRequest.Metadata.Service.LocalId)
+	endpoint, err = CreateActuatorTopic(Config.ActuatorTopicPattern, commandRequest.Metadata.Device.DeviceTypeId, commandRequest.Metadata.Device.Id, commandRequest.Metadata.Device.LocalId, commandRequest.Metadata.Service.Id, commandRequest.Metadata.Service.LocalId)
 	if err != nil {
 		return
 	}
@@ -20,9 +20,10 @@ func CommandHandler(commandRequest model.ProtocolMsg, requestMsg platform_connec
 	return
 }
 
-func CreateActuatorTopic(templ string, deviceId string, deviceUri string, serviceId string, serviceUri string) (result string, err error) {
+func CreateActuatorTopic(templ string, deviceTypeId string, deviceId string, deviceUri string, serviceId string, serviceUri string) (result string, err error) {
 	var temp bytes.Buffer
 	err = template.Must(template.New("actuatortopic").Parse(templ)).Execute(&temp, map[string]string{
+		"DeviceTypeId": deviceTypeId,
 		"DeviceId": deviceId,
 		"LocalDeviceId": deviceUri,
 		"ServiceId": serviceId,
@@ -34,10 +35,11 @@ func CreateActuatorTopic(templ string, deviceId string, deviceUri string, servic
 	return temp.String(), nil
 }
 
-func ParseTopic(pattern string, topic string)(deviceId string, deviceUri string, serviceId string, serviceUri string, err error){
+func ParseTopic(pattern string, topic string)(deviceTypeId string, deviceId string, deviceUri string, serviceId string, serviceUri string, err error){
 	patternParts := strings.Split(pattern, "/")
 	topicParts := strings.Split(topic, "/")
 	index := map[string]*string{
+		"{{.DeviceTypeId}}": &deviceTypeId,
 		"{{.DeviceId}}": &deviceId,
 		"{{.LocalDeviceId}}": &deviceUri,
 		"{{.ServiceId}}": &serviceId,

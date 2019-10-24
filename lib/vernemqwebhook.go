@@ -83,7 +83,7 @@ func AuthWebhooks(connector *platform_connector_lib.Connector) {
 				sendError(writer, err.Error(), http.StatusUnauthorized)
 				return
 			}
-			deviceId, localDeviceId, serviceId, localServiceId, err := ParseTopic(Config.SensorTopicPattern, msg.Topic)
+			_, deviceId, localDeviceId, serviceId, localServiceId, err := ParseTopic(Config.SensorTopicPattern, msg.Topic)
 			if err != nil {
 				log.Println("ERROR: AuthWebhooks::publish::ParseTopic", err)
 				sendError(writer, err.Error(), http.StatusUnauthorized)
@@ -125,7 +125,7 @@ func AuthWebhooks(connector *platform_connector_lib.Connector) {
 				return
 			}
 			for _, topic := range msg.Topics {
-				deviceId, localDeviceId, _, _, err := ParseTopic(Config.ActuatorTopicPattern, topic.Topic)
+				_, deviceId, localDeviceId, _, _, err := ParseTopic(Config.ActuatorTopicPattern, topic.Topic)
 				if err != nil {
 					log.Println("ERROR: AuthWebhooks::subscribe::ParseTopic", err)
 					sendError(writer, err.Error(), http.StatusUnauthorized)
