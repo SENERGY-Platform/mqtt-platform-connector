@@ -2,9 +2,15 @@ package test
 
 import (
 	"context"
+	"encoding/json"
 	"github.com/SENERGY-Platform/mqtt-platform-connector/lib"
 	"github.com/SENERGY-Platform/mqtt-platform-connector/test/server"
+	"github.com/SENERGY-Platform/platform-connector-lib/kafka"
 	"github.com/SENERGY-Platform/platform-connector-lib/model"
+	uuid "github.com/satori/go.uuid"
+	"log"
+	"reflect"
+	"sync"
 	"testing"
 	"time"
 )
@@ -62,6 +68,8 @@ func TestEvent(t *testing.T) {
 	serviceLocalId := "testservice1"
 	deviceType := model.DeviceType{}
 	protocol := model.Protocol{}
+	device := model.Device{}
+	msg := `{"level":42}`
 
 	t.Run("create protocol", func(t *testing.T) {
 		protocol = createTestProtocol(t, config)
@@ -74,12 +82,16 @@ func TestEvent(t *testing.T) {
 	})
 
 	t.Run("send mqtt message", func(t *testing.T) {
-		sendMqttEvent(t, config, deviceType.Id+"/"+deviceLocalId+"/"+serviceLocalId, `{"level":42}`)
+		sendMqttEvent(t, config, deviceType.Id+"/"+deviceLocalId+"/"+serviceLocalId, msg)
 		time.Sleep(10 * time.Second) //wait for cqrs
 	})
 
 	t.Run("check device creation", func(t *testing.T) {
-		checkDevice(t, config, deviceLocalId, deviceType.Id)
+		device = checkDevice(t, config, deviceLocalId, deviceType.Id)
+	})
+
+	t.Run("check kafka event", func(t *testing.T) {
+		trySensorFromDevice(t, config, protocol, deviceType, device, serviceLocalId, msg)
 	})
 }
 
@@ -92,5 +104,61 @@ func sendMqttEvent(t *testing.T, config lib.Config, topic string, msg string) {
 	err = mqtt.Publish(topic, msg)
 	if err != nil {
 		t.Fatal(err)
+	}
+}
+
+func trySensorFromDevice(t *testing.T, config lib.Config, protocol model.Protocol, deviceType model.DeviceType, device model.Device, serviceLocalId string, msg string) {
+	service := model.Service{}
+	for _, s := range deviceType.Services {
+		if s.LocalId == serviceLocalId {
+			service = s
+			break
+		}
+	}
+	mux := sync.Mutex{}
+	events := []model.Envelope{}
+	log.Println("DEBUG CONSUME:", model.ServiceIdToTopic(service.Id))
+	consumer, err := kafka.NewConsumer(config.ZookeeperUrl, "testing_"+uuid.NewV4().String(), model.ServiceIdToTopic(service.Id), func(topic string, msg []byte, time time.Time) error {
+		mux.Lock()
+		defer mux.Unlock()
+		resp := model.Envelope{}
+		err := json.Unmarshal(msg, &resp)
+		if err != nil {
+			t.Fatal(err)
+			return err
+		}
+		events = append(events, resp)
+		return nil
+	}, func(err error, consumer *kafka.Consumer) {
+		t.Fatal(err)
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer consumer.Stop()
+
+	time.Sleep(10 * time.Second)
+
+	mux.Lock()
+	defer mux.Unlock()
+	if len(events) == 0 {
+		t.Fatal("unexpected event count", events)
+	}
+	event := events[0]
+	if event.DeviceId != device.Id {
+		t.Fatal("unexpected envelope", event)
+	}
+	if event.ServiceId != service.Id {
+		t.Fatal("unexpected envelope", event)
+	}
+
+	var expected interface{}
+	err = json.Unmarshal([]byte("{\"metrics\":"+msg+"}"), &expected)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if reflect.DeepEqual(event.Value, expected) {
+		t.Fatal(event.Value, "\n\n!=\n\n", expected)
 	}
 }

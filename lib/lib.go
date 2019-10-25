@@ -59,6 +59,11 @@ func Start(ctx context.Context, config Config) error {
 
 	connector := platform_connector_lib.New(libConf)
 
+	if config.Debug {
+		connector.SetKafkaLogger(log.New(os.Stdout, "[CONNECTOR-KAFKA] ", 0))
+		connector.IotCache.Debug = true
+	}
+
 	AuthWebhooks(ctx, config, connector)
 
 	time.Sleep(1 * time.Second) //ensure http server startup before continue

@@ -4,7 +4,7 @@ require (
 	github.com/Azure/go-ansiterm v0.0.0-20170929234023-d6e3b3328b78 // indirect
 	github.com/Microsoft/go-winio v0.4.8 // indirect
 	github.com/Nvveen/Gotty v0.0.0-20120604004816-cd527374f1e5 // indirect
-	github.com/SENERGY-Platform/platform-connector-lib v0.0.0-20191025090749-c24ee45d14f8
+	github.com/SENERGY-Platform/platform-connector-lib v0.0.0-20191025092606-058305bedd50
 	github.com/bradfitz/gomemcache v0.0.0-20180710155616-bc664df96737
 	github.com/cenkalti/backoff v2.0.0+incompatible // indirect
 	github.com/containerd/continuity v0.0.0-20180612233548-246e49050efd // indirect
@@ -23,6 +23,7 @@ require (
 	github.com/opencontainers/runc v0.1.1 // indirect
 	github.com/ory/dockertest v3.3.2+incompatible
 	github.com/pkg/errors v0.8.0 // indirect
+	github.com/satori/go.uuid v1.2.0
 	github.com/segmentio/kafka-go v0.2.2
 	github.com/sirupsen/logrus v1.0.5 // indirect
 	github.com/streadway/amqp v0.0.0-20180315184602-8e4aba63da9f

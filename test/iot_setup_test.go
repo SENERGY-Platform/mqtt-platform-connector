@@ -64,7 +64,7 @@ func createTestDeviceType(t *testing.T, config lib.Config, protocol model.Protoc
 	return
 }
 
-func checkDevice(t *testing.T, config lib.Config, deviceLocalId string, deviceTypeId string) {
+func checkDevice(t *testing.T, config lib.Config, deviceLocalId string, deviceTypeId string) (result model.Device) {
 	client := http.Client{
 		Timeout: 5 * time.Second,
 	}
@@ -88,7 +88,6 @@ func checkDevice(t *testing.T, config lib.Config, deviceLocalId string, deviceTy
 		err = errors.New(resp.Status + ": " + string(responseBody))
 		t.Fatal(err)
 	}
-	result := model.Device{}
 	err = json.NewDecoder(resp.Body).Decode(&result)
 	if err != nil {
 		t.Fatal(err)
@@ -99,4 +98,5 @@ func checkDevice(t *testing.T, config lib.Config, deviceLocalId string, deviceTy
 	if result.DeviceTypeId != deviceTypeId {
 		t.Fatal("unexpected result", result)
 	}
+	return
 }

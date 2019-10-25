@@ -25,6 +25,7 @@ import (
 	"log"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func Kafka(pool *dockertest.Pool, ctx context.Context, zookeeperUrl string) (err error) {
@@ -70,6 +71,7 @@ func Kafka(pool *dockertest.Pool, ctx context.Context, zookeeperUrl string) (err
 		defer conn.Close()
 		return nil
 	})
+	time.Sleep(5 * time.Second)
 	return err
 }
 
