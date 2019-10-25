@@ -33,7 +33,7 @@ func TestInit(t *testing.T) {
 	}
 }
 
-func TestDeviceCreation(t *testing.T) {
+func TestEvent(t *testing.T) {
 	defaultConfig, err := lib.LoadConfigLocation("../config.json")
 	if err != nil {
 		t.Error(err)

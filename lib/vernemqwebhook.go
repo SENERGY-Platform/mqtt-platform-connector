@@ -86,7 +86,7 @@ func AuthWebhooks(ctx context.Context, config Config, connector *platform_connec
 				sendError(writer, err.Error(), http.StatusUnauthorized)
 				return
 			}
-			_, deviceId, localDeviceId, serviceId, localServiceId, err := ParseTopic(config.SensorTopicPattern, msg.Topic)
+			deviceTypeId, deviceId, localDeviceId, serviceId, localServiceId, err := ParseTopic(config.SensorTopicPattern, msg.Topic)
 			if err != nil {
 				log.Println("ERROR: AuthWebhooks::publish::ParseTopic", err)
 				sendError(writer, err.Error(), http.StatusUnauthorized)
@@ -97,9 +97,12 @@ func AuthWebhooks(ctx context.Context, config Config, connector *platform_connec
 					"payload": string(payload),
 				})
 			} else if localDeviceId != "" {
-				err = connector.HandleDeviceRefEventWithAuthToken(token, localDeviceId, localServiceId, map[string]string{
-					"payload": string(payload),
-				})
+				err = ensureDeviceExistence(token, connector, deviceTypeId, localDeviceId)
+				if err == nil {
+					err = connector.HandleDeviceRefEventWithAuthToken(token, localDeviceId, localServiceId, map[string]string{
+						"payload": string(payload),
+					})
+				}
 			} else {
 				err = errors.New("unable to identify device from topic")
 			}

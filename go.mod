@@ -4,7 +4,7 @@ require (
 	github.com/Azure/go-ansiterm v0.0.0-20170929234023-d6e3b3328b78 // indirect
 	github.com/Microsoft/go-winio v0.4.8 // indirect
 	github.com/Nvveen/Gotty v0.0.0-20120604004816-cd527374f1e5 // indirect
-	github.com/SENERGY-Platform/platform-connector-lib v0.0.0-20191024081525-fa0da32fedea
+	github.com/SENERGY-Platform/platform-connector-lib v0.0.0-20191025090749-c24ee45d14f8
 	github.com/bradfitz/gomemcache v0.0.0-20180710155616-bc664df96737
 	github.com/cenkalti/backoff v2.0.0+incompatible // indirect
 	github.com/containerd/continuity v0.0.0-20180612233548-246e49050efd // indirect
