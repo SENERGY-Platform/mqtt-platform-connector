@@ -57,7 +57,6 @@ type Config struct {
 
 	MqttBroker   string `json:"mqtt_broker"`
 	MqttClientId string `json:"mqtt_client_id"`
-	MqttGroupId  string `json:"mqtt_group_id"`
 	Qos          byte   `json:"qos"`
 	MqttLogLevel string `json:"mqtt_log_level"`
 
