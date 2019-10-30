@@ -3,7 +3,6 @@
 
   "mqtt_broker": "mqtt:1883",
   "mqtt_client_id": "sepl_mqtt_connector_1",
-  "mqtt_group_id": "sepl_mqtt_connector",
   "qos": 2,
   "mqtt_log_level": "warn",
 
