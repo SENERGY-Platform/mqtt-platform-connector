@@ -1,57 +1,164 @@
 package test
 
 import (
+	"context"
+	"encoding/json"
 	"github.com/SENERGY-Platform/mqtt-platform-connector/lib"
 	"github.com/SENERGY-Platform/mqtt-platform-connector/test/server"
-	platform_connector_lib "github.com/SENERGY-Platform/platform-connector-lib"
-	"github.com/SENERGY-Platform/platform-connector-lib/security"
-	paho "github.com/eclipse/paho.mqtt.golang"
+	"github.com/SENERGY-Platform/platform-connector-lib/kafka"
+	"github.com/SENERGY-Platform/platform-connector-lib/model"
+	uuid "github.com/satori/go.uuid"
 	"log"
-	"os"
+	"reflect"
+	"sync"
 	"testing"
 	"time"
 )
 
-var mqtt paho.Client
-var config platform_connector_lib.Config
-var connector *platform_connector_lib.Connector
-var usertoken security.JwtToken = `Bearer eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICIzaUtabW9aUHpsMmRtQnBJdS1vSkY4ZVVUZHh4OUFIckVOcG5CcHM5SjYwIn0.eyJqdGkiOiJhYTk5MzMzYS04YzJiLTQ3OWEtODFjNC1kZTQwNjg2ZDNlODciLCJleHAiOjE1NjA5NDc4OTYsIm5iZiI6MCwiaWF0IjoxNTYwOTQ0Mjk2LCJpc3MiOiJodHRwczovL2F1dGguc2VwbC5pbmZhaS5vcmcvYXV0aC9yZWFsbXMvbWFzdGVyIiwiYXVkIjoiZnJvbnRlbmQiLCJzdWIiOiJkZDY5ZWEwZC1mNTUzLTQzMzYtODBmMy03ZjQ1NjdmODVjN2IiLCJ0eXAiOiJCZWFyZXIiLCJhenAiOiJmcm9udGVuZCIsIm5vbmNlIjoiMWEyZmY0MzktMjg1OC00NDI1LTlhOTAtMjc0MDY5OGYyODczIiwiYXV0aF90aW1lIjoxNTYwOTQ0Mjg4LCJzZXNzaW9uX3N0YXRlIjoiMmJmY2M5MzItZWI5OC00YzMwLThiZGYtOWY1MDI1N2ViY2E1IiwiYWNyIjoiMCIsImFsbG93ZWQtb3JpZ2lucyI6WyIqIl0sInJlYWxtX2FjY2VzcyI6eyJyb2xlcyI6WyJjcmVhdGUtcmVhbG0iLCJhZG1pbiIsImRldmVsb3BlciIsInVtYV9hdXRob3JpemF0aW9uIiwidXNlciJdfSwicmVzb3VyY2VfYWNjZXNzIjp7Im1hc3Rlci1yZWFsbSI6eyJyb2xlcyI6WyJ2aWV3LWlkZW50aXR5LXByb3ZpZGVycyIsInZpZXctcmVhbG0iLCJtYW5hZ2UtaWRlbnRpdHktcHJvdmlkZXJzIiwiaW1wZXJzb25hdGlvbiIsImNyZWF0ZS1jbGllbnQiLCJtYW5hZ2UtdXNlcnMiLCJxdWVyeS1yZWFsbXMiLCJ2aWV3LWF1dGhvcml6YXRpb24iLCJxdWVyeS1jbGllbnRzIiwicXVlcnktdXNlcnMiLCJtYW5hZ2UtZXZlbnRzIiwibWFuYWdlLXJlYWxtIiwidmlldy1ldmVudHMiLCJ2aWV3LXVzZXJzIiwidmlldy1jbGllbnRzIiwibWFuYWdlLWF1dGhvcml6YXRpb24iLCJtYW5hZ2UtY2xpZW50cyIsInF1ZXJ5LWdyb3VwcyJdfSwiQmFja2VuZC1yZWFsbSI6eyJyb2xlcyI6WyJ2aWV3LXJlYWxtIiwidmlldy1pZGVudGl0eS1wcm92aWRlcnMiLCJtYW5hZ2UtaWRlbnRpdHktcHJvdmlkZXJzIiwiaW1wZXJzb25hdGlvbiIsImNyZWF0ZS1jbGllbnQiLCJtYW5hZ2UtdXNlcnMiLCJxdWVyeS1yZWFsbXMiLCJ2aWV3LWF1dGhvcml6YXRpb24iLCJxdWVyeS1jbGllbnRzIiwicXVlcnktdXNlcnMiLCJtYW5hZ2UtZXZlbnRzIiwibWFuYWdlLXJlYWxtIiwidmlldy1ldmVudHMiLCJ2aWV3LXVzZXJzIiwidmlldy1jbGllbnRzIiwibWFuYWdlLWF1dGhvcml6YXRpb24iLCJtYW5hZ2UtY2xpZW50cyIsInF1ZXJ5LWdyb3VwcyJdfSwiYWNjb3VudCI6eyJyb2xlcyI6WyJtYW5hZ2UtYWNjb3VudCIsIm1hbmFnZS1hY2NvdW50LWxpbmtzIiwidmlldy1wcm9maWxlIl19fSwicm9sZXMiOlsidW1hX2F1dGhvcml6YXRpb24iLCJhZG1pbiIsImNyZWF0ZS1yZWFsbSIsImRldmVsb3BlciIsInVzZXIiLCJvZmZsaW5lX2FjY2VzcyJdLCJuYW1lIjoiU2VwbCBBZG1pbiIsInByZWZlcnJlZF91c2VybmFtZSI6InNlcGwiLCJnaXZlbl9uYW1lIjoiU2VwbCIsImZhbWlseV9uYW1lIjoiQWRtaW4iLCJlbWFpbCI6InNlcGxAc2VwbC5kZSJ9.fQ03R2IJrn9-zGPAktrl6eUdnWZ4aWF2T4VGS6ACtzeoZ-43y9Wuu_kfRAPIdkEGQJOrydBnLMQO1_-5H_FLQXWXa_dtGOSNF71K3HBxrg7OTRe5Wt3zQmmWc3PspQigK-gTUh6S-jfCkhV3TJD_f7ZjetqizJEe0nCqBfvjr_DzR8AmfWdMtn4c7sp2Rb7mwMVWfzg9piRhjve2fdVMCvEtD60eUIinH7B82Hil6XTFWyUvAY9L_mUQ9xqHxSffSoyi6e5h0ZVj-NWBuJgRAKozpK-VDZAAi_3TuxZLkJZM1s54EL2eojvM1GNj_QudAOLOsUKYKVWWIWcmEsZ3ig`
-
-func TestMain(m *testing.M) {
-	err := lib.LoadConfig("../config.json")
+func TestInit(t *testing.T) {
+	defaultConfig, err := lib.LoadConfigLocation("../config.json")
 	if err != nil {
-		log.Fatal(err)
-	}
-	libConf, err := platform_connector_lib.LoadConfig("../config.json")
-	if err != nil {
-		log.Fatal(err)
+		t.Error(err)
+		return
 	}
 
-	var stop func()
-	connector, config, stop, err = server.New(libConf)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer time.Sleep(10 * time.Second) //wait for docker cleanup
+	defer cancel()
+
+	config, err := server.New(ctx, defaultConfig)
 	if err != nil {
-		log.Fatal(err)
-	}
-	time.Sleep(5 * time.Second)
-	options := paho.NewClientOptions().
-		SetPassword("sepl").
-		SetUsername("sepl").
-		SetClientID("test").
-		SetAutoReconnect(true).
-		SetCleanSession(true).
-		AddBroker(lib.Config.MqttBroker)
-	mqtt = paho.NewClient(options)
-	if token := mqtt.Connect(); token.Wait() && token.Error() != nil {
-		log.Println("Error on Client.Connect(): ", token.Error())
-		stop()
-		log.Fatal(token.Error())
+		t.Error(err)
+		return
 	}
 
-	var result int
-	func(){
-		defer stop()
-		defer mqtt.Disconnect(0)
-		result = m.Run()
-	}()
-	os.Exit(result)
+	err = lib.Start(ctx, config)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+}
+
+func TestEvent(t *testing.T) {
+	defaultConfig, err := lib.LoadConfigLocation("../config.json")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer time.Sleep(10 * time.Second) //wait for docker cleanup
+	defer cancel()
+
+	config, err := server.New(ctx, defaultConfig)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	err = lib.Start(ctx, config)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	time.Sleep(1 * time.Second)
+
+	deviceLocalId := "testservice1"
+	serviceLocalId := "testservice1"
+	deviceType := model.DeviceType{}
+	protocol := model.Protocol{}
+	device := model.Device{}
+	msg := `{"level":42}`
+
+	t.Run("create protocol", func(t *testing.T) {
+		protocol = createTestProtocol(t, config)
+		time.Sleep(10 * time.Second) //wait for cqrs
+	})
+
+	t.Run("create device type", func(t *testing.T) {
+		deviceType = createTestDeviceType(t, config, protocol, serviceLocalId)
+		time.Sleep(10 * time.Second) //wait for cqrs
+	})
+
+	t.Run("send mqtt message", func(t *testing.T) {
+		sendMqttEvent(t, config, deviceType.Id+"/"+deviceLocalId+"/"+serviceLocalId, msg)
+		time.Sleep(10 * time.Second) //wait for cqrs
+	})
+
+	t.Run("check device creation", func(t *testing.T) {
+		device = checkDevice(t, config, deviceLocalId, deviceType.Id)
+	})
+
+	t.Run("check kafka event", func(t *testing.T) {
+		trySensorFromDevice(t, config, protocol, deviceType, device, serviceLocalId, msg)
+	})
+}
+
+func sendMqttEvent(t *testing.T, config lib.Config, topic string, msg string) {
+	mqtt, err := lib.NewMqtt(lib.Config{AuthClientId: "sepl", AuthClientSecret: "sepl", MqttBroker: config.MqttBroker, Qos: config.Qos})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer mqtt.Close()
+	err = mqtt.Publish(topic, msg)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func trySensorFromDevice(t *testing.T, config lib.Config, protocol model.Protocol, deviceType model.DeviceType, device model.Device, serviceLocalId string, msg string) {
+	service := model.Service{}
+	for _, s := range deviceType.Services {
+		if s.LocalId == serviceLocalId {
+			service = s
+			break
+		}
+	}
+	mux := sync.Mutex{}
+	events := []model.Envelope{}
+	log.Println("DEBUG CONSUME:", model.ServiceIdToTopic(service.Id))
+	consumer, err := kafka.NewConsumer(config.ZookeeperUrl, "testing_"+uuid.NewV4().String(), model.ServiceIdToTopic(service.Id), func(topic string, msg []byte, time time.Time) error {
+		mux.Lock()
+		defer mux.Unlock()
+		resp := model.Envelope{}
+		err := json.Unmarshal(msg, &resp)
+		if err != nil {
+			t.Fatal(err)
+			return err
+		}
+		events = append(events, resp)
+		return nil
+	}, func(err error, consumer *kafka.Consumer) {
+		t.Fatal(err)
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer consumer.Stop()
+
+	time.Sleep(10 * time.Second)
+
+	mux.Lock()
+	defer mux.Unlock()
+	if len(events) == 0 {
+		t.Fatal("unexpected event count", events)
+	}
+	event := events[0]
+	if event.DeviceId != device.Id {
+		t.Fatal("unexpected envelope", event)
+	}
+	if event.ServiceId != service.Id {
+		t.Fatal("unexpected envelope", event)
+	}
+
+	var expected interface{}
+	err = json.Unmarshal([]byte("{\"metrics\":"+msg+"}"), &expected)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if reflect.DeepEqual(event.Value, expected) {
+		t.Fatal(event.Value, "\n\n!=\n\n", expected)
+	}
 }

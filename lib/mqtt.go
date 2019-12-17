@@ -25,42 +25,45 @@ import (
 	paho "github.com/eclipse/paho.mqtt.golang"
 )
 
-var mqttClient paho.Client
-
-func MqttClose() {
-	// Terminate the Client.
-	mqttClient.Disconnect(0)
+type MqttClient struct {
+	client paho.Client
+	config Config
 }
 
-func MqttStart() error {
+func (this *MqttClient) Close() {
+	// Terminate the Client.
+	this.client.Disconnect(0)
+}
+
+func NewMqtt(config Config) (result *MqttClient, err error) {
 	options := paho.NewClientOptions().
-		SetPassword(Config.AuthClientSecret).
-		SetUsername(Config.AuthClientId).
-		SetClientID(Config.MqttClientId).
+		SetPassword(config.AuthClientSecret).
+		SetUsername(config.AuthClientId).
+		SetClientID(config.MqttClientId).
 		SetAutoReconnect(true).
 		SetCleanSession(true).
-		AddBroker(Config.MqttBroker)
-
-	mqttClient = paho.NewClient(options)
-	if token := mqttClient.Connect(); token.Wait() && token.Error() != nil {
+		AddBroker(config.MqttBroker)
+	result = &MqttClient{config: config}
+	result.client = paho.NewClient(options)
+	if token := result.client.Connect(); token.Wait() && token.Error() != nil {
 		log.Println("Error on Client.Connect(): ", token.Error())
-		return token.Error()
+		return result, token.Error()
 	}
 
-	return nil
+	return result, nil
 }
 
 var mqttPublishMux = sync.Mutex{}
 
-func MqttPublish(topic, msg string) (err error) {
+func (this *MqttClient) Publish(topic, msg string) (err error) {
 	mqttPublishMux.Lock()
 	defer mqttPublishMux.Unlock()
 	log.Println("DEBUG mqtt out: ", topic, msg)
-	if !mqttClient.IsConnected() {
+	if !this.client.IsConnected() {
 		log.Println("WARNING: mqtt client not connected")
 		return errors.New("mqtt client not connected")
 	}
-	token := mqttClient.Publish(topic, Config.Qos, false, msg)
+	token := this.client.Publish(topic, this.config.Qos, false, msg)
 	if token.Wait() && token.Error() != nil {
 		log.Println("Error on Client.Publish(): ", token.Error())
 		return token.Error()
