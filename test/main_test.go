@@ -56,6 +56,8 @@ func TestEvent(t *testing.T) {
 		return
 	}
 
+	time.Sleep(2 * time.Second)
+
 	err = lib.Start(ctx, config)
 	if err != nil {
 		t.Error(err)
