@@ -64,6 +64,21 @@ func createTestDeviceType(t *testing.T, config lib.Config, protocol model.Protoc
 	return
 }
 
+func createTestDevice(t *testing.T, config lib.Config, dt model.DeviceType, deviceLocalId string) (result model.Device) {
+	err := helper.AdminJwt.PostJSON(config.DeviceManagerUrl+"/devices", model.Device{
+		LocalId:      deviceLocalId,
+		Name:         "test-device",
+		DeviceTypeId: dt.Id,
+	}, &result)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result.Id == "" {
+		t.Fatal("unexpected result", result)
+	}
+	return
+}
+
 func checkDevice(t *testing.T, config lib.Config, deviceLocalId string, deviceTypeId string) (result model.Device) {
 	client := http.Client{
 		Timeout: 5 * time.Second,

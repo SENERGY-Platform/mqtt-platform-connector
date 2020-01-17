@@ -120,7 +120,9 @@ func CreateActuatorTopic(templ string, deviceTypeId string, deviceId string, dev
 func ParseTopic(pattern string, topic string) (deviceTypeId string, deviceId string, deviceUri string, serviceId string, serviceUri string, err error) {
 	patternParts := strings.Split(pattern, "/")
 	topicParts := strings.Split(topic, "/")
+	var ignore string
 	index := map[string]*string{
+		"{{.Ignore}}":         &ignore,
 		"{{.DeviceTypeId}}":   &deviceTypeId,
 		"{{.DeviceId}}":       &deviceId,
 		"{{.LocalDeviceId}}":  &deviceUri,

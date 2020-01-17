@@ -6,8 +6,8 @@
   "qos": 2,
   "mqtt_log_level": "warn",
 
-  "actuator_topic_pattern": "{{.DeviceTypeId}}/{{.LocalDeviceId}}/{{.LocalServiceId}}",
-  "sensor_topic_pattern": "{{.DeviceTypeId}}/{{.LocalDeviceId}}/{{.LocalServiceId}}",
+  "actuator_topic_pattern": "something/{{.LocalDeviceId}}/{{.LocalServiceId}}",
+  "sensor_topic_pattern": "{{.Ignore}}/{{.LocalDeviceId}}/{{.LocalServiceId}}",
 
   "zookeeper_url":"zk",
   "kafka_response_topic":"response",

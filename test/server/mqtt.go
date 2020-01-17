@@ -47,6 +47,7 @@ func Vernemqtt(pool *dockertest.Pool, ctx context.Context, connecorUrl string) (
 	if err != nil {
 		return "", "", err
 	}
+	go Dockerlog(pool, ctx, container, "VERNEMQ")
 	go func() {
 		<-ctx.Done()
 		log.Println("DEBUG: remove container " + container.Container.Name)

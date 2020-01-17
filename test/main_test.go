@@ -39,6 +39,67 @@ func TestInit(t *testing.T) {
 	}
 }
 
+func TestEventWithoutProvisioning(t *testing.T) {
+	defaultConfig, err := lib.LoadConfigLocation("../config.json")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer time.Sleep(10 * time.Second) //wait for docker cleanup
+	defer cancel()
+
+	defaultConfig.SensorTopicPattern = "{{.Ignore}}/{{.LocalDeviceId}}/{{.LocalServiceId}}"
+
+	config, err := server.New(ctx, defaultConfig)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	time.Sleep(2 * time.Second)
+
+	err = lib.Start(ctx, config)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	time.Sleep(1 * time.Second)
+
+	deviceLocalId := "testservice1"
+	serviceLocalId := "testservice1"
+	deviceType := model.DeviceType{}
+	protocol := model.Protocol{}
+	device := model.Device{}
+	msg := `{"level":42}`
+
+	t.Run("create protocol", func(t *testing.T) {
+		protocol = createTestProtocol(t, config)
+		time.Sleep(10 * time.Second) //wait for cqrs
+	})
+
+	t.Run("create device type", func(t *testing.T) {
+		deviceType = createTestDeviceType(t, config, protocol, serviceLocalId)
+		time.Sleep(10 * time.Second) //wait for cqrs
+	})
+
+	t.Run("create device", func(t *testing.T) {
+		device = createTestDevice(t, config, deviceType, deviceLocalId)
+		time.Sleep(10 * time.Second) //wait for cqrs
+	})
+
+	t.Run("send mqtt message", func(t *testing.T) {
+		sendMqttEvent(t, config, "senergy/"+deviceLocalId+"/"+serviceLocalId, msg)
+		time.Sleep(10 * time.Second) //wait for cqrs
+	})
+
+	t.Run("check kafka event", func(t *testing.T) {
+		trySensorFromDevice(t, config, deviceType, device, serviceLocalId, msg)
+	})
+}
+
 func TestEvent(t *testing.T) {
 	defaultConfig, err := lib.LoadConfigLocation("../config.json")
 	if err != nil {
@@ -49,6 +110,8 @@ func TestEvent(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer time.Sleep(10 * time.Second) //wait for docker cleanup
 	defer cancel()
+
+	defaultConfig.SensorTopicPattern = "{{.DeviceTypeId}}/{{.LocalDeviceId}}/{{.LocalServiceId}}"
 
 	config, err := server.New(ctx, defaultConfig)
 	if err != nil {
@@ -93,7 +156,7 @@ func TestEvent(t *testing.T) {
 	})
 
 	t.Run("check kafka event", func(t *testing.T) {
-		trySensorFromDevice(t, config, protocol, deviceType, device, serviceLocalId, msg)
+		trySensorFromDevice(t, config, deviceType, device, serviceLocalId, msg)
 	})
 }
 
@@ -109,7 +172,7 @@ func sendMqttEvent(t *testing.T, config lib.Config, topic string, msg string) {
 	}
 }
 
-func trySensorFromDevice(t *testing.T, config lib.Config, protocol model.Protocol, deviceType model.DeviceType, device model.Device, serviceLocalId string, msg string) {
+func trySensorFromDevice(t *testing.T, config lib.Config, deviceType model.DeviceType, device model.Device, serviceLocalId string, msg string) {
 	service := model.Service{}
 	for _, s := range deviceType.Services {
 		if s.LocalId == serviceLocalId {

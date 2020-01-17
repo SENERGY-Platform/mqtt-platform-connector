@@ -96,7 +96,9 @@ func AuthWebhooks(ctx context.Context, config Config, connector *platform_connec
 					"payload": string(payload),
 				})
 			} else if localDeviceId != "" {
-				err = ensureDeviceExistence(token, connector, deviceTypeId, localDeviceId)
+				if deviceTypeId != "" {
+					err = ensureDeviceExistence(token, connector, deviceTypeId, localDeviceId)
+				}
 				if err == nil {
 					err = connector.HandleDeviceRefEventWithAuthToken(token, localDeviceId, localServiceId, map[string]string{
 						"payload": string(payload),
