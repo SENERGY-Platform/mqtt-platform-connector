@@ -19,7 +19,7 @@ func createTestProtocol(t *testing.T, config lib.Config) model.Protocol {
 	err := helper.AdminJwt.PostJSON(config.DeviceManagerUrl+"/protocols", model.Protocol{
 		Name:             config.Protocol,
 		Handler:          config.Protocol,
-		ProtocolSegments: []model.ProtocolSegment{{Name: "metrics"}},
+		ProtocolSegments: []model.ProtocolSegment{{Name: "payload"}},
 	}, &protocol)
 	if err != nil {
 		t.Fatal(err)
@@ -41,7 +41,7 @@ func createTestDeviceType(t *testing.T, config lib.Config, protocol model.Protoc
 						ProtocolSegmentId: protocol.ProtocolSegments[0].Id,
 						Serialization:     "json",
 						ContentVariable: model.ContentVariable{
-							Name: "metrics",
+							Name: "payload",
 							Type: model.Structure,
 							SubContentVariables: []model.ContentVariable{
 								{

@@ -28,5 +28,7 @@
   "token_cache_urls":"memcahed:11211",
   "token_cache_expiration":3600,
   "sync_kafka":true,
-  "sync_kafka_idempotent":false
+  "sync_kafka_idempotent":false,
+
+  "serialization_fallback": "plain-text"
 }

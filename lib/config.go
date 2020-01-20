@@ -64,6 +64,8 @@ type Config struct {
 
 	ActuatorTopicPattern string `json:"actuator_topic_pattern"`
 	SensorTopicPattern   string `json:"sensor_topic_pattern"`
+
+	SerializationFallback string `json:"serialization_fallback"`
 }
 
 func LoadConfig() (result Config, err error) {

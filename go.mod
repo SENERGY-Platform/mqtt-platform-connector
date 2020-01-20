@@ -3,7 +3,7 @@ module github.com/SENERGY-Platform/mqtt-platform-connector
 go 1.13
 
 require (
-	github.com/SENERGY-Platform/platform-connector-lib v0.0.0-20200113123549-76e9d296c2eb
+	github.com/SENERGY-Platform/platform-connector-lib v0.0.0-20200120153225-d0a7d2f92ff6
 	github.com/bradfitz/gomemcache v0.0.0-20180710155616-bc664df96737
 	github.com/eclipse/paho.mqtt.golang v1.2.0
 	github.com/onsi/ginkgo v1.8.0 // indirect
