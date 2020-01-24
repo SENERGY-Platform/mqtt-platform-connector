@@ -30,10 +30,7 @@ import (
 
 func sendError(writer http.ResponseWriter, msg string, additionalInfo ...int) {
 	log.Println("DEBUG: send error:", msg)
-	//sendError(writer, fmt.Sprintf(`{"result": { "error": "%s" }}`, msg), statusCode)
-	_, err := fmt.Fprintf(writer, `{"result": { "error": "%s" }}`, msg)
-	//_, err := fmt.Fprintf(writer, `{"result": "next"}`)
-	//_, err := fmt.Fprintf(writer, `{"result": "ok"}`)
+	err := json.NewEncoder(writer).Encode(map[string]map[string]string{"result": {"error": msg}})
 	if err != nil {
 		log.Println("ERROR: unable to send error msg:", err, msg, additionalInfo)
 	}
