@@ -56,6 +56,10 @@ func Start(ctx context.Context, config Config) error {
 		SyncKafkaIdempotent:      config.SyncKafkaIdempotent,
 		Debug:                    config.Debug,
 		SerializationFallback:    config.SerializationFallback,
+
+		Validate:                  config.Validate,
+		ValidateAllowMissingField: config.ValidateAllowMissingField,
+		ValidateAllowUnknownField: config.ValidateAllowUnknownField,
 	}
 
 	connector := platform_connector_lib.New(libConf)

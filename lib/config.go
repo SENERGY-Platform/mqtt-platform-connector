@@ -66,6 +66,10 @@ type Config struct {
 	SensorTopicPattern   string `json:"sensor_topic_pattern"`
 
 	SerializationFallback string `json:"serialization_fallback"`
+
+	Validate                  bool `json:"validate"`
+	ValidateAllowUnknownField bool `json:"validate_allow_unknown_field"`
+	ValidateAllowMissingField bool `json:"validate_allow_missing_field"`
 }
 
 func LoadConfig() (result Config, err error) {

@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"reflect"
 	"testing"
 	"time"
 )
@@ -22,12 +23,17 @@ func createTestProtocol(t *testing.T, config lib.Config) model.Protocol {
 		ProtocolSegments: []model.ProtocolSegment{{Name: "payload"}},
 	}, &protocol)
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
+		return model.Protocol{}
 	}
 	return protocol
 }
 
 func createTestDeviceType(t *testing.T, config lib.Config, protocol model.Protocol, serviceLocalId string) (result model.DeviceType) {
+	if reflect.DeepEqual(protocol, model.Protocol{}) {
+		t.Error("invalid protocol")
+		return model.DeviceType{}
+	}
 	err := helper.AdminJwt.PostJSON(config.DeviceManagerUrl+"/device-types", model.DeviceType{
 		Name: "testDeviceType",
 		Services: []model.Service{
@@ -64,7 +70,46 @@ func createTestDeviceType(t *testing.T, config lib.Config, protocol model.Protoc
 	return
 }
 
+func createTestDeviceTypeWithTextPayload(t *testing.T, config lib.Config, protocol model.Protocol, serviceLocalId string) (result model.DeviceType) {
+	if reflect.DeepEqual(protocol, model.Protocol{}) {
+		t.Error("invalid protocol")
+		return model.DeviceType{}
+	}
+	err := helper.AdminJwt.PostJSON(config.DeviceManagerUrl+"/device-types", model.DeviceType{
+		Name: "testDeviceType",
+		Services: []model.Service{
+			{
+				Name:        serviceLocalId,
+				LocalId:     serviceLocalId,
+				Description: serviceLocalId,
+				ProtocolId:  protocol.Id,
+				Outputs: []model.Content{
+					{
+						ProtocolSegmentId: protocol.ProtocolSegments[0].Id,
+						Serialization:     "json",
+						ContentVariable: model.ContentVariable{
+							Name: "payload",
+							Type: model.String,
+						},
+					},
+				},
+			},
+		},
+	}, &result)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result.Id == "" {
+		t.Fatal("unexpected result", result)
+	}
+	return
+}
+
 func createTestDevice(t *testing.T, config lib.Config, dt model.DeviceType, deviceLocalId string) (result model.Device) {
+	if reflect.DeepEqual(dt, model.DeviceType{}) {
+		t.Error("invalid device-type")
+		return
+	}
 	err := helper.AdminJwt.PostJSON(config.DeviceManagerUrl+"/devices", model.Device{
 		LocalId:      deviceLocalId,
 		Name:         "test-device",

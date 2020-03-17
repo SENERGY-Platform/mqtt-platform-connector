@@ -30,5 +30,9 @@
   "sync_kafka":true,
   "sync_kafka_idempotent":false,
 
-  "serialization_fallback": "plain-text"
+  "serialization_fallback": "plain-text",
+
+  "validate": true,
+  "validate_allow_unknown_field": true,
+  "validate_allow_missing_field": true
 }
