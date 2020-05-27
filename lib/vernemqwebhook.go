@@ -82,11 +82,15 @@ func AuthWebhooks(ctx context.Context, config Config, connector *platform_connec
 				sendError(writer, err.Error(), http.StatusUnauthorized)
 				return
 			}
+
 			deviceTypeId, deviceId, localDeviceId, serviceId, localServiceId, err := ParseTopic(config.SensorTopicPattern, msg.Topic)
 			if err != nil {
-				log.Println("ERROR: AuthWebhooks::publish::ParseTopic", err)
-				sendError(writer, err.Error(), http.StatusUnauthorized)
-				return
+				deviceTypeId, deviceId, localDeviceId, serviceId, localServiceId, err = ParseTopic(config.ActuatorTopicPattern, msg.Topic)
+				if err != nil {
+					log.Println("ERROR: AuthWebhooks::publish::ParseTopic", err)
+					sendError(writer, err.Error(), http.StatusUnauthorized)
+					return
+				}
 			}
 			if deviceId != "" {
 				err = connector.HandleDeviceEventWithAuthToken(token, deviceId, serviceId, map[string]string{
