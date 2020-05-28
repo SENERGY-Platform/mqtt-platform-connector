@@ -92,24 +92,19 @@ func AuthWebhooks(ctx context.Context, config Config, connector *platform_connec
 					return
 				}
 			}
-			if deviceId != "" {
-				err = connector.HandleDeviceEventWithAuthToken(token, deviceId, serviceId, map[string]string{
-					"payload": string(payload),
-				})
-			} else if localDeviceId != "" {
-				if deviceTypeId != "" {
-					err = ensureDeviceExistence(token, connector, deviceTypeId, localDeviceId)
+			if deviceTypeId != "" && localDeviceId != "" {
+				err = ensureDeviceExistence(token, connector, deviceTypeId, localDeviceId)
+				if err != nil {
+					log.Println("ERROR: AuthWebhooks::publish::ensureDeviceExistence", err, deviceTypeId, localDeviceId)
+					sendError(writer, err.Error(), http.StatusUnauthorized)
+					return
 				}
-				if err == nil {
-					err = connector.HandleDeviceRefEventWithAuthToken(token, localDeviceId, localServiceId, map[string]string{
-						"payload": string(payload),
-					})
-				}
-			} else {
-				err = errors.New("unable to identify device from topic")
 			}
+			err = connector.HandleDeviceIdentEventWithAuthToken(token, deviceId, localDeviceId, serviceId, localServiceId, map[string]string{
+				"payload": string(payload),
+			})
 			if err != nil {
-				log.Println("ERROR: AuthWebhooks::publish::HandleEventWithAuthToken", err, deviceId, serviceId, localDeviceId, localServiceId)
+				log.Println("ERROR: AuthWebhooks::publish::HandleDeviceIdentEventWithAuthToken", err, deviceId, serviceId, localDeviceId, localServiceId)
 				sendError(writer, err.Error(), http.StatusUnauthorized)
 				return
 			}
