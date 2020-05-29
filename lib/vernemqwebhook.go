@@ -87,7 +87,7 @@ func AuthWebhooks(ctx context.Context, config Config, connector *platform_connec
 			if err != nil {
 				deviceTypeId, deviceId, localDeviceId, serviceId, localServiceId, err = ParseTopic(config.ActuatorTopicPattern, msg.Topic)
 				if err != nil {
-					log.Println("ERROR: AuthWebhooks::publish::ParseTopic", err)
+					log.Println("ERROR: AuthWebhooks::publish::ParseTopic", err, msg.Topic)
 					sendError(writer, err.Error(), http.StatusUnauthorized)
 					return
 				}
@@ -95,7 +95,7 @@ func AuthWebhooks(ctx context.Context, config Config, connector *platform_connec
 			if deviceTypeId != "" && localDeviceId != "" {
 				err = ensureDeviceExistence(token, connector, deviceTypeId, localDeviceId)
 				if err != nil {
-					log.Println("ERROR: AuthWebhooks::publish::ensureDeviceExistence", err, deviceTypeId, localDeviceId)
+					log.Println("ERROR: AuthWebhooks::publish::ensureDeviceExistence", err, deviceTypeId, localDeviceId, msg.Topic)
 					sendError(writer, err.Error(), http.StatusUnauthorized)
 					return
 				}
@@ -104,7 +104,7 @@ func AuthWebhooks(ctx context.Context, config Config, connector *platform_connec
 				"payload": string(payload),
 			})
 			if err != nil {
-				log.Println("ERROR: AuthWebhooks::publish::HandleDeviceIdentEventWithAuthToken", err, deviceId, serviceId, localDeviceId, localServiceId)
+				log.Println("ERROR: AuthWebhooks::publish::HandleDeviceIdentEventWithAuthToken", err, deviceId, serviceId, localDeviceId, localServiceId, msg.Topic)
 				sendError(writer, err.Error(), http.StatusUnauthorized)
 				return
 			}
