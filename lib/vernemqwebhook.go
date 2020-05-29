@@ -130,7 +130,7 @@ func AuthWebhooks(ctx context.Context, config Config, connector *platform_connec
 			for _, topic := range msg.Topics {
 				_, deviceId, localDeviceId, _, _, err := ParseTopic(config.ActuatorTopicPattern, topic.Topic)
 				if err != nil {
-					log.Println("ERROR: AuthWebhooks::subscribe::ParseTopic", err)
+					log.Println("ERROR: AuthWebhooks::subscribe::ParseTopic", err, topic)
 					sendError(writer, err.Error(), http.StatusUnauthorized)
 					return
 				}
@@ -142,7 +142,7 @@ func AuthWebhooks(ctx context.Context, config Config, connector *platform_connec
 					err = errors.New("unable to identify device from topic")
 				}
 				if err != nil {
-					log.Println("ERROR: AuthWebhooks::subscribe::CheckEndpointAuth", err)
+					log.Println("ERROR: AuthWebhooks::subscribe::CheckEndpointAuth", err, topic)
 					sendError(writer, err.Error(), http.StatusUnauthorized)
 					return
 				}
