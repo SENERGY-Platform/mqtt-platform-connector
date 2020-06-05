@@ -103,6 +103,12 @@ func AuthWebhooks(ctx context.Context, config Config, connector *platform_connec
 			err = connector.HandleDeviceIdentEventWithAuthToken(token, deviceId, localDeviceId, serviceId, localServiceId, map[string]string{
 				"payload": string(payload),
 			})
+
+			//ignore error if local service id is unknown
+			if err == platform_connector_lib.ErrorUnknownLocalServiceId {
+				fmt.Fprintf(writer, `{"result": "ok"}`)
+				return
+			}
 			if err != nil {
 				log.Println("ERROR: AuthWebhooks::publish::HandleDeviceIdentEventWithAuthToken", err, deviceId, serviceId, localDeviceId, localServiceId, msg.Topic)
 				sendError(writer, err.Error(), http.StatusUnauthorized)
