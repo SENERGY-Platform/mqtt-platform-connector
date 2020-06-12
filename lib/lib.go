@@ -60,6 +60,9 @@ func Start(ctx context.Context, config Config) error {
 		Validate:                  config.Validate,
 		ValidateAllowMissingField: config.ValidateAllowMissingField,
 		ValidateAllowUnknownField: config.ValidateAllowUnknownField,
+
+		SemanticRepositoryUrl:    config.SemanticRepoUrl,
+		CharacteristicExpiration: config.SemanticExpiration,
 	}
 
 	connector := platform_connector_lib.New(libConf)
