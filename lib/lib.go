@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/shortid"
 	platform_connector_lib "github.com/SENERGY-Platform/platform-connector-lib"
 	"github.com/SENERGY-Platform/platform-connector-lib/model"
 	paho "github.com/eclipse/paho.mqtt.golang"
@@ -151,5 +152,6 @@ func ParseTopic(pattern string, topic string) (deviceTypeId string, deviceId str
 			}
 		}
 	}
+	deviceId, err = shortid.EnsureLongDeviceId(deviceId)
 	return
 }
