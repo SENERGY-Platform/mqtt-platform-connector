@@ -20,7 +20,7 @@ import "testing"
 
 func TestShortening(t *testing.T) {
 	t.Run(testShortening("urn:infai:ses:device:6bd07b75-d7cc-4a1a-88db-ac93f61aa7b3", "a9B7ddfMShqI26yT9hqnsw"))
-	t.Run(testShortening("6bd07b75-d7cc-4a1a-88db-ac93f61aa7b3", "a9B7ddfMShqI26yT9hqnsw"))
+	t.Run(testShorteningExpectError("6bd07b75-d7cc-4a1a-88db-ac93f61aa7b3"))
 	t.Run(testShortening("", ""))
 }
 
@@ -53,6 +53,16 @@ func testShortening(long string, expectedShort string) (string, func(t *testing.
 		}
 		if expectedShort != short {
 			t.Error(short, len(short), expectedShort)
+			return
+		}
+	}
+}
+
+func testShorteningExpectError(long string) (string, func(t *testing.T)) {
+	return long, func(t *testing.T) {
+		_, err := ShortId(long)
+		if err == nil {
+			t.Error(err)
 			return
 		}
 	}

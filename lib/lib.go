@@ -152,6 +152,9 @@ func ParseTopic(pattern string, topic string) (deviceTypeId string, deviceId str
 			}
 		}
 	}
+	if err != nil {
+		return
+	}
 	deviceId, err = shortid.EnsureLongDeviceId(deviceId)
 	return
 }

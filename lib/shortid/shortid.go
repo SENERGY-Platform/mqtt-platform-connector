@@ -27,7 +27,7 @@ func EnsureLongDeviceId(shortDeviceId string) (longDeviceId string, err error) {
 	if shortDeviceId == "" {
 		return "", nil //is empty -> nothing to decode
 	}
-	if strings.Contains(shortDeviceId, DEVICE_PREFIX) {
+	if strings.HasPrefix(shortDeviceId, DEVICE_PREFIX) {
 		return shortDeviceId, nil //is already long version
 	}
 
@@ -46,6 +46,9 @@ func EnsureLongDeviceId(shortDeviceId string) (longDeviceId string, err error) {
 func ShortId(longId string) (shortId string, err error) {
 	if longId == "" {
 		return "", nil
+	}
+	if !strings.HasPrefix(longId, DEVICE_PREFIX) {
+		return "", errors.New("expected " + DEVICE_PREFIX + " as prefix")
 	}
 	parts := strings.Split(longId, ":")
 	uuidStr := parts[len(parts)-1]
