@@ -20,8 +20,8 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
-	"errors"
 	"fmt"
+	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/topic"
 	"github.com/SENERGY-Platform/platform-connector-lib"
 	"log"
 	"net/http"
@@ -60,47 +60,37 @@ type LoginWebhookMsg struct {
 type EventHandler func(username string, topic string, payload string)
 
 func AuthWebhooks(ctx context.Context, config Config, connector *platform_connector_lib.Connector) {
+	topicParser := topic.New(connector.IotCache, config.ActuatorTopicPattern)
 	router := http.NewServeMux()
 	router.HandleFunc("/publish", func(writer http.ResponseWriter, request *http.Request) {
 		msg := PublishWebhookMsg{}
 		err := json.NewDecoder(request.Body).Decode(&msg)
 		if err != nil {
 			log.Println("ERROR: AuthWebhooks::publish::jsondecoding", err)
-			sendError(writer, err.Error(), http.StatusUnauthorized)
+			sendError(writer, err.Error())
 			return
 		}
 		if msg.Username != config.AuthClientId {
 			payload, err := base64.StdEncoding.DecodeString(msg.Payload)
 			if err != nil {
 				log.Println("ERROR: AuthWebhooks::publish::base64decoding", err)
-				sendError(writer, err.Error(), http.StatusUnauthorized)
+				sendError(writer, err.Error())
 				return
 			}
 			token, err := connector.Security().GetCachedUserToken(msg.Username)
 			if err != nil {
 				log.Println("ERROR: AuthWebhooks::publish::GetUserToken", err)
-				sendError(writer, err.Error(), http.StatusUnauthorized)
+				sendError(writer, err.Error())
 				return
 			}
 
-			deviceTypeId, deviceId, localDeviceId, serviceId, localServiceId, err := ParseTopic(config.SensorTopicPattern, msg.Topic)
+			device, service, err := topicParser.Parse(token, msg.Topic)
 			if err != nil {
-				deviceTypeId, deviceId, localDeviceId, serviceId, localServiceId, err = ParseTopic(config.ActuatorTopicPattern, msg.Topic)
-				if err != nil {
-					log.Println("ERROR: AuthWebhooks::publish::ParseTopic", err, msg.Topic)
-					sendError(writer, err.Error(), http.StatusUnauthorized)
-					return
-				}
+				log.Println("ERROR: AuthWebhooks::publish::Parse", err)
+				sendError(writer, err.Error())
+				return
 			}
-			if deviceTypeId != "" && localDeviceId != "" {
-				err = ensureDeviceExistence(token, connector, deviceTypeId, localDeviceId)
-				if err != nil {
-					log.Println("ERROR: AuthWebhooks::publish::ensureDeviceExistence", err, deviceTypeId, localDeviceId, msg.Topic)
-					sendError(writer, err.Error(), http.StatusUnauthorized)
-					return
-				}
-			}
-			err = connector.HandleDeviceIdentEventWithAuthToken(token, deviceId, localDeviceId, serviceId, localServiceId, map[string]string{
+			err = connector.HandleDeviceIdentEventWithAuthToken(token, device.Id, device.LocalId, service.Id, service.LocalId, map[string]string{
 				"payload": string(payload),
 			})
 
@@ -110,7 +100,7 @@ func AuthWebhooks(ctx context.Context, config Config, connector *platform_connec
 				return
 			}
 			if err != nil {
-				log.Println("ERROR: AuthWebhooks::publish::HandleDeviceIdentEventWithAuthToken", err, deviceId, serviceId, localDeviceId, localServiceId, msg.Topic)
+				log.Println("ERROR: AuthWebhooks::publish::HandleDeviceIdentEventWithAuthToken", err, device.Id, device.LocalId, service.Id, service.LocalId, msg.Topic)
 				sendError(writer, err.Error(), http.StatusUnauthorized)
 				return
 			}
@@ -133,23 +123,14 @@ func AuthWebhooks(ctx context.Context, config Config, connector *platform_connec
 				sendError(writer, err.Error(), http.StatusUnauthorized)
 				return
 			}
-			for _, topic := range msg.Topics {
-				_, deviceId, localDeviceId, _, _, err := ParseTopic(config.ActuatorTopicPattern, topic.Topic)
-				if err != nil {
-					log.Println("ERROR: AuthWebhooks::subscribe::ParseTopic", err, topic)
-					sendError(writer, err.Error(), http.StatusUnauthorized)
-					return
-				}
-				if deviceId != "" {
-					_, err = connector.IotCache.WithToken(token).GetDevice(deviceId)
-				} else if localDeviceId != "" {
-					_, err = connector.IotCache.WithToken(token).GetDeviceByLocalId(localDeviceId)
-				} else {
-					err = errors.New("unable to identify device from topic")
+			for _, mqtttopic := range msg.Topics {
+				_, _, err := topicParser.Parse(token, mqtttopic.Topic)
+				if err == topic.ErrNoServiceMatchFound {
+					err = nil //we want to only check device access
 				}
 				if err != nil {
-					log.Println("ERROR: AuthWebhooks::subscribe::CheckEndpointAuth", err, topic)
-					sendError(writer, err.Error(), http.StatusUnauthorized)
+					log.Println("ERROR: AuthWebhooks::subscribe::ParseTopic", err, mqtttopic.Topic)
+					sendError(writer, err.Error())
 					return
 				}
 			}

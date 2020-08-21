@@ -26,8 +26,6 @@ func TestEventWithoutProvisioning(t *testing.T) {
 	defer time.Sleep(10 * time.Second) //wait for docker cleanup
 	defer cancel()
 
-	defaultConfig.SensorTopicPattern = "{{.Ignore}}/{{.LocalDeviceId}}/{{.LocalServiceId}}"
-
 	config, err := server.New(ctx, defaultConfig)
 	if err != nil {
 		t.Error(err)
@@ -67,7 +65,7 @@ func TestEventWithoutProvisioning(t *testing.T) {
 	})
 
 	t.Run("send mqtt message", func(t *testing.T) {
-		sendMqttEvent(t, config, "senergy/"+deviceLocalId+"/"+serviceLocalId, msg)
+		sendMqttEvent(t, config, "senergy/"+device.Id+"/"+serviceLocalId, msg)
 		time.Sleep(10 * time.Second) //wait for cqrs
 	})
 
@@ -86,8 +84,6 @@ func TestEventPlainText(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer time.Sleep(10 * time.Second) //wait for docker cleanup
 	defer cancel()
-
-	defaultConfig.SensorTopicPattern = "{{.Ignore}}/{{.LocalDeviceId}}/{{.LocalServiceId}}"
 
 	config, err := server.New(ctx, defaultConfig)
 	if err != nil {
@@ -128,72 +124,12 @@ func TestEventPlainText(t *testing.T) {
 	})
 
 	t.Run("send mqtt message", func(t *testing.T) {
-		sendMqttEvent(t, config, "senergy/"+deviceLocalId+"/"+serviceLocalId, msg)
+		sendMqttEvent(t, config, "senergy/"+device.Id+"/"+serviceLocalId, msg)
 		time.Sleep(10 * time.Second) //wait for cqrs
 	})
 
 	t.Run("check kafka event", func(t *testing.T) {
 		trySensorFromDevice(t, config, deviceType, device, serviceLocalId, "\""+msg+"\"")
-	})
-}
-
-func TestEvent(t *testing.T) {
-	defaultConfig, err := lib.LoadConfigLocation("../config.json")
-	if err != nil {
-		t.Error(err)
-		return
-	}
-
-	ctx, cancel := context.WithCancel(context.Background())
-	defer time.Sleep(10 * time.Second) //wait for docker cleanup
-	defer cancel()
-
-	defaultConfig.SensorTopicPattern = "{{.DeviceTypeId}}/{{.LocalDeviceId}}/{{.LocalServiceId}}"
-
-	config, err := server.New(ctx, defaultConfig)
-	if err != nil {
-		t.Error(err)
-		return
-	}
-
-	time.Sleep(2 * time.Second)
-
-	err = lib.Start(ctx, config)
-	if err != nil {
-		t.Error(err)
-		return
-	}
-
-	time.Sleep(1 * time.Second)
-
-	deviceLocalId := "testservice1"
-	serviceLocalId := "testservice1"
-	deviceType := model.DeviceType{}
-	protocol := model.Protocol{}
-	device := model.Device{}
-	msg := `{"level":42}`
-
-	t.Run("create protocol", func(t *testing.T) {
-		protocol = createTestProtocol(t, config)
-		time.Sleep(10 * time.Second) //wait for cqrs
-	})
-
-	t.Run("create device type", func(t *testing.T) {
-		deviceType = createTestDeviceType(t, config, protocol, serviceLocalId)
-		time.Sleep(10 * time.Second) //wait for cqrs
-	})
-
-	t.Run("send mqtt message", func(t *testing.T) {
-		sendMqttEvent(t, config, deviceType.Id+"/"+deviceLocalId+"/"+serviceLocalId, msg)
-		time.Sleep(10 * time.Second) //wait for cqrs
-	})
-
-	t.Run("check device creation", func(t *testing.T) {
-		device = checkDevice(t, config, deviceLocalId, deviceType.Id)
-	})
-
-	t.Run("check kafka event", func(t *testing.T) {
-		trySensorFromDevice(t, config, deviceType, device, serviceLocalId, msg)
 	})
 }
 

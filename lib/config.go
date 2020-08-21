@@ -65,7 +65,6 @@ type Config struct {
 	WebhookPort string `json:"webhook_port"`
 
 	ActuatorTopicPattern string `json:"actuator_topic_pattern"`
-	SensorTopicPattern   string `json:"sensor_topic_pattern"`
 
 	SerializationFallback string `json:"serialization_fallback"`
 

@@ -20,7 +20,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"github.com/SENERGY-Platform/mqtt-platform-connector/lib"
 	"github.com/SENERGY-Platform/mqtt-platform-connector/test/helper"
 	iotmock "github.com/SENERGY-Platform/mqtt-platform-connector/test/server/mock/iot"
 	"github.com/SENERGY-Platform/platform-connector-lib/iot"
@@ -35,20 +34,19 @@ const unknownShortDeviceIdExample = "a9B7ddfMShqI26yT9hqnsu"
 const unknownLongDeviceIdExample = "urn:infai:ses:device:6bd07b75-d7cc-4a1a-88db-ac93f61aa7bu"
 
 func TestParse(t *testing.T) {
-	conf := lib.Config{}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	err := iotmock.Mock(&conf, ctx)
+	deviceManagerUrl, deviceRepoUrl, err := iotmock.Mock(ctx)
 	if err != nil {
 		t.Error(err)
 		return
 	}
-	iotRepo := iot.New(conf.DeviceManagerUrl, conf.DeviceRepoUrl, "")
+	iotRepo := iot.New(deviceManagerUrl, deviceRepoUrl, "")
 	iotCache := iot.NewCache(iotRepo, 60, 60, 60)
 
 	topic := New(iotCache, "")
 
-	t.Run("create device type", testCreateDeviceType(conf, model.DeviceType{
+	t.Run("create device type", testCreateDeviceType(deviceManagerUrl, model.DeviceType{
 		Id:   "dt1",
 		Name: "dt1",
 		Services: []model.Service{
@@ -64,12 +62,12 @@ func TestParse(t *testing.T) {
 		},
 	}))
 
-	t.Run("create device", testCreateType(conf, model.Device{
+	t.Run("create device", testCreateType(deviceManagerUrl, model.Device{
 		Id:           longDeviceIdExample,
 		DeviceTypeId: "dt1",
 	}))
 
-	t.Run("create device 2", testCreateType(conf, model.Device{
+	t.Run("create device 2", testCreateType(deviceManagerUrl, model.Device{
 		Id:           longDeviceIdExample2,
 		DeviceTypeId: "dt1",
 	}))
@@ -118,9 +116,12 @@ func TestParse(t *testing.T) {
 	t.Run(testTopicParserExpectError(topic, "cmd/bar/"+longDeviceIdExample2+"/"+longDeviceIdExample, ErrMultipleMatchingDevicesFound))
 	t.Run(testTopicParserExpectError(topic, longDeviceIdExample+"/cmd/bar/"+longDeviceIdExample2, ErrMultipleMatchingDevicesFound))
 
+	t.Run(testTopicParserExpectError(topic, longDeviceIdExample+"/cmd/bar", ErrNoServiceMatchFound))
+	t.Run(testTopicParserExpectError(topic, "cmd/bar/"+longDeviceIdExample, ErrNoServiceMatchFound))
+
 }
 
-func testCreateType(conf lib.Config, device model.Device) func(t *testing.T) {
+func testCreateType(deviceManagerUrl string, device model.Device) func(t *testing.T) {
 	return func(t *testing.T) {
 		b := new(bytes.Buffer)
 		err := json.NewEncoder(b).Encode(device)
@@ -133,7 +134,7 @@ func testCreateType(conf lib.Config, device model.Device) func(t *testing.T) {
 		}
 		req, err := http.NewRequest(
 			"PUT",
-			conf.DeviceManagerUrl+"/devices/"+url.PathEscape(device.Id),
+			deviceManagerUrl+"/devices/"+url.PathEscape(device.Id),
 			b,
 		)
 		if err != nil {
@@ -156,7 +157,7 @@ func testCreateType(conf lib.Config, device model.Device) func(t *testing.T) {
 	}
 }
 
-func testCreateDeviceType(conf lib.Config, deviceType model.DeviceType) func(t *testing.T) {
+func testCreateDeviceType(deviceManagerUrl string, deviceType model.DeviceType) func(t *testing.T) {
 	return func(t *testing.T) {
 		b := new(bytes.Buffer)
 		err := json.NewEncoder(b).Encode(deviceType)
@@ -169,7 +170,7 @@ func testCreateDeviceType(conf lib.Config, deviceType model.DeviceType) func(t *
 		}
 		req, err := http.NewRequest(
 			"PUT",
-			conf.DeviceManagerUrl+"/device-types/"+url.PathEscape(deviceType.Id),
+			deviceManagerUrl+"/device-types/"+url.PathEscape(deviceType.Id),
 			b,
 		)
 		if err != nil {
@@ -199,17 +200,17 @@ func testTopicParse(parser *Topic, topic string, expectedDeviceId string, expect
 				t.Error("recover", r)
 			}
 		}()
-		deviceId, localServiceId, err := parser.Parse(helper.AdminJwt, topic)
+		device, service, err := parser.Parse(helper.AdminJwt, topic)
 		if err != nil {
 			t.Error(err)
 			return
 		}
-		if deviceId != expectedDeviceId {
-			t.Error(deviceId, expectedDeviceId)
+		if device.Id != expectedDeviceId {
+			t.Error(device.Id, expectedDeviceId)
 			return
 		}
-		if localServiceId != expectedLocalServiceId {
-			t.Error(localServiceId, expectedLocalServiceId)
+		if service.LocalId != expectedLocalServiceId {
+			t.Error(service.LocalId, expectedLocalServiceId)
 			return
 		}
 	}

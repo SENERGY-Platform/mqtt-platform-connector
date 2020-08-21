@@ -27,24 +27,27 @@ import (
 )
 
 var ErrNoDeviceMatchFound = errors.New("no device match found")
+var ErrNoServiceMatchFound = errors.New("no service match found")
 var ErrMultipleMatchingDevicesFound = errors.New("multiple matching devices found")
 
-func (this *Topic) Parse(token security.JwtToken, topic string) (deviceId string, localServiceId string, err error) {
+//if no service is fount, ErrNoServiceMatchFound will be returned as error. but the device will be set if one was found
+func (this *Topic) Parse(token security.JwtToken, topic string) (device model.Device, service model.Service, err error) {
 	candidates, err := this.ParseForCandidates(token, topic)
 	if err != nil {
-		return deviceId, localServiceId, err
+		return device, service, err
 	}
 	if len(candidates) == 0 {
-		return deviceId, localServiceId, ErrNoDeviceMatchFound
+		return device, service, ErrNoDeviceMatchFound
 	}
 	if len(candidates) > 1 {
-		return "", "", ErrMultipleMatchingDevicesFound
+		return device, service, ErrMultipleMatchingDevicesFound
 	}
-	deviceId = candidates[0].device.Id
-	if len(candidates[0].services) > 0 {
-		localServiceId = candidates[0].services[0].LocalId
+	device = candidates[0].device
+	if len(candidates[0].services) == 0 {
+		return device, service, ErrNoServiceMatchFound
 	}
-	return deviceId, localServiceId, nil
+	service = candidates[0].services[0]
+	return device, service, nil
 }
 
 //not exported, no one should care

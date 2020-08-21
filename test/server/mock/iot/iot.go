@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/SENERGY-Platform/mqtt-platform-connector/lib"
 	"github.com/SENERGY-Platform/platform-connector-lib/model"
 	"github.com/julienschmidt/httprouter"
 	uuid "github.com/satori/go.uuid"
@@ -14,7 +13,7 @@ import (
 	"sync"
 )
 
-func Mock(config *lib.Config, ctx context.Context) (err error) {
+func Mock(ctx context.Context) (deviceManagerUrl string, deviceRepoUrl string, err error) {
 	router, err := getRouter(&Controller{
 		mux:              sync.Mutex{},
 		devices:          map[string]model.Device{},
@@ -24,17 +23,15 @@ func Mock(config *lib.Config, ctx context.Context) (err error) {
 		protocols:        map[string]model.Protocol{},
 	})
 	if err != nil {
-		return err
+		return "", "", err
 	}
 
 	server := httptest.NewServer(NewLogger(router, "DEBUG"))
-	config.DeviceManagerUrl = server.URL
-	config.DeviceRepoUrl = server.URL
 	go func() {
 		<-ctx.Done()
 		server.Close()
 	}()
-	return nil
+	return server.URL, server.URL, nil
 }
 
 func getRouter(controller *Controller) (router *httprouter.Router, err error) {
@@ -77,7 +74,7 @@ func (this *Controller) ReadDevice(id string) (result interface{}, err error, co
 func (this *Controller) PublishDeviceCreate(device model.Device) (result interface{}, err error, code int) {
 	this.mux.Lock()
 	defer this.mux.Unlock()
-	device.Id = uuid.NewV4().String()
+	device.Id = "urn:infai:ses:device:" + uuid.NewV4().String()
 	this.devices[device.Id] = device
 	this.devicesByLocalId[device.LocalId] = device.Id
 	return device, nil, 200

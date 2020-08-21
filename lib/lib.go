@@ -1,17 +1,13 @@
 package lib
 
 import (
-	"bytes"
 	"context"
-	"errors"
-	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/shortid"
+	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/topic"
 	platform_connector_lib "github.com/SENERGY-Platform/platform-connector-lib"
 	"github.com/SENERGY-Platform/platform-connector-lib/model"
 	paho "github.com/eclipse/paho.mqtt.golang"
 	"log"
 	"os"
-	"strings"
-	"text/template"
 	"time"
 )
 
@@ -102,59 +98,11 @@ func Start(ctx context.Context, config Config) error {
 func CreateCommandHandler(config Config, mqtt *MqttClient) platform_connector_lib.AsyncCommandHandler {
 	return func(commandRequest model.ProtocolMsg, requestMsg platform_connector_lib.CommandRequestMsg, t time.Time) (err error) {
 		endpoint := ""
-		endpoint, err = CreateActuatorTopic(config.ActuatorTopicPattern, commandRequest.Metadata.Device.DeviceTypeId, commandRequest.Metadata.Device.Id, commandRequest.Metadata.Device.LocalId, commandRequest.Metadata.Service.Id, commandRequest.Metadata.Service.LocalId)
+		endpoint, err = topic.New(nil, config.ActuatorTopicPattern).Create(commandRequest.Metadata.Device.Id, commandRequest.Metadata.Service.LocalId)
 		if err != nil {
 			return
 		}
 		err = mqtt.Publish(endpoint, commandRequest.Request.Input["payload"])
 		return
 	}
-}
-
-func CreateActuatorTopic(templ string, deviceTypeId string, deviceId string, deviceUri string, serviceId string, serviceUri string) (result string, err error) {
-	var temp bytes.Buffer
-	err = template.Must(template.New("actuatortopic").Parse(templ)).Execute(&temp, map[string]string{
-		"DeviceTypeId":   deviceTypeId,
-		"DeviceId":       deviceId,
-		"LocalDeviceId":  deviceUri,
-		"ServiceId":      serviceId,
-		"LocalServiceId": serviceUri,
-	})
-	if err != nil {
-		return
-	}
-	return temp.String(), nil
-}
-
-func ParseTopic(pattern string, topic string) (deviceTypeId string, deviceId string, deviceUri string, serviceId string, serviceUri string, err error) {
-	patternParts := strings.Split(pattern, "/")
-	topicParts := strings.Split(topic, "/")
-	var ignore string
-	index := map[string]*string{
-		"{{.Ignore}}":         &ignore,
-		"{{.DeviceTypeId}}":   &deviceTypeId,
-		"{{.DeviceId}}":       &deviceId,
-		"{{.LocalDeviceId}}":  &deviceUri,
-		"{{.ServiceId}}":      &serviceId,
-		"{{.LocalServiceId}}": &serviceUri,
-	}
-	if len(patternParts) != len(topicParts) {
-		err = errors.New("topic doesnt match pattern")
-		return
-	}
-	for i, part := range patternParts {
-		ptr, ok := index[part]
-		if ok {
-			*ptr = topicParts[i]
-		} else {
-			if part != topicParts[i] {
-				err = errors.New("topic doesnt match pattern")
-			}
-		}
-	}
-	if err != nil {
-		return
-	}
-	deviceId, err = shortid.EnsureLongDeviceId(deviceId)
-	return
 }

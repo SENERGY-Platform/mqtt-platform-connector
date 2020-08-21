@@ -24,7 +24,7 @@ func New(basectx context.Context, defaults lib.Config) (config lib.Config, err e
 		return config, err
 	}
 
-	err = iot.Mock(&config, ctx)
+	config.DeviceManagerUrl, config.DeviceRepoUrl, err = iot.Mock(ctx)
 	if err != nil {
 		cancel()
 		return config, err
