@@ -20,6 +20,7 @@ import "testing"
 
 const shortDeviceIdExample = "a9B7ddfMShqI26yT9hqnsw"
 const longDeviceIdExample = "urn:infai:ses:device:6bd07b75-d7cc-4a1a-88db-ac93f61aa7b3"
+const longDeviceIdExample2 = "urn:infai:ses:device:6bd07b75-d7cc-4a1a-88db-ac93f61aa7b3"
 
 func TestCreate(t *testing.T) {
 	topic := New(nil, "{{.DeviceId}}/cmnd/{{.LocalServiceId}}")

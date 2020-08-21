@@ -27,6 +27,7 @@ import (
 )
 
 var ErrNoDeviceMatchFound = errors.New("no device match found")
+var ErrMultipleMatchingDevicesFound = errors.New("multiple matching devices found")
 
 func (this *Topic) Parse(token security.JwtToken, topic string) (deviceId string, localServiceId string, err error) {
 	candidates, err := this.ParseForCandidates(token, topic)
@@ -35,6 +36,9 @@ func (this *Topic) Parse(token security.JwtToken, topic string) (deviceId string
 	}
 	if len(candidates) == 0 {
 		return deviceId, localServiceId, ErrNoDeviceMatchFound
+	}
+	if len(candidates) > 1 {
+		return "", "", ErrMultipleMatchingDevicesFound
 	}
 	deviceId = candidates[0].device.Id
 	if len(candidates[0].services) > 0 {

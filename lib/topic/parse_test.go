@@ -69,6 +69,11 @@ func TestParse(t *testing.T) {
 		DeviceTypeId: "dt1",
 	}))
 
+	t.Run("create device 2", testCreateType(conf, model.Device{
+		Id:           longDeviceIdExample2,
+		DeviceTypeId: "dt1",
+	}))
+
 	t.Run(testTopicParse(topic, shortDeviceIdExample+"/void/poweron", longDeviceIdExample, "void/poweron"))
 	t.Run(testTopicParse(topic, shortDeviceIdExample+"/poweron", longDeviceIdExample, "poweron"))
 
@@ -104,6 +109,15 @@ func TestParse(t *testing.T) {
 
 	t.Run(testTopicParse(topic, "cmd/"+longDeviceIdExample+"/"+unknownLongDeviceIdExample+"/void/poweron", longDeviceIdExample, "void/poweron"))
 	t.Run(testTopicParse(topic, "cmd/"+longDeviceIdExample+"/"+unknownLongDeviceIdExample+"/poweron", longDeviceIdExample, "poweron"))
+
+	t.Run(testTopicParserExpectError(topic, "cmd/foo/bar", ErrNoDeviceMatchFound))
+	t.Run(testTopicParserExpectError(topic, "cmd/"+unknownLongDeviceIdExample+"/bar", ErrNoDeviceMatchFound))
+	t.Run(testTopicParserExpectError(topic, unknownLongDeviceIdExample+"/cmd/bar", ErrNoDeviceMatchFound))
+	t.Run(testTopicParserExpectError(topic, "cmd/bar/"+unknownLongDeviceIdExample, ErrNoDeviceMatchFound))
+
+	t.Run(testTopicParserExpectError(topic, "cmd/bar/"+longDeviceIdExample2+"/"+longDeviceIdExample, ErrMultipleMatchingDevicesFound))
+	t.Run(testTopicParserExpectError(topic, longDeviceIdExample+"/cmd/bar/"+longDeviceIdExample2, ErrMultipleMatchingDevicesFound))
+
 }
 
 func testCreateType(conf lib.Config, device model.Device) func(t *testing.T) {
@@ -196,6 +210,21 @@ func testTopicParse(parser *Topic, topic string, expectedDeviceId string, expect
 		}
 		if localServiceId != expectedLocalServiceId {
 			t.Error(localServiceId, expectedLocalServiceId)
+			return
+		}
+	}
+}
+
+func testTopicParserExpectError(parser *Topic, topic string, expectedError error) (string, func(t *testing.T)) {
+	return topic, func(t *testing.T) {
+		defer func() {
+			if r := recover(); r != nil {
+				t.Error("recover", r)
+			}
+		}()
+		deviceId, localServiceId, err := parser.Parse(helper.AdminJwt, topic)
+		if err != expectedError {
+			t.Error(err, expectedError, deviceId, localServiceId)
 			return
 		}
 	}
