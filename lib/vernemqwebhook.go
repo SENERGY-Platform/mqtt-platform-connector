@@ -91,6 +91,12 @@ func AuthWebhooks(ctx context.Context, config Config, connector *platform_connec
 			}
 
 			device, service, err := topicParser.Parse(token, msg.Topic)
+			if err == topic.ErrNoServiceMatchFound {
+				//we want to only check device access
+				log.Println("WARNING: AuthWebhooks::publish::ParseTopic", err, msg.Topic)
+				fmt.Fprintf(writer, `{"result": "ok"}`)
+				return
+			}
 			if err != nil {
 				log.Println("ERROR: AuthWebhooks::publish::Parse", err)
 				sendError(writer, err.Error())
