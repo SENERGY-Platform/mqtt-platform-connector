@@ -93,7 +93,9 @@ func AuthWebhooks(ctx context.Context, config Config, connector *platform_connec
 			device, service, err := topicParser.Parse(token, msg.Topic)
 			if err == topic.ErrNoServiceMatchFound {
 				//we want to only check device access
-				log.Println("WARNING: AuthWebhooks::publish::ParseTopic", err, msg.Topic)
+				if config.Debug {
+					log.Println("WARNING: AuthWebhooks::publish::ParseTopic", err, msg.Topic)
+				}
 				fmt.Fprintf(writer, `{"result": "ok"}`)
 				return
 			}
@@ -105,15 +107,11 @@ func AuthWebhooks(ctx context.Context, config Config, connector *platform_connec
 			err = connector.HandleDeviceIdentEventWithAuthToken(token, device.Id, device.LocalId, service.Id, service.LocalId, map[string]string{
 				"payload": string(payload),
 			})
-
-			//ignore error if local service id is unknown
-			if err == platform_connector_lib.ErrorUnknownLocalServiceId {
-				fmt.Fprintf(writer, `{"result": "ok"}`)
-				return
-			}
 			if err != nil {
-				log.Println("ERROR: AuthWebhooks::publish::HandleDeviceIdentEventWithAuthToken", err, device.Id, device.LocalId, service.Id, service.LocalId, msg.Topic)
-				sendError(writer, err.Error(), http.StatusUnauthorized)
+				if config.Debug {
+					log.Println("WARNING: AuthWebhooks::publish::HandleDeviceIdentEventWithAuthToken", err, device.Id, device.LocalId, service.Id, service.LocalId, msg.Topic)
+				}
+				fmt.Fprintf(writer, `{"result": "ok"}`)
 				return
 			}
 		}
