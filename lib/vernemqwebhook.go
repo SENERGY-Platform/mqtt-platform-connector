@@ -45,11 +45,17 @@ type PublishWebhookMsg struct {
 
 type WebhookmsgTopic struct {
 	Topic string `json:"topic"`
+	Qos   int    `json:"qos"`
 }
 
 type SubscribeWebhookMsg struct {
 	Username string            `json:"username"`
 	Topics   []WebhookmsgTopic `json:"topics"`
+}
+
+type SubscribeWebhookResult struct {
+	Result string            `json:"result"`
+	Topics []WebhookmsgTopic `json:"topics"`
 }
 
 type LoginWebhookMsg struct {
@@ -117,6 +123,7 @@ func AuthWebhooks(ctx context.Context, config Config, connector *platform_connec
 			sendError(writer, err.Error(), http.StatusUnauthorized)
 			return
 		}
+		resultTopics := []WebhookmsgTopic{}
 		if msg.Username != config.AuthClientId {
 			token, err := connector.Security().GetCachedUserToken(msg.Username)
 			if err != nil {
@@ -126,16 +133,29 @@ func AuthWebhooks(ctx context.Context, config Config, connector *platform_connec
 			for _, mqtttopic := range msg.Topics {
 				_, _, err := topicParser.Parse(token, mqtttopic.Topic)
 				if err == topic.ErrNoServiceMatchFound {
-					err = nil //we want to only check device access
+					//we want to only check device access
+					err = nil
+				}
+				if err == topic.ErrMultipleMatchingDevicesFound || err == topic.ErrNoDeviceMatchFound {
+					//no err but disallow subscription
+					mqtttopic.Qos = 128
+					err = nil
 				}
 				if err != nil {
-					log.Println("ERROR: AuthWebhooks::subscribe::ParseTopic", err, mqtttopic.Topic)
+					log.Println("WARNING: AuthWebhooks::subscribe::ParseTopic", err, mqtttopic.Topic)
 					sendError(writer, err.Error())
 					return
 				}
+				resultTopics = append(resultTopics, mqtttopic)
 			}
 		}
-		fmt.Fprintf(writer, `{"result": "ok"}`)
+		err = json.NewEncoder(writer).Encode(SubscribeWebhookResult{
+			Result: "ok",
+			Topics: resultTopics,
+		})
+		if err != nil {
+			log.Println("ERROR: AuthWebhooks::subscribe::SubscribeWebhookResult", err)
+		}
 	})
 
 	router.HandleFunc("/login", func(writer http.ResponseWriter, request *http.Request) {
