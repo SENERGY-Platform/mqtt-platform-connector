@@ -18,6 +18,7 @@ package lib
 
 import (
 	"errors"
+	uuid "github.com/satori/go.uuid"
 	"log"
 
 	"sync"
@@ -39,7 +40,7 @@ func NewMqtt(config Config) (result *MqttClient, err error) {
 	options := paho.NewClientOptions().
 		SetPassword(config.AuthClientSecret).
 		SetUsername(config.AuthClientId).
-		SetClientID(config.MqttClientId).
+		SetClientID(config.MqttClientId + "_" + uuid.NewV4().String()).
 		SetAutoReconnect(true).
 		SetCleanSession(true).
 		AddBroker(config.MqttBroker)
