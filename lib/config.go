@@ -71,6 +71,8 @@ type Config struct {
 	Validate                  bool `json:"validate"`
 	ValidateAllowUnknownField bool `json:"validate_allow_unknown_field"`
 	ValidateAllowMissingField bool `json:"validate_allow_missing_field"`
+
+	KafkaProducerSlowTimeoutSec int64 `json:"kafka_producer_slow_timeout_sec"`
 }
 
 func LoadConfig() (result Config, err error) {

@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/topic"
 	platform_connector_lib "github.com/SENERGY-Platform/platform-connector-lib"
+	"github.com/SENERGY-Platform/platform-connector-lib/kafka"
 	"github.com/SENERGY-Platform/platform-connector-lib/model"
 	paho "github.com/eclipse/paho.mqtt.golang"
 	"log"
@@ -12,6 +13,10 @@ import (
 )
 
 func Start(ctx context.Context, config Config) error {
+	if config.KafkaProducerSlowTimeoutSec != 0 {
+		kafka.SlowProducerTimeout = time.Duration(config.KafkaProducerSlowTimeoutSec) * time.Second
+	}
+
 	switch config.MqttLogLevel {
 	case "critical":
 		paho.CRITICAL = log.New(os.Stderr, "[paho] ", log.LstdFlags)
