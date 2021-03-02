@@ -65,6 +65,9 @@ func Start(ctx context.Context, config Config) error {
 
 		SemanticRepositoryUrl:    config.SemanticRepoUrl,
 		CharacteristicExpiration: config.SemanticExpiration,
+
+		PartitionsNum:     config.KafkaPartitionNum,
+		ReplicationFactor: config.KafkaReplicationFactor,
 	}
 
 	connector := platform_connector_lib.New(libConf)

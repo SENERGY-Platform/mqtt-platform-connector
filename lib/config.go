@@ -73,6 +73,9 @@ type Config struct {
 	ValidateAllowMissingField bool `json:"validate_allow_missing_field"`
 
 	KafkaProducerSlowTimeoutSec int64 `json:"kafka_producer_slow_timeout_sec"`
+
+	KafkaPartitionNum      int `json:"kafka_partition_num"`
+	KafkaReplicationFactor int `json:"kafka_replication_factor"`
 }
 
 func LoadConfig() (result Config, err error) {

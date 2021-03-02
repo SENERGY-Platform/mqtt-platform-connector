@@ -36,5 +36,8 @@
 
   "validate": true,
   "validate_allow_unknown_field": true,
-  "validate_allow_missing_field": true
+  "validate_allow_missing_field": true,
+
+  "kafka_partition_num": 1,
+  "kafka_replication_factor": 2
 }
