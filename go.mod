@@ -1,9 +1,9 @@
 module github.com/SENERGY-Platform/mqtt-platform-connector
 
-go 1.13
+go 1.16
 
 require (
-	github.com/SENERGY-Platform/platform-connector-lib v0.0.0-20210330073225-0e7aee0a1263
+	github.com/SENERGY-Platform/platform-connector-lib v0.0.0-20210511072731-52dd22017fbd
 	github.com/Shopify/sarama v1.27.0 // indirect
 	github.com/bradfitz/gomemcache v0.0.0-20190913173617-a41fca850d0b
 	github.com/coocood/freecache v1.1.1 // indirect
@@ -13,7 +13,7 @@ require (
 	github.com/ory/dockertest v3.3.4+incompatible
 	github.com/samuel/go-zookeeper v0.0.0-20200724154423-2164a8ac840e // indirect
 	github.com/satori/go.uuid v1.2.0
-	github.com/segmentio/kafka-go v0.4.2
+	github.com/segmentio/kafka-go v0.4.15
 	github.com/wvanbergen/kazoo-go v0.0.0-20180202103751-f72d8611297a
 	golang.org/x/crypto v0.0.0-20200820211705-5c72a883971a // indirect
 	golang.org/x/net v0.0.0-20200904194848-62affa334b73 // indirect

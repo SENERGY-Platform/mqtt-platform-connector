@@ -50,9 +50,9 @@ func New(basectx context.Context, defaults lib.Config) (config lib.Config, err e
 		cancel()
 		return config, err
 	}
-	config.ZookeeperUrl = zk + ":2181"
+	zkUrl := zk + ":2181"
 
-	err = docker.Kafka(pool, ctx, config.ZookeeperUrl)
+	config.KafkaUrl, err = docker.Kafka(pool, ctx, zkUrl)
 	if err != nil {
 		log.Println("ERROR:", err)
 		debug.PrintStack()

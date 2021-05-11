@@ -28,7 +28,7 @@ import (
 )
 
 type Config struct {
-	ZookeeperUrl       string `json:"zookeeper_url"`
+	KafkaUrl           string `json:"kafka_url"`
 	KafkaResponseTopic string `json:"kafka_response_topic"`
 	KafkaGroupName     string `json:"kafka_group_name"`
 	FatalKafkaError    bool   `json:"fatal_kafka_error"`

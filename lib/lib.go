@@ -35,7 +35,7 @@ func Start(ctx context.Context, config Config) error {
 	}
 
 	libConf := platform_connector_lib.Config{
-		ZookeeperUrl:             config.ZookeeperUrl,
+		KafkaUrl:                 config.KafkaUrl,
 		KafkaResponseTopic:       config.KafkaResponseTopic,
 		KafkaGroupName:           config.KafkaGroupName,
 		FatalKafkaError:          config.FatalKafkaError,

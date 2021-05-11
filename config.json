@@ -9,7 +9,7 @@
   "actuator_topic_pattern": "something/{{.LocalDeviceId}}/{{.LocalServiceId}}",
   "sensor_topic_pattern": "{{.Ignore}}/{{.LocalDeviceId}}/{{.LocalServiceId}}",
 
-  "zookeeper_url":"zk",
+  "kafka_url":"kafka:9092",
   "kafka_response_topic":"response",
   "perm_search_url":"http://query.permissions:8080",
   "kafka_group_name":"mqtt",

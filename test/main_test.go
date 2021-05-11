@@ -156,7 +156,7 @@ func trySensorFromDevice(t *testing.T, config lib.Config, deviceType model.Devic
 	mux := sync.Mutex{}
 	events := []model.Envelope{}
 	log.Println("DEBUG CONSUME:", model.ServiceIdToTopic(service.Id))
-	consumer, err := kafka.NewConsumer(config.ZookeeperUrl, "testing_"+uuid.NewV4().String(), model.ServiceIdToTopic(service.Id), func(topic string, msg []byte, time time.Time) error {
+	consumer, err := kafka.NewConsumer(config.KafkaUrl, "testing_"+uuid.NewV4().String(), model.ServiceIdToTopic(service.Id), func(topic string, msg []byte, time time.Time) error {
 		mux.Lock()
 		defer mux.Unlock()
 		resp := model.Envelope{}
