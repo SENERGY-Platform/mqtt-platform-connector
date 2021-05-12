@@ -15,6 +15,8 @@ import (
 
 func New(basectx context.Context, defaults lib.Config) (config lib.Config, err error) {
 	config = defaults
+	config.KafkaPartitionNum = 1
+	config.KafkaReplicationFactor = 1
 
 	ctx, cancel := context.WithCancel(basectx)
 
