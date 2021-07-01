@@ -3,13 +3,14 @@ module github.com/SENERGY-Platform/mqtt-platform-connector
 go 1.16
 
 require (
-	github.com/SENERGY-Platform/platform-connector-lib v0.0.0-20210511072731-52dd22017fbd
+	github.com/SENERGY-Platform/platform-connector-lib v0.0.0-20210603081142-9d81515fb9c9
 	github.com/Shopify/sarama v1.27.0 // indirect
 	github.com/bradfitz/gomemcache v0.0.0-20190913173617-a41fca850d0b
 	github.com/coocood/freecache v1.1.1 // indirect
 	github.com/eclipse/paho.mqtt.golang v1.2.0
 	github.com/julienschmidt/httprouter v1.3.0
 	github.com/klauspost/compress v1.11.0 // indirect
+	github.com/lib/pq v1.4.0
 	github.com/ory/dockertest v3.3.4+incompatible
 	github.com/samuel/go-zookeeper v0.0.0-20200724154423-2164a8ac840e // indirect
 	github.com/satori/go.uuid v1.2.0

@@ -39,5 +39,12 @@
   "validate_allow_missing_field": true,
 
   "kafka_partition_num": 1,
-  "kafka_replication_factor": 2
+  "kafka_replication_factor": 2,
+
+  "PublishToPostgres": false,
+  "PostgresHost": "localhost",
+  "PostgresPort": 5432,
+  "PostgresUser": "postgres",
+  "PostgresPw": "postgrespw",
+  "PostgresDb": "postgres"
 }

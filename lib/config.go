@@ -76,6 +76,13 @@ type Config struct {
 
 	KafkaPartitionNum      int `json:"kafka_partition_num"`
 	KafkaReplicationFactor int `json:"kafka_replication_factor"`
+
+	PublishToPostgres bool
+	PostgresHost      string
+	PostgresPort      int
+	PostgresUser      string
+	PostgresPw        string
+	PostgresDb        string
 }
 
 func LoadConfig() (result Config, err error) {

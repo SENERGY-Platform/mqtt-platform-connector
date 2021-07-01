@@ -29,7 +29,7 @@ func createTestProtocol(t *testing.T, config lib.Config) model.Protocol {
 	return protocol
 }
 
-func createTestDeviceType(t *testing.T, config lib.Config, protocol model.Protocol, serviceLocalId string) (result model.DeviceType) {
+func createTestDeviceType(t *testing.T, config lib.Config, protocol model.Protocol, serviceLocalId string, serviceId string) (result model.DeviceType) {
 	if reflect.DeepEqual(protocol, model.Protocol{}) {
 		t.Error("invalid protocol")
 		return model.DeviceType{}
@@ -38,6 +38,7 @@ func createTestDeviceType(t *testing.T, config lib.Config, protocol model.Protoc
 		Name: "testDeviceType",
 		Services: []model.Service{
 			{
+				Id:          serviceId,
 				Name:        serviceLocalId,
 				LocalId:     serviceLocalId,
 				Description: serviceLocalId,
@@ -70,7 +71,7 @@ func createTestDeviceType(t *testing.T, config lib.Config, protocol model.Protoc
 	return
 }
 
-func createTestDeviceTypeWithTextPayload(t *testing.T, config lib.Config, protocol model.Protocol, serviceLocalId string) (result model.DeviceType) {
+func createTestDeviceTypeWithTextPayload(t *testing.T, config lib.Config, protocol model.Protocol, serviceLocalId string, serviceId string) (result model.DeviceType) {
 	if reflect.DeepEqual(protocol, model.Protocol{}) {
 		t.Error("invalid protocol")
 		return model.DeviceType{}
@@ -79,6 +80,7 @@ func createTestDeviceTypeWithTextPayload(t *testing.T, config lib.Config, protoc
 		Name: "testDeviceType",
 		Services: []model.Service{
 			{
+				Id:          serviceId,
 				Name:        serviceLocalId,
 				LocalId:     serviceLocalId,
 				Description: serviceLocalId,
@@ -105,12 +107,13 @@ func createTestDeviceTypeWithTextPayload(t *testing.T, config lib.Config, protoc
 	return
 }
 
-func createTestDevice(t *testing.T, config lib.Config, dt model.DeviceType, deviceLocalId string) (result model.Device) {
+func createTestDevice(t *testing.T, config lib.Config, dt model.DeviceType, deviceLocalId string, deviceId string) (result model.Device) {
 	if reflect.DeepEqual(dt, model.DeviceType{}) {
 		t.Error("invalid device-type")
 		return
 	}
 	err := helper.AdminJwt.PostJSON(config.DeviceManagerUrl+"/devices", model.Device{
+		Id:           deviceId,
 		LocalId:      deviceLocalId,
 		Name:         "test-device",
 		DeviceTypeId: dt.Id,
