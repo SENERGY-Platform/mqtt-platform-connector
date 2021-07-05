@@ -70,7 +70,7 @@ func TestEventWithoutProvisioning(t *testing.T) {
 	})
 
 	t.Run("check kafka event", func(t *testing.T) {
-		trySensorFromDevice(t, config, deviceType, device, serviceLocalId, msg)
+		trySensorFromDevice(t, config, ctx, deviceType, device, serviceLocalId, msg)
 	})
 }
 
@@ -129,7 +129,7 @@ func TestEventPlainText(t *testing.T) {
 	})
 
 	t.Run("check kafka event", func(t *testing.T) {
-		trySensorFromDevice(t, config, deviceType, device, serviceLocalId, "\""+msg+"\"")
+		trySensorFromDevice(t, config, ctx, deviceType, device, serviceLocalId, "\""+msg+"\"")
 	})
 }
 
@@ -145,7 +145,7 @@ func sendMqttEvent(t *testing.T, config lib.Config, topic string, msg string) {
 	}
 }
 
-func trySensorFromDevice(t *testing.T, config lib.Config, deviceType model.DeviceType, device model.Device, serviceLocalId string, msg string) {
+func trySensorFromDevice(t *testing.T, config lib.Config, ctx context.Context, deviceType model.DeviceType, device model.Device, serviceLocalId string, msg string) {
 	service := model.Service{}
 	for _, s := range deviceType.Services {
 		if s.LocalId == serviceLocalId {
@@ -156,7 +156,7 @@ func trySensorFromDevice(t *testing.T, config lib.Config, deviceType model.Devic
 	mux := sync.Mutex{}
 	events := []model.Envelope{}
 	log.Println("DEBUG CONSUME:", model.ServiceIdToTopic(service.Id))
-	consumer, err := kafka.NewConsumer(config.KafkaUrl, "testing_"+uuid.NewV4().String(), model.ServiceIdToTopic(service.Id), func(topic string, msg []byte, time time.Time) error {
+	err := kafka.NewConsumer(ctx, config.KafkaUrl, "testing_"+uuid.NewV4().String(), model.ServiceIdToTopic(service.Id), func(topic string, msg []byte, time time.Time) error {
 		mux.Lock()
 		defer mux.Unlock()
 		resp := model.Envelope{}
@@ -173,7 +173,6 @@ func trySensorFromDevice(t *testing.T, config lib.Config, deviceType model.Devic
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer consumer.Stop()
 
 	time.Sleep(20 * time.Second)
 

@@ -41,6 +41,7 @@ type PublishWebhookMsg struct {
 	ClientId string `json:"client_id"`
 	Topic    string `json:"topic"`
 	Payload  string `json:"payload"`
+	Qos      int    `json:"qos"`
 }
 
 type WebhookmsgTopic struct {
@@ -106,7 +107,7 @@ func AuthWebhooks(ctx context.Context, config Config, connector *platform_connec
 			}
 			err = connector.HandleDeviceIdentEventWithAuthToken(token, device.Id, device.LocalId, service.Id, service.LocalId, map[string]string{
 				"payload": string(payload),
-			})
+			}, platform_connector_lib.Qos(msg.Qos))
 			if err != nil {
 				if config.Debug {
 					log.Println("WARNING: AuthWebhooks::publish::HandleDeviceIdentEventWithAuthToken", err, device.Id, device.LocalId, service.Id, service.LocalId, msg.Topic)

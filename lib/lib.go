@@ -12,7 +12,13 @@ import (
 	"time"
 )
 
-func Start(ctx context.Context, config Config) error {
+func Start(basectx context.Context, config Config) (err error) {
+	ctx, cancel := context.WithCancel(basectx)
+	defer func() {
+		if err != nil {
+			cancel()
+		}
+	}()
 	if config.KafkaProducerSlowTimeoutSec != 0 {
 		kafka.SlowProducerTimeout = time.Duration(config.KafkaProducerSlowTimeoutSec) * time.Second
 	}
@@ -54,8 +60,6 @@ func Start(ctx context.Context, config Config) error {
 		TokenCacheExpiration:     config.TokenCacheExpiration,
 		IotCacheUrl:              config.IotCacheUrl,
 		TokenCacheUrl:            config.TokenCacheUrl,
-		SyncKafka:                config.SyncKafka,
-		SyncKafkaIdempotent:      config.SyncKafkaIdempotent,
 		Debug:                    config.Debug,
 		SerializationFallback:    config.SerializationFallback,
 
@@ -77,6 +81,11 @@ func Start(ctx context.Context, config Config) error {
 		connector.IotCache.Debug = true
 	}
 
+	err = connector.InitProducer(ctx, []platform_connector_lib.Qos{platform_connector_lib.Async, platform_connector_lib.Sync, platform_connector_lib.SyncIdempotent})
+	if err != nil {
+		return err
+	}
+
 	AuthWebhooks(ctx, config, connector)
 
 	time.Sleep(1 * time.Second) //ensure http server startup before continue
@@ -85,20 +94,15 @@ func Start(ctx context.Context, config Config) error {
 	if err != nil {
 		return err
 	}
-
-	err = connector.SetAsyncCommandHandler(CreateCommandHandler(config, mqtt)).Start()
-
-	if err != nil {
-		connector.Stop()
-		mqtt.Close()
-		return err
-	}
-
 	go func() {
 		<-ctx.Done()
 		mqtt.Close()
-		connector.Stop()
 	}()
+
+	err = connector.SetAsyncCommandHandler(CreateCommandHandler(config, mqtt)).StartConsumer(ctx)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
