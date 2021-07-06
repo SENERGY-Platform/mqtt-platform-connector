@@ -19,7 +19,7 @@ import (
 )
 
 func Mock(ctx context.Context, config lib.Config) (deviceManagerUrl string, deviceRepoUrl string, err error) {
-	kafkaProducer, err := kafka.PrepareProducer(config.KafkaUrl, false, false, 1, 1)
+	kafkaProducer, err := kafka.PrepareProducer(ctx, config.KafkaUrl, false, false, 1, 1)
 	if err != nil {
 		return "", "", err
 	}
@@ -41,14 +41,12 @@ func Mock(ctx context.Context, config lib.Config) (deviceManagerUrl string, devi
 	}
 	server.Listener, err = net.Listen("tcp", ":")
 	if err != nil {
-		kafkaProducer.Close()
 		return "", "", err
 	}
 	server.Start()
 	go func() {
 		<-ctx.Done()
 		server.Close()
-		kafkaProducer.Close()
 	}()
 	return server.URL, server.URL, nil
 }

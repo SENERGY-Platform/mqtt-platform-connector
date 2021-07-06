@@ -79,6 +79,8 @@ func Start(basectx context.Context, config Config) (err error) {
 		PostgresUser:      config.PostgresUser,
 		PostgresPw:        config.PostgresPw,
 		PostgresDb:        config.PostgresDb,
+
+		HttpCommandConsumerPort: config.HttpCommandConsumerPort,
 	}
 
 	connector := platform_connector_lib.New(libConf)

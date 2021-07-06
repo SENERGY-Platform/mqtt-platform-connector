@@ -1,5 +1,6 @@
 {
   "webhook_port":"8080",
+  "http_command_consumer_port": "8081",
 
   "mqtt_broker": "mqtt:1883",
   "mqtt_client_id": "sepl_mqtt_connector_1",

@@ -62,7 +62,8 @@ type Config struct {
 	Qos          byte   `json:"qos"`
 	MqttLogLevel string `json:"mqtt_log_level"`
 
-	WebhookPort string `json:"webhook_port"`
+	WebhookPort             string `json:"webhook_port"`
+	HttpCommandConsumerPort string `json:"http_command_consumer_port"`
 
 	ActuatorTopicPattern string `json:"actuator_topic_pattern"`
 
