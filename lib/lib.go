@@ -72,6 +72,13 @@ func Start(basectx context.Context, config Config) (err error) {
 
 		PartitionsNum:     config.KafkaPartitionNum,
 		ReplicationFactor: config.KafkaReplicationFactor,
+
+		PublishToPostgres: config.PublishToPostgres,
+		PostgresHost:      config.PostgresHost,
+		PostgresPort:      config.PostgresPort,
+		PostgresUser:      config.PostgresUser,
+		PostgresPw:        config.PostgresPw,
+		PostgresDb:        config.PostgresDb,
 	}
 
 	connector := platform_connector_lib.New(libConf)
