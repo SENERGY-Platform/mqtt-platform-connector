@@ -53,6 +53,50 @@ func Mock(ctx context.Context, config lib.Config) (deviceManagerUrl string, devi
 	return server.URL, server.URL, nil
 }
 
+type MockProducer struct {
+}
+
+func (this MockProducer) Produce(topic string, message string) (err error) {
+	return nil
+}
+
+func (this MockProducer) ProduceWithKey(topic string, message string, key string) (err error) {
+	return nil
+}
+
+func (this MockProducer) Log(logger *log.Logger) {}
+
+func (this MockProducer) Close() {}
+
+func MockWithoutKafka(ctx context.Context) (deviceManagerUrl string, deviceRepoUrl string, err error) {
+	router, err := getRouter(&Controller{
+		mux:              sync.Mutex{},
+		devices:          map[string]model.Device{},
+		devicesByLocalId: map[string]string{},
+		deviceTypes:      map[string]model.DeviceType{},
+		hubs:             map[string]model.Hub{},
+		protocols:        map[string]model.Protocol{},
+		kafkaProducer:    MockProducer{},
+	})
+	if err != nil {
+		return "", "", err
+	}
+
+	server := &httptest.Server{
+		Config: &http.Server{Handler: NewLogger(router, "DEBUG")},
+	}
+	server.Listener, err = net.Listen("tcp", ":")
+	if err != nil {
+		return "", "", err
+	}
+	server.Start()
+	go func() {
+		<-ctx.Done()
+		server.Close()
+	}()
+	return server.URL, server.URL, nil
+}
+
 func getRouter(controller *Controller) (router *httprouter.Router, err error) {
 	defer func() {
 		if r := recover(); r != nil && err == nil {
