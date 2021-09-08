@@ -14,16 +14,19 @@
  * limitations under the License.
  */
 
-package topic
+package test
 
-import "testing"
+import (
+	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/topic"
+	"testing"
+)
 
 const shortDeviceIdExample = "a9B7ddfMShqI26yT9hqnsw"
 const longDeviceIdExample = "urn:infai:ses:device:6bd07b75-d7cc-4a1a-88db-ac93f61aa7b3"
 const longDeviceIdExample2 = "urn:infai:ses:device:6bd07b75-d7cc-4a1a-88db-ac93f61aa7b3"
 
 func TestCreate(t *testing.T) {
-	topic := New(nil, "{{.DeviceId}}/cmnd/{{.LocalServiceId}}")
+	topic := topic.New(nil, "{{.DeviceId}}/cmnd/{{.LocalServiceId}}")
 
 	t.Run(testTopicCreate(topic, "{{.DeviceId}}/temperature", longDeviceIdExample+"/temperature"))
 	t.Run(testTopicCreate(topic, "cmd/{{.DeviceId}}/temperature", "cmd/"+longDeviceIdExample+"/temperature"))
@@ -38,7 +41,7 @@ func TestCreate(t *testing.T) {
 }
 
 func TestCreateDefaultShort(t *testing.T) {
-	topic := New(nil, "{{.ShortDeviceId}}/cmnd/{{.LocalServiceId}}")
+	topic := topic.New(nil, "{{.ShortDeviceId}}/cmnd/{{.LocalServiceId}}")
 
 	t.Run(testTopicCreate(topic, "{{.DeviceId}}/temperature", longDeviceIdExample+"/temperature"))
 	t.Run(testTopicCreate(topic, "cmd/{{.DeviceId}}/temperature", "cmd/"+longDeviceIdExample+"/temperature"))
@@ -52,7 +55,7 @@ func TestCreateDefaultShort(t *testing.T) {
 	t.Run(testTopicCreate(topic, "temperature/celsius", shortDeviceIdExample+"/cmnd/temperature/celsius"))
 }
 
-func testTopicCreate(topic *Topic, localServiceId string, expectedTopic string) (string, func(t *testing.T)) {
+func testTopicCreate(topic *topic.Topic, localServiceId string, expectedTopic string) (string, func(t *testing.T)) {
 	return localServiceId, func(t *testing.T) {
 		defer func() {
 			if r := recover(); r != nil {

@@ -1,5 +1,6 @@
 {
   "webhook_port":"8080",
+  "http_command_consumer_port": "8081",
 
   "mqtt_broker": "mqtt:1883",
   "mqtt_client_id": "sepl_mqtt_connector_1",
@@ -39,5 +40,12 @@
   "validate_allow_missing_field": true,
 
   "kafka_partition_num": 1,
-  "kafka_replication_factor": 2
+  "kafka_replication_factor": 2,
+
+  "PublishToPostgres": false,
+  "PostgresHost": "localhost",
+  "PostgresPort": 5432,
+  "PostgresUser": "postgres",
+  "PostgresPw": "postgrespw",
+  "PostgresDb": "postgres"
 }

@@ -11,6 +11,7 @@ import (
 	"net"
 	"runtime/debug"
 	"strconv"
+	"strings"
 )
 
 func New(basectx context.Context, defaults lib.Config) (config lib.Config, err error) {
@@ -21,12 +22,6 @@ func New(basectx context.Context, defaults lib.Config) (config lib.Config, err e
 	ctx, cancel := context.WithCancel(basectx)
 
 	err = auth.Mock(&config, ctx)
-	if err != nil {
-		cancel()
-		return config, err
-	}
-
-	config.DeviceManagerUrl, config.DeviceRepoUrl, err = iot.Mock(ctx)
 	if err != nil {
 		cancel()
 		return config, err
@@ -62,6 +57,12 @@ func New(basectx context.Context, defaults lib.Config) (config lib.Config, err e
 		return config, err
 	}
 
+	config.DeviceManagerUrl, config.DeviceRepoUrl, err = iot.Mock(ctx, config)
+	if err != nil {
+		cancel()
+		return config, err
+	}
+
 	_, memcacheIp, err := docker.Memcached(pool, ctx)
 	if err != nil {
 		log.Println("ERROR:", err)
@@ -82,6 +83,36 @@ func New(basectx context.Context, defaults lib.Config) (config lib.Config, err e
 	}
 	hostIp := network.IPAM.Config[0].Gateway
 	config.MqttBroker, err = docker.Vernemqtt(pool, ctx, hostIp+":"+config.WebhookPort)
+	if err != nil {
+		log.Println("ERROR:", err)
+		debug.PrintStack()
+		cancel()
+		return config, err
+	}
+
+	config.PostgresHost, config.PostgresPort, config.PostgresUser, config.PostgresPw, config.PostgresDb, err = docker.Timescale(pool, ctx)
+	if err != nil {
+		log.Println("ERROR:", err)
+		debug.PrintStack()
+		cancel()
+		return config, err
+	}
+
+	hostIp = "127.0.0.1"
+	networks, _ := pool.Client.ListNetworks()
+	for _, network := range networks {
+		if network.Name == "bridge" {
+			hostIp = network.IPAM.Config[0].Gateway
+			break
+		}
+	}
+
+	//transform local-address to address in docker container
+	deviceManagerUrlStruct := strings.Split(config.DeviceManagerUrl, ":")
+	deviceManagerUrl := "http://" + hostIp + ":" + deviceManagerUrlStruct[len(deviceManagerUrlStruct)-1]
+	log.Println("DEBUG: semantic url transformation:", config.DeviceManagerUrl, "-->", deviceManagerUrl)
+
+	err = docker.Tableworker(pool, ctx, config.PostgresHost, config.PostgresPort, config.PostgresUser, config.PostgresPw, config.PostgresDb, config.KafkaUrl, deviceManagerUrl)
 	if err != nil {
 		log.Println("ERROR:", err)
 		debug.PrintStack()
