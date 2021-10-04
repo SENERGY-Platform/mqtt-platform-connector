@@ -84,6 +84,12 @@ type Config struct {
 	PostgresUser      string
 	PostgresPw        string
 	PostgresDb        string
+
+	AsyncPgThreadMax    int64
+	AsyncFlushMessages  int64
+	AsyncFlushFrequency string
+	AsyncCompression    string
+	SyncCompression     string
 }
 
 func LoadConfig() (result Config, err error) {

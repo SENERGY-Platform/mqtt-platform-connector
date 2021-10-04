@@ -6,9 +6,11 @@ import (
 	platform_connector_lib "github.com/SENERGY-Platform/platform-connector-lib"
 	"github.com/SENERGY-Platform/platform-connector-lib/kafka"
 	"github.com/SENERGY-Platform/platform-connector-lib/model"
+	"github.com/Shopify/sarama"
 	paho "github.com/eclipse/paho.mqtt.golang"
 	"log"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -19,6 +21,12 @@ func Start(basectx context.Context, config Config) (err error) {
 			cancel()
 		}
 	}()
+
+	asyncFlushFrequency, err := time.ParseDuration(config.AsyncFlushFrequency)
+	if err != nil {
+		return err
+	}
+
 	if config.KafkaProducerSlowTimeoutSec != 0 {
 		kafka.SlowProducerTimeout = time.Duration(config.KafkaProducerSlowTimeoutSec) * time.Second
 	}
@@ -81,6 +89,12 @@ func Start(basectx context.Context, config Config) (err error) {
 		PostgresDb:        config.PostgresDb,
 
 		HttpCommandConsumerPort: config.HttpCommandConsumerPort,
+
+		SyncCompression:     getKafkaCompression(config.SyncCompression),
+		AsyncCompression:    getKafkaCompression(config.AsyncCompression),
+		AsyncFlushFrequency: asyncFlushFrequency,
+		AsyncFlushMessages:  int(config.AsyncFlushMessages),
+		AsyncPgThreadMax:    int(config.AsyncPgThreadMax),
 	}
 
 	connector := platform_connector_lib.New(libConf)
@@ -126,4 +140,21 @@ func CreateCommandHandler(config Config, mqtt *MqttClient) platform_connector_li
 		err = mqtt.Publish(endpoint, commandRequest.Request.Input["payload"])
 		return
 	}
+}
+
+func getKafkaCompression(compression string) sarama.CompressionCodec {
+	switch strings.ToLower(compression) {
+	case "":
+		return sarama.CompressionNone
+	case "-":
+		return sarama.CompressionNone
+	case "none":
+		return sarama.CompressionNone
+	case "gzip":
+		return sarama.CompressionGZIP
+	case "snappy":
+		return sarama.CompressionSnappy
+	}
+	log.Println("WARNING: unknown compression", compression, "fallback to none")
+	return sarama.CompressionNone
 }

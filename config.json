@@ -47,5 +47,11 @@
   "PostgresPort": 5432,
   "PostgresUser": "postgres",
   "PostgresPw": "postgrespw",
-  "PostgresDb": "postgres"
+  "PostgresDb": "postgres",
+
+  "AsyncPgThreadMax": 1000,
+  "AsyncFlushMessages": 200,
+  "AsyncFlushFrequency": "500ms",
+  "AsyncCompression": "snappy",
+  "SyncCompression": "snappy"
 }
