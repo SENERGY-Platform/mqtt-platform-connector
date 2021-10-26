@@ -2,6 +2,8 @@ package lib
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/topic"
 	platform_connector_lib "github.com/SENERGY-Platform/platform-connector-lib"
 	"github.com/SENERGY-Platform/platform-connector-lib/kafka"
@@ -95,6 +97,13 @@ func Start(basectx context.Context, config Config) (err error) {
 		AsyncFlushFrequency: asyncFlushFrequency,
 		AsyncFlushMessages:  int(config.AsyncFlushMessages),
 		AsyncPgThreadMax:    int(config.AsyncPgThreadMax),
+
+		KafkaConsumerMinBytes: int(config.KafkaConsumerMinBytes),
+		KafkaConsumerMaxBytes: int(config.KafkaConsumerMaxBytes),
+		KafkaConsumerMaxWait:  config.KafkaConsumerMaxWait,
+
+		IotCacheTimeout:      config.IotCacheTimeout,
+		IotCacheMaxIdleConns: int(config.IotCacheMaxIdleConns),
 	}
 
 	connector := platform_connector_lib.New(libConf)
@@ -122,12 +131,51 @@ func Start(basectx context.Context, config Config) (err error) {
 		mqtt.Close()
 	}()
 
-	err = connector.SetAsyncCommandHandler(CreateCommandHandler(config, mqtt)).StartConsumer(ctx)
-	if err != nil {
-		return err
+	if config.CommandWorkerCount > 1 {
+		err = connector.SetAsyncCommandHandler(CreateQueuedCommandHandler(ctx, config, mqtt)).StartConsumer(ctx)
+	} else {
+		err = connector.SetAsyncCommandHandler(CreateCommandHandler(config, mqtt)).StartConsumer(ctx)
 	}
 
-	return nil
+	return err
+}
+
+type commandQueueValue struct {
+	commandRequest model.ProtocolMsg
+	requestMsg     platform_connector_lib.CommandRequestMsg
+	t              time.Time
+}
+
+func CreateQueuedCommandHandler(ctx context.Context, config Config, mqtt *MqttClient) platform_connector_lib.AsyncCommandHandler {
+	queue := make(chan commandQueueValue, config.CommandWorkerCount)
+	handler := CreateCommandHandler(config, mqtt)
+	for i := int64(0); i < config.CommandWorkerCount; i++ {
+		go func() {
+			for msg := range queue {
+				err := handler(msg.commandRequest, msg.requestMsg, msg.t)
+				if err != nil {
+					log.Println("ERROR: ", err)
+				}
+			}
+		}()
+	}
+	go func() {
+		<-ctx.Done()
+		close(queue)
+	}()
+	return func(commandRequest model.ProtocolMsg, requestMsg platform_connector_lib.CommandRequestMsg, t time.Time) (err error) {
+		defer func() {
+			if r := recover(); r != nil {
+				err = errors.New(fmt.Sprint(r))
+			}
+		}()
+		queue <- commandQueueValue{
+			commandRequest: commandRequest,
+			requestMsg:     requestMsg,
+			t:              t,
+		}
+		return err
+	}
 }
 
 func CreateCommandHandler(config Config, mqtt *MqttClient) platform_connector_lib.AsyncCommandHandler {

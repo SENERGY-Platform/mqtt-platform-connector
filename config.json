@@ -42,16 +42,25 @@
   "kafka_partition_num": 1,
   "kafka_replication_factor": 2,
 
-  "PublishToPostgres": false,
-  "PostgresHost": "localhost",
-  "PostgresPort": 5432,
-  "PostgresUser": "postgres",
-  "PostgresPw": "postgrespw",
-  "PostgresDb": "postgres",
+  "publish_to_postgres": false,
+  "postgres_host": "localhost",
+  "postgres_port": 5432,
+  "postgres_user": "postgres",
+  "postgres_pw": "postgrespw",
+  "postgres_db": "postgres",
 
-  "AsyncPgThreadMax": 1000,
-  "AsyncFlushMessages": 200,
-  "AsyncFlushFrequency": "500ms",
-  "AsyncCompression": "snappy",
-  "SyncCompression": "snappy"
+  "async_pg_thread_max": 1000,
+  "async_flush_messages": 200,
+  "async_flush_frequency": "500ms",
+  "async_compression": "snappy",
+  "sync_compression": "snappy",
+
+  "kafka_consumer_max_wait": "100ms",
+  "kafka_consumer_min_bytes": 1000,
+  "kafka_consumer_max_bytes": 1000000,
+
+  "iot_cache_max_idle_conns": 100,
+  "iot_cache_timeout": "200ms",
+
+  "command_worker_count": 20
 }

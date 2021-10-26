@@ -207,7 +207,14 @@ func trySensorFromDevice(t *testing.T, config lib.Config, ctx context.Context, d
 	mux := sync.Mutex{}
 	events := []model.Envelope{}
 	log.Println("DEBUG CONSUME:", model.ServiceIdToTopic(service.Id))
-	err := kafka.NewConsumer(ctx, config.KafkaUrl, "testing_"+uuid.NewV4().String(), model.ServiceIdToTopic(service.Id), func(topic string, msg []byte, time time.Time) error {
+	err := kafka.NewConsumer(ctx, kafka.ConsumerConfig{
+		KafkaUrl: config.KafkaUrl,
+		GroupId:  "testing_" + uuid.NewV4().String(),
+		Topic:    model.ServiceIdToTopic(service.Id),
+		MinBytes: 1000,
+		MaxBytes: 1000000,
+		MaxWait:  100 * time.Millisecond,
+	}, func(topic string, msg []byte, _ time.Time) error {
 		mux.Lock()
 		defer mux.Unlock()
 		resp := model.Envelope{}
@@ -218,12 +225,9 @@ func trySensorFromDevice(t *testing.T, config lib.Config, ctx context.Context, d
 		}
 		events = append(events, resp)
 		return nil
-	}, func(err error, consumer *kafka.Consumer) {
-		t.Fatal(err)
+	}, func(err error) {
+		t.Error(err)
 	})
-	if err != nil {
-		t.Fatal(err)
-	}
 
 	time.Sleep(20 * time.Second)
 

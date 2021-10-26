@@ -78,18 +78,27 @@ type Config struct {
 	KafkaPartitionNum      int `json:"kafka_partition_num"`
 	KafkaReplicationFactor int `json:"kafka_replication_factor"`
 
-	PublishToPostgres bool
-	PostgresHost      string
-	PostgresPort      int
-	PostgresUser      string
-	PostgresPw        string
-	PostgresDb        string
+	PublishToPostgres bool   `json:"publish_to_postgres"`
+	PostgresHost      string `json:"postgres_host"`
+	PostgresPort      int    `json:"postgres_port"`
+	PostgresUser      string `json:"postgres_user"`
+	PostgresPw        string `json:"postgres_pw"`
+	PostgresDb        string `json:"postgres_db"`
 
-	AsyncPgThreadMax    int64
-	AsyncFlushMessages  int64
-	AsyncFlushFrequency string
-	AsyncCompression    string
-	SyncCompression     string
+	AsyncPgThreadMax    int64  `json:"async_pg_thread_max"`
+	AsyncFlushMessages  int64  `json:"async_flush_messages"`
+	AsyncFlushFrequency string `json:"async_flush_frequency"`
+	AsyncCompression    string `json:"async_compression"`
+	SyncCompression     string `json:"sync_compression"`
+
+	KafkaConsumerMaxWait  string `json:"kafka_consumer_max_wait"`
+	KafkaConsumerMinBytes int64  `json:"kafka_consumer_min_bytes"`
+	KafkaConsumerMaxBytes int64  `json:"kafka_consumer_max_bytes"`
+
+	IotCacheMaxIdleConns int64  `json:"iot_cache_max_idle_conns"`
+	IotCacheTimeout      string `json:"iot_cache_timeout"`
+
+	CommandWorkerCount int64 `json:"command_worker_count"`
 }
 
 func LoadConfig() (result Config, err error) {
