@@ -2,17 +2,18 @@ package docker
 
 import (
 	"context"
-	"github.com/ory/dockertest"
-	"github.com/ory/dockertest/docker"
+	"github.com/ory/dockertest/v3"
+	"github.com/ory/dockertest/v3/docker"
 	"github.com/segmentio/kafka-go"
 	"github.com/wvanbergen/kazoo-go"
 	"log"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
-func Kafka(pool *dockertest.Pool, ctx context.Context, zookeeperUrl string) (kafkaUrl string, err error) {
+func Kafka(pool *dockertest.Pool, ctx context.Context, wg *sync.WaitGroup, zookeeperUrl string) (kafkaUrl string, err error) {
 	kafkaport, err := getFreePort()
 	if err != nil {
 		return kafkaUrl, err
@@ -42,10 +43,12 @@ func Kafka(pool *dockertest.Pool, ctx context.Context, zookeeperUrl string) (kaf
 	if err != nil {
 		return kafkaUrl, err
 	}
+	wg.Add(1)
 	go func() {
 		<-ctx.Done()
 		log.Println("DEBUG: remove container " + container.Container.Name)
 		container.Close()
+		wg.Done()
 	}()
 	err = pool.Retry(func() error {
 		log.Println("try kafka connection...")

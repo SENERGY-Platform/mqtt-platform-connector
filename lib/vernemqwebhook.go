@@ -21,10 +21,12 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/connectionlog"
 	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/topic"
 	"github.com/SENERGY-Platform/platform-connector-lib"
 	"log"
 	"net/http"
+	"runtime/debug"
 	"time"
 )
 
@@ -50,6 +52,7 @@ type WebhookmsgTopic struct {
 }
 
 type SubscribeWebhookMsg struct {
+	ClientId string            `json:"client_id"`
 	Username string            `json:"username"`
 	Topics   []WebhookmsgTopic `json:"topics"`
 }
@@ -60,15 +63,101 @@ type SubscribeWebhookResult struct {
 }
 
 type LoginWebhookMsg struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
+	Username     string `json:"username"`
+	Password     string `json:"password"`
+	ClientId     string `json:"client_id"`
+	CleanSession bool   `json:"clean_session"`
+}
+
+type OnlineWebhookMsg struct {
+	ClientId string `json:"client_id"`
+}
+
+type DisconnectWebhookMsg struct {
+	ClientId string `json:"client_id"`
+}
+
+type UnsubscribeWebhookMsg struct {
+	ClientId string   `json:"client_id"`
+	Username string   `json:"username"`
+	Topics   []string `json:"topics"`
 }
 
 type EventHandler func(username string, topic string, payload string)
 
-func AuthWebhooks(ctx context.Context, config Config, connector *platform_connector_lib.Connector) {
+func AuthWebhooks(ctx context.Context, config Config, connector *platform_connector_lib.Connector, connectionLog connectionlog.ConnectionLog) {
 	topicParser := topic.New(connector.IotCache, config.ActuatorTopicPattern)
 	router := http.NewServeMux()
+
+	router.HandleFunc("/login", func(writer http.ResponseWriter, request *http.Request) {
+		//{"peer_addr":"172.20.0.30","peer_port":41310,"mountpoint":"","client_id":"sepl_mqtt_connector_1","username":"sepl","password":"sepl","clean_session":true}
+		msg := LoginWebhookMsg{}
+		err := json.NewDecoder(request.Body).Decode(&msg)
+		if err != nil {
+			log.Println("ERROR: AuthWebhooks::login::jsondecoding", err)
+			sendError(writer, err.Error(), http.StatusUnauthorized)
+			return
+		}
+		if msg.Username != config.AuthClientId {
+			token, err := connector.Security().GetUserToken(msg.Username, msg.Password)
+			if err != nil {
+				log.Println("ERROR: AuthWebhooks::login::GetOpenidPasswordToken", err, msg)
+				sendError(writer, err.Error(), http.StatusUnauthorized)
+				return
+			}
+			if token == "" {
+				sendError(writer, "access denied", http.StatusUnauthorized)
+				return
+			}
+			connectionLog.SetCleanSession(msg.ClientId, msg.CleanSession)
+		}
+		fmt.Fprintf(writer, `{"result": "ok"}`)
+	})
+
+	router.HandleFunc("/online", func(writer http.ResponseWriter, request *http.Request) {
+		defer func() {
+			if p := recover(); p != nil {
+				debug.PrintStack()
+				sendError(writer, fmt.Sprint(p))
+				return
+			} else {
+				fmt.Fprint(writer, `{}`)
+			}
+		}()
+		msg := OnlineWebhookMsg{}
+		err := json.NewDecoder(request.Body).Decode(&msg)
+		if err != nil {
+			sendError(writer, err.Error())
+			return
+		}
+		if config.Debug {
+			log.Println("DEBUG: /online", msg)
+		}
+		connectionLog.Connect(msg.ClientId)
+	})
+
+	router.HandleFunc("/disconnect", func(writer http.ResponseWriter, request *http.Request) {
+		defer func() {
+			if p := recover(); p != nil {
+				debug.PrintStack()
+				sendError(writer, fmt.Sprint(p))
+				return
+			} else {
+				fmt.Fprintf(writer, "{}")
+			}
+		}()
+		msg := DisconnectWebhookMsg{}
+		err := json.NewDecoder(request.Body).Decode(&msg)
+		if err != nil {
+			log.Println("ERROR: InitWebhooks::disconnect::jsondecoding", err)
+			return
+		}
+		if config.Debug {
+			log.Println("DEBUG: /disconnect", msg)
+		}
+		connectionLog.Disconnect(msg.ClientId)
+	})
+
 	router.HandleFunc("/publish", func(writer http.ResponseWriter, request *http.Request) {
 		msg := PublishWebhookMsg{}
 		err := json.NewDecoder(request.Body).Decode(&msg)
@@ -136,10 +225,13 @@ func AuthWebhooks(ctx context.Context, config Config, connector *platform_connec
 				return
 			}
 			for _, mqtttopic := range msg.Topics {
-				_, _, err := topicParser.Parse(token, mqtttopic.Topic)
+				device, _, err := topicParser.Parse(token, mqtttopic.Topic)
 				if err == topic.ErrNoServiceMatchFound {
 					//we want to only check device access
 					err = nil
+				}
+				if err == nil {
+					connectionLog.Subscribe(msg.ClientId, mqtttopic.Topic, device.Id)
 				}
 				if err == topic.ErrMultipleMatchingDevicesFound || err == topic.ErrNoDeviceMatchFound {
 					//no err but disallow subscription
@@ -163,29 +255,42 @@ func AuthWebhooks(ctx context.Context, config Config, connector *platform_connec
 		}
 	})
 
-	router.HandleFunc("/login", func(writer http.ResponseWriter, request *http.Request) {
-		//{"peer_addr":"172.20.0.30","peer_port":41310,"mountpoint":"","client_id":"sepl_mqtt_connector_1","username":"sepl","password":"sepl","clean_session":true}
-		msg := LoginWebhookMsg{}
+	router.HandleFunc("/unsubscribe", func(writer http.ResponseWriter, request *http.Request) {
+		defer func() {
+			if p := recover(); p != nil {
+				debug.PrintStack()
+				sendError(writer, fmt.Sprint(p))
+				return
+			}
+		}()
+		msg := UnsubscribeWebhookMsg{}
 		err := json.NewDecoder(request.Body).Decode(&msg)
 		if err != nil {
-			log.Println("ERROR: AuthWebhooks::login::jsondecoding", err)
-			sendError(writer, err.Error(), http.StatusUnauthorized)
+			sendError(writer, err.Error())
 			return
 		}
+		if config.Debug {
+			log.Println("DEBUG: /unsubscribe", msg)
+		}
+		//defer json.NewEncoder(writer).Encode(map[string]interface{}{"result": "ok", "topics": msg.Topics})
+		defer json.NewEncoder(writer).Encode(map[string]interface{}{"result": "ok", "topics": msg.Topics})
 		if msg.Username != config.AuthClientId {
-			token, err := connector.Security().GetUserToken(msg.Username, msg.Password)
+			token, err := connector.Security().GetCachedUserToken(msg.Username)
 			if err != nil {
-				log.Println("ERROR: AuthWebhooks::login::GetOpenidPasswordToken", err, msg)
-				sendError(writer, err.Error(), http.StatusUnauthorized)
+				log.Println("ERROR: InitWebhooks::unsubscribe::GenerateUserToken", err)
 				return
 			}
-			if token == "" {
-				sendError(writer, "access denied", http.StatusUnauthorized)
-				return
+			for _, topic := range msg.Topics {
+				device, _, err := topicParser.Parse(token, topic)
+				if err != nil {
+					log.Println("ERROR: InitWebhooks::unsubscribe::parseTopic", err)
+					return
+				}
+				connectionLog.Unsubscribe(msg.ClientId, topic, device.Id)
 			}
 		}
-		fmt.Fprintf(writer, `{"result": "ok"}`)
 	})
+
 	var handler http.Handler = router
 	if config.Debug {
 		handler = Logger(router)

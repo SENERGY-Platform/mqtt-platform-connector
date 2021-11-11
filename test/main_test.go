@@ -25,11 +25,12 @@ func TestEventWithoutProvisioning(t *testing.T) {
 		return
 	}
 
+	wg := &sync.WaitGroup{}
+	defer wg.Wait()
 	ctx, cancel := context.WithCancel(context.Background())
-	defer time.Sleep(10 * time.Second) //wait for docker cleanup
 	defer cancel()
 
-	config, err := server.New(ctx, defaultConfig)
+	config, err := server.New(ctx, wg, defaultConfig)
 	if err != nil {
 		t.Error(err)
 		return
@@ -87,11 +88,12 @@ func TestEventPlainText(t *testing.T) {
 	}
 	defaultConfig.PublishToPostgres = true
 
+	wg := &sync.WaitGroup{}
+	defer wg.Wait()
 	ctx, cancel := context.WithCancel(context.Background())
-	defer time.Sleep(10 * time.Second) //wait for docker cleanup
 	defer cancel()
 
-	config, err := server.New(ctx, defaultConfig)
+	config, err := server.New(ctx, wg, defaultConfig)
 	if err != nil {
 		t.Error(err)
 		return

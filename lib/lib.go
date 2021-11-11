@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/connectionlog"
 	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/topic"
 	platform_connector_lib "github.com/SENERGY-Platform/platform-connector-lib"
 	"github.com/SENERGY-Platform/platform-connector-lib/kafka"
@@ -118,7 +119,19 @@ func Start(basectx context.Context, config Config) (err error) {
 		return err
 	}
 
-	AuthWebhooks(ctx, config, connector)
+	var logging connectionlog.ConnectionLog = connectionlog.Void
+	if config.SubscriptionDbConStr != "" && config.SubscriptionDbConStr != "-" {
+		producer, err := connector.GetProducer(platform_connector_lib.Sync)
+		if err != nil {
+			return err
+		}
+		logging, err = connectionlog.New(producer, config.SubscriptionDbConStr, config.DeviceLogTopic)
+		if err != nil {
+			return err
+		}
+	}
+
+	AuthWebhooks(ctx, config, connector, logging)
 
 	time.Sleep(1 * time.Second) //ensure http server startup before continue
 

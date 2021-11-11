@@ -62,5 +62,11 @@
   "iot_cache_max_idle_conns": 100,
   "iot_cache_timeout": "200ms",
 
-  "command_worker_count": 20
+  "command_worker_count": 20,
+
+  "device_log_topic": "device_log",
+
+  "__EXAMPLE: subscription_db_con_str": "postgres://user:password@host/dbname?sslmode=disable",
+  "subscription_db_con_str": ""
+
 }

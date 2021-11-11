@@ -5,11 +5,12 @@ import (
 	"database/sql"
 	"fmt"
 	_ "github.com/lib/pq"
-	"github.com/ory/dockertest"
+	"github.com/ory/dockertest/v3"
 	"log"
+	"sync"
 )
 
-func Timescale(pool *dockertest.Pool, ctx context.Context) (host string, port int, user string, pw string, db string, err error) {
+func Timescale(pool *dockertest.Pool, ctx context.Context, wg *sync.WaitGroup) (host string, port int, user string, pw string, db string, err error) {
 	log.Println("start postgres")
 	pw = "postgrespw"
 	user = "postgres"
@@ -21,10 +22,12 @@ func Timescale(pool *dockertest.Pool, ctx context.Context) (host string, port in
 		return "", 0, "", "", "", err
 	}
 	go Dockerlog(pool, ctx, container, "TIMESCALE")
+	wg.Add(1)
 	go func() {
 		<-ctx.Done()
 		log.Println("DEBUG: remove container " + container.Container.Name)
 		container.Close()
+		wg.Done()
 	}()
 	host = container.Container.NetworkSettings.IPAddress
 	port = 5432

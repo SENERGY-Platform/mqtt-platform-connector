@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/SENERGY-Platform/platform-connector-lib/model"
 	"github.com/julienschmidt/httprouter"
+	uuid "github.com/satori/go.uuid"
 	"log"
 	"net/http"
 )
@@ -32,6 +33,9 @@ func DevicesEndpoints(control *Controller, router *httprouter.Router) {
 		if err != nil {
 			http.Error(writer, err.Error(), http.StatusBadRequest)
 			return
+		}
+		if device.Id == "" {
+			device.Id = "urn:infai:ses:device:" + uuid.NewV4().String()
 		}
 		result, err, errCode := control.PublishDeviceCreate(device)
 		if err != nil {

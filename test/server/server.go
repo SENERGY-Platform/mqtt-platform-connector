@@ -6,15 +6,30 @@ import (
 	"github.com/SENERGY-Platform/mqtt-platform-connector/test/server/docker"
 	"github.com/SENERGY-Platform/mqtt-platform-connector/test/server/mock/auth"
 	"github.com/SENERGY-Platform/mqtt-platform-connector/test/server/mock/iot"
-	"github.com/ory/dockertest"
+	"github.com/ory/dockertest/v3"
 	"log"
 	"net"
 	"runtime/debug"
 	"strconv"
 	"strings"
+	"sync"
 )
 
-func New(basectx context.Context, defaults lib.Config) (config lib.Config, err error) {
+func NewWithConnectionLog(basectx context.Context, wg *sync.WaitGroup, defaults lib.Config) (config lib.Config, err error) {
+	ctx, cancel := context.WithCancel(basectx)
+	config, err = New(ctx, wg, defaults)
+	if err != nil {
+		return
+	}
+	config.SubscriptionDbConStr,  _, _, err = docker.Postgres(ctx, wg, "subscriptions")
+	if err != nil {
+		cancel()
+		return config, err
+	}
+	return config, nil
+}
+
+func New(basectx context.Context, wg *sync.WaitGroup, defaults lib.Config) (config lib.Config, err error) {
 	config = defaults
 	config.KafkaPartitionNum = 1
 	config.KafkaReplicationFactor = 1
@@ -49,7 +64,7 @@ func New(basectx context.Context, defaults lib.Config) (config lib.Config, err e
 	}
 	zkUrl := zk + ":2181"
 
-	config.KafkaUrl, err = docker.Kafka(pool, ctx, zkUrl)
+	config.KafkaUrl, err = docker.Kafka(pool, ctx, wg, zkUrl)
 	if err != nil {
 		log.Println("ERROR:", err)
 		debug.PrintStack()
@@ -63,7 +78,7 @@ func New(basectx context.Context, defaults lib.Config) (config lib.Config, err e
 		return config, err
 	}
 
-	_, memcacheIp, err := docker.Memcached(pool, ctx)
+	_, memcacheIp, err := docker.Memcached(pool, ctx, wg)
 	if err != nil {
 		log.Println("ERROR:", err)
 		debug.PrintStack()
@@ -82,7 +97,7 @@ func New(basectx context.Context, defaults lib.Config) (config lib.Config, err e
 		return config, err
 	}
 	hostIp := network.IPAM.Config[0].Gateway
-	config.MqttBroker, err = docker.Vernemqtt(pool, ctx, hostIp+":"+config.WebhookPort)
+	config.MqttBroker, err = docker.Vernemqtt(pool, ctx, wg, hostIp+":"+config.WebhookPort)
 	if err != nil {
 		log.Println("ERROR:", err)
 		debug.PrintStack()
@@ -90,7 +105,7 @@ func New(basectx context.Context, defaults lib.Config) (config lib.Config, err e
 		return config, err
 	}
 
-	config.PostgresHost, config.PostgresPort, config.PostgresUser, config.PostgresPw, config.PostgresDb, err = docker.Timescale(pool, ctx)
+	config.PostgresHost, config.PostgresPort, config.PostgresUser, config.PostgresPw, config.PostgresDb, err = docker.Timescale(pool, ctx, wg)
 	if err != nil {
 		log.Println("ERROR:", err)
 		debug.PrintStack()
@@ -112,7 +127,7 @@ func New(basectx context.Context, defaults lib.Config) (config lib.Config, err e
 	deviceManagerUrl := "http://" + hostIp + ":" + deviceManagerUrlStruct[len(deviceManagerUrlStruct)-1]
 	log.Println("DEBUG: semantic url transformation:", config.DeviceManagerUrl, "-->", deviceManagerUrl)
 
-	err = docker.Tableworker(pool, ctx, config.PostgresHost, config.PostgresPort, config.PostgresUser, config.PostgresPw, config.PostgresDb, config.KafkaUrl, deviceManagerUrl)
+	err = docker.Tableworker(pool, ctx, wg, config.PostgresHost, config.PostgresPort, config.PostgresUser, config.PostgresPw, config.PostgresDb, config.KafkaUrl, deviceManagerUrl)
 	if err != nil {
 		log.Println("ERROR:", err)
 		debug.PrintStack()

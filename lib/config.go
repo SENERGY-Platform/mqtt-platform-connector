@@ -99,6 +99,9 @@ type Config struct {
 	IotCacheTimeout      string `json:"iot_cache_timeout"`
 
 	CommandWorkerCount int64 `json:"command_worker_count"`
+
+	SubscriptionDbConStr string `json:"subscription_db_con_str"`
+	DeviceLogTopic       string `json:"device_log_topic"`
 }
 
 func LoadConfig() (result Config, err error) {

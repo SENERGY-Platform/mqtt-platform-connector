@@ -60,6 +60,29 @@ func createTestDeviceType(t *testing.T, config lib.Config, protocol model.Protoc
 					},
 				},
 			},
+			{
+				Id:          serviceId + "_2",
+				Name:        serviceLocalId + "_2",
+				LocalId:     serviceLocalId + "_2",
+				Description: serviceLocalId + "_2",
+				ProtocolId:  protocol.Id,
+				Outputs: []model.Content{
+					{
+						ProtocolSegmentId: protocol.ProtocolSegments[0].Id,
+						Serialization:     "json",
+						ContentVariable: model.ContentVariable{
+							Name: "payload",
+							Type: model.Structure,
+							SubContentVariables: []model.ContentVariable{
+								{
+									Name: "level",
+									Type: model.Integer,
+								},
+							},
+						},
+					},
+				},
+			},
 		},
 	}, &result)
 	if err != nil {
