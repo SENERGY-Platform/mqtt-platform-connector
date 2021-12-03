@@ -69,7 +69,7 @@
     "__EXAMPLE: subscription_db_con_str": "postgres://user:password@host/dbname?sslmode=disable",
     "subscription_db_con_str": "",
 
-    "DeviceTypeTopic": "device-types",
+    "device_type_topic": "device-types",
 
     "notification_url": "",
     "perm_query_url": "",
