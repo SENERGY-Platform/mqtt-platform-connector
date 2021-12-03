@@ -71,8 +71,8 @@
 
     "DeviceTypeTopic": "device-types",
 
-    "NotificationUrl": "",
-    "PermQueryUrl": "",
+    "notification_url": "",
+    "perm_query_url": "",
 
     "kafka_topic_configs": {
         "device-types": [
