@@ -105,6 +105,10 @@ func Start(basectx context.Context, config Config) (err error) {
 
 		IotCacheTimeout:      config.IotCacheTimeout,
 		IotCacheMaxIdleConns: int(config.IotCacheMaxIdleConns),
+		KafkaTopicConfigs:    config.KafkaTopicConfigs,
+		DeviceTypeTopic:      config.DeviceTypeTopic,
+		PermQueryUrl:         config.PermQueryUrl,
+		NotificationUrl:      config.NotificationUrl,
 	}
 
 	connector := platform_connector_lib.New(libConf)

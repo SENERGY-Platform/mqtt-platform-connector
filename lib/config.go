@@ -19,6 +19,7 @@ package lib
 import (
 	"encoding/json"
 	"flag"
+	"github.com/segmentio/kafka-go"
 	"log"
 	"os"
 	"reflect"
@@ -102,6 +103,13 @@ type Config struct {
 
 	SubscriptionDbConStr string `json:"subscription_db_con_str"`
 	DeviceLogTopic       string `json:"device_log_topic"`
+
+	DeviceTypeTopic string `json:"device_type_topic"`
+
+	NotificationUrl string `json:"notification_url"`
+	PermQueryUrl    string `json:"perm_query_url"`
+
+	KafkaTopicConfigs map[string][]kafka.ConfigEntry `json:"kafka_topic_configs"`
 }
 
 func LoadConfig() (result Config, err error) {

@@ -76,7 +76,7 @@ func (this *Topic) ParseForCandidates(token security.JwtToken, topic string) (ca
 		})
 	}
 
-	//first sort by service count and than by service.LocalId to prefer devices with the longest service match and the most matching services if 2 have the same length of localID
+	//first sort by service count and then by service.LocalId to prefer devices with the longest service match and the most matching services if 2 have the same length of localID
 	//this allows devices as result without matching services but prefers devices with matches
 
 	//sort by service count
