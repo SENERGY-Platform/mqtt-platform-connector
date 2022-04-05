@@ -13,6 +13,8 @@ github.com/OneOfOne/xxhash v1.2.2 h1:KMrpdQIwFcEqXDklaen+P1axHaj9BSKzvpUUfnHldSE
 github.com/OneOfOne/xxhash v1.2.2/go.mod h1:HSdplMjZKSmBqAxg5vPj2TmRDmfkzw+cTzAElWljhcU=
 github.com/SENERGY-Platform/platform-connector-lib v0.0.0-20220307123741-4efc0d1f5ef1 h1:/+kleSZWcLq9Ph86z6sPZGxvm+SG6dHvmjJYkzOlm/8=
 github.com/SENERGY-Platform/platform-connector-lib v0.0.0-20220307123741-4efc0d1f5ef1/go.mod h1:TsVM0K4X8PjIy2eWrbaCSrr/Em1JpCNt+IpSDGtayXM=
+github.com/SENERGY-Platform/platform-connector-lib v0.0.0-20220405080326-36165fc3b1c1 h1:SbTaqRxWVe8vFN5XmRzL0HGM5ZVdJej/7OlkJCBs+KA=
+github.com/SENERGY-Platform/platform-connector-lib v0.0.0-20220405080326-36165fc3b1c1/go.mod h1:TsVM0K4X8PjIy2eWrbaCSrr/Em1JpCNt+IpSDGtayXM=
 github.com/Shopify/sarama v1.22.0/go.mod h1:lm3THZ8reqBDBQKQyb5HB3sY1lKp3grEbQ81aWSgPp4=
 github.com/Shopify/sarama v1.27.0 h1:tqo2zmyzPf1+gwTTwhI6W+EXDw4PVSczynpHKFtVAmo=
 github.com/Shopify/sarama v1.27.0/go.mod h1:aCdj6ymI8uyPEux1JJ9gcaDT6cinjGhNCAhs54taSUo=

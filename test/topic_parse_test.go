@@ -42,7 +42,7 @@ func TestParse(t *testing.T) {
 		t.Error(err)
 		return
 	}
-	iotRepo := iot.New(deviceManagerUrl, deviceRepoUrl, "", "")
+	iotRepo := iot.New(deviceManagerUrl, deviceRepoUrl, "")
 	iotCache := iot.NewCache(iotRepo, 60, 60, 60, 2, 200*time.Millisecond)
 
 	topics := topic.New(iotCache, "")

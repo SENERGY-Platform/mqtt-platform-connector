@@ -78,8 +78,7 @@ func Start(basectx context.Context, config Config) (err error) {
 		ValidateAllowMissingField: config.ValidateAllowMissingField,
 		ValidateAllowUnknownField: config.ValidateAllowUnknownField,
 
-		SemanticRepositoryUrl:    config.SemanticRepoUrl,
-		CharacteristicExpiration: config.SemanticExpiration,
+		CharacteristicExpiration: config.DeviceExpiration,
 
 		PartitionsNum:     config.KafkaPartitionNum,
 		ReplicationFactor: config.KafkaReplicationFactor,

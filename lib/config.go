@@ -37,7 +37,6 @@ type Config struct {
 
 	DeviceManagerUrl string `json:"device_manager_url"`
 	DeviceRepoUrl    string `json:"device_repo_url"`
-	SemanticRepoUrl  string `json:"semantic_repo_url"`
 
 	AuthClientId             string  `json:"auth_client_id"`
 	AuthClientSecret         string  `json:"auth_client_secret"`
@@ -50,7 +49,6 @@ type Config struct {
 
 	DeviceExpiration     int32    `json:"device_expiration"`
 	DeviceTypeExpiration int32    `json:"device_type_expiration"`
-	SemanticExpiration   int32    `json:"semantic_expiration"`
 	TokenCacheExpiration int32    `json:"token_cache_expiration"`
 	IotCacheUrl          []string `json:"iot_cache_url"`
 	TokenCacheUrl        []string `json:"token_cache_url"`

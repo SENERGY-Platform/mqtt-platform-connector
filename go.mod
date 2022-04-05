@@ -3,7 +3,7 @@ module github.com/SENERGY-Platform/mqtt-platform-connector
 go 1.17
 
 require (
-	github.com/SENERGY-Platform/platform-connector-lib v0.0.0-20220307123741-4efc0d1f5ef1
+	github.com/SENERGY-Platform/platform-connector-lib v0.0.0-20220405080326-36165fc3b1c1
 	github.com/Shopify/sarama v1.27.0
 	github.com/bradfitz/gomemcache v0.0.0-20190913173617-a41fca850d0b
 	github.com/coocood/freecache v1.1.1 // indirect
