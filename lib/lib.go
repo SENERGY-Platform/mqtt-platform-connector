@@ -102,12 +102,13 @@ func Start(basectx context.Context, config Config) (err error) {
 		KafkaConsumerMaxBytes: int(config.KafkaConsumerMaxBytes),
 		KafkaConsumerMaxWait:  config.KafkaConsumerMaxWait,
 
-		IotCacheTimeout:      config.IotCacheTimeout,
-		IotCacheMaxIdleConns: int(config.IotCacheMaxIdleConns),
-		KafkaTopicConfigs:    config.KafkaTopicConfigs,
-		DeviceTypeTopic:      config.DeviceTypeTopic,
-		PermQueryUrl:         config.PermQueryUrl,
-		NotificationUrl:      config.NotificationUrl,
+		IotCacheTimeout:                      config.IotCacheTimeout,
+		IotCacheMaxIdleConns:                 int(config.IotCacheMaxIdleConns),
+		KafkaTopicConfigs:                    config.KafkaTopicConfigs,
+		DeviceTypeTopic:                      config.DeviceTypeTopic,
+		PermQueryUrl:                         config.PermQueryUrl,
+		NotificationUrl:                      config.NotificationUrl,
+		NotificationsIgnoreDuplicatesWithinS: config.NotificationsIgnoreDuplicatesWithinS,
 	}
 
 	connector := platform_connector_lib.New(libConf)
