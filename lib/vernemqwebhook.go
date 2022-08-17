@@ -181,6 +181,14 @@ func AuthWebhooks(ctx context.Context, config Config, connector *platform_connec
 			}
 
 			device, service, err := topicParser.Parse(token, msg.Topic)
+			if err == topic.ErrNoDeviceIdCandidateFound {
+				//topics that cant possibly be connected to a device may be handled at will
+				if config.Debug {
+					log.Println("WARNING: AuthWebhooks::publish::ParseTopic", err, msg.Topic)
+				}
+				fmt.Fprintf(writer, `{"result": "ok"}`)
+				return
+			}
 			if err == topic.ErrNoServiceMatchFound {
 				//we want to only check device access
 				if config.Debug {
@@ -238,7 +246,7 @@ func AuthWebhooks(ctx context.Context, config Config, connector *platform_connec
 					mqtttopic.Qos = 128
 					err = nil
 				}
-				if err != nil {
+				if err != nil && err != topic.ErrNoDeviceIdCandidateFound {
 					log.Println("WARNING: AuthWebhooks::subscribe::ParseTopic", err, mqtttopic.Topic)
 					sendError(writer, err.Error())
 					return

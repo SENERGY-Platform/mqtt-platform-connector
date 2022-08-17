@@ -27,6 +27,7 @@ import (
 )
 
 var ErrNoDeviceMatchFound = errors.New("no device match found")
+var ErrNoDeviceIdCandidateFound = errors.New("no device id candidate found")
 var ErrNoServiceMatchFound = errors.New("no service match found")
 var ErrMultipleMatchingDevicesFound = errors.New("multiple matching devices found")
 
@@ -123,6 +124,9 @@ func (this *Topic) findDeviceCandidates(token security.JwtToken, topic string) (
 	if err != nil {
 		return candidates, err
 	}
+	if len(candidateIds) == 0 {
+		return candidates, ErrNoDeviceIdCandidateFound
+	}
 	for _, id := range candidateIds {
 		device, err := this.iotCache.WithToken(token).GetDevice(id)
 		if err == nil {
@@ -140,10 +144,9 @@ func (this *Topic) findDeviceIdCandidates(topic string) (candidates []string, er
 	candidates = findDeviceIdCandidates(topic)
 	for _, shortCandidate := range findShortDeviceIdCandidates(topic) {
 		candidate, err := shortid.EnsureLongDeviceId(shortCandidate)
-		if err != nil {
-			return candidates, err
+		if err == nil {
+			candidates = append(candidates, candidate)
 		}
-		candidates = append(candidates, candidate)
 	}
 	return candidates, nil
 }

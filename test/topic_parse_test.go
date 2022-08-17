@@ -109,7 +109,7 @@ func TestParse(t *testing.T) {
 	t.Run(testTopicParse(topics, "cmd/"+longDeviceIdExample+"/"+unknownLongDeviceIdExample+"/void/poweron", longDeviceIdExample, "void/poweron"))
 	t.Run(testTopicParse(topics, "cmd/"+longDeviceIdExample+"/"+unknownLongDeviceIdExample+"/poweron", longDeviceIdExample, "poweron"))
 
-	t.Run(testTopicParserExpectError(topics, "cmd/foo/bar", topic.ErrNoDeviceMatchFound))
+	t.Run(testTopicParserExpectError(topics, "cmd/foo/bar", topic.ErrNoDeviceIdCandidateFound))
 	t.Run(testTopicParserExpectError(topics, "cmd/"+unknownLongDeviceIdExample+"/bar", topic.ErrNoDeviceMatchFound))
 	t.Run(testTopicParserExpectError(topics, unknownLongDeviceIdExample+"/cmd/bar", topic.ErrNoDeviceMatchFound))
 	t.Run(testTopicParserExpectError(topics, "cmd/bar/"+unknownLongDeviceIdExample, topic.ErrNoDeviceMatchFound))
