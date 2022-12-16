@@ -17,10 +17,8 @@ github.com/RyanCarrier/dijkstra-1 v0.0.0-20170512020943-0e5801a26345 h1:fgSpoKVi
 github.com/RyanCarrier/dijkstra-1 v0.0.0-20170512020943-0e5801a26345/go.mod h1:OK4EvWJ441LQqGzed5NGB6vKBAE34n3z7iayPcEwr30=
 github.com/SENERGY-Platform/converter v0.0.0-20220810123448-27fbbf6ab679 h1:73IwfEYhENSbwB/OnBQ4zTg9F31pYacy1l4oY5kgHAM=
 github.com/SENERGY-Platform/converter v0.0.0-20220810123448-27fbbf6ab679/go.mod h1:tNlmWollEzd2MTSMoPf2u+GXKakZnW/4v1iUxxm8YI4=
-github.com/SENERGY-Platform/platform-connector-lib v0.0.0-20220921130135-f415be2e5dae h1:QHdr3escceaiskgASL1qavebgnxsnk3bhkZ9z9flU9o=
-github.com/SENERGY-Platform/platform-connector-lib v0.0.0-20220921130135-f415be2e5dae/go.mod h1:rTuTemTM7jDiI6b93JMBlUka9CYfoHEjYdLWWVc8hUc=
-github.com/SENERGY-Platform/platform-connector-lib v0.0.0-20220922073852-a9548171e8ee h1:XHbSRVAAi7tEyx1nL2mwHEffAuzcJK4bW1V+Kisik+I=
-github.com/SENERGY-Platform/platform-connector-lib v0.0.0-20220922073852-a9548171e8ee/go.mod h1:rTuTemTM7jDiI6b93JMBlUka9CYfoHEjYdLWWVc8hUc=
+github.com/SENERGY-Platform/platform-connector-lib v0.0.0-20221216064905-0be574c5ef5f h1:F/pAQFUj6MQINAifLys6SdaaOjz6neUyCqJE7Fx2GRs=
+github.com/SENERGY-Platform/platform-connector-lib v0.0.0-20221216064905-0be574c5ef5f/go.mod h1:rTuTemTM7jDiI6b93JMBlUka9CYfoHEjYdLWWVc8hUc=
 github.com/Shopify/sarama v1.22.0/go.mod h1:lm3THZ8reqBDBQKQyb5HB3sY1lKp3grEbQ81aWSgPp4=
 github.com/Shopify/sarama v1.27.0 h1:tqo2zmyzPf1+gwTTwhI6W+EXDw4PVSczynpHKFtVAmo=
 github.com/Shopify/sarama v1.27.0/go.mod h1:aCdj6ymI8uyPEux1JJ9gcaDT6cinjGhNCAhs54taSUo=
