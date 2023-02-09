@@ -1,9 +1,9 @@
 module github.com/SENERGY-Platform/mqtt-platform-connector
 
-go 1.17
+go 1.19
 
 require (
-	github.com/SENERGY-Platform/platform-connector-lib v0.0.0-20230206092303-dcd1e73d73f6
+	github.com/SENERGY-Platform/platform-connector-lib v0.0.0-20230209070039-5e31233e059d
 	github.com/Shopify/sarama v1.27.0
 	github.com/bradfitz/gomemcache v0.0.0-20190913173617-a41fca850d0b
 	github.com/eclipse/paho.mqtt.golang v1.2.0
