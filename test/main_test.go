@@ -6,11 +6,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/SENERGY-Platform/mqtt-platform-connector/lib"
+	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/configuration"
+	"github.com/SENERGY-Platform/mqtt-platform-connector/test/client"
 	"github.com/SENERGY-Platform/mqtt-platform-connector/test/server"
 	"github.com/SENERGY-Platform/platform-connector-lib/kafka"
 	"github.com/SENERGY-Platform/platform-connector-lib/model"
 	"github.com/SENERGY-Platform/platform-connector-lib/psql"
-	uuid "github.com/satori/go.uuid"
+	"github.com/google/uuid"
 	"log"
 	"reflect"
 	"sync"
@@ -18,11 +20,32 @@ import (
 	"time"
 )
 
-func TestEventWithoutProvisioning(t *testing.T) {
-	defaultConfig, err := lib.LoadConfigLocation("../config.json")
+func TestEventWithoutProvisioningPw4(t *testing.T) {
+	testEventWithoutProvisioning(t, "password", client.MQTT4)
+}
+
+func TestEventWithoutProvisioningPw5(t *testing.T) {
+	testEventWithoutProvisioning(t, "password", client.MQTT5)
+}
+
+func TestEventWithoutProvisioningCert4(t *testing.T) {
+	testEventWithoutProvisioning(t, "certificate", client.MQTT4)
+}
+
+func TestEventWithoutProvisioningCert5(t *testing.T) {
+	testEventWithoutProvisioning(t, "certificate", client.MQTT5)
+}
+
+func testEventWithoutProvisioning(t *testing.T, authMethod string, mqttVersion client.MqttVersion) {
+	defaultConfig, err := configuration.Load("../config.json")
 	if err != nil {
 		t.Error(err)
 		return
+	}
+
+	defaultConfig.MqttAuthMethod = authMethod
+	if mqttVersion == client.MQTT5 {
+		defaultConfig.MqttVersion = "5"
 	}
 
 	wg := &sync.WaitGroup{}
@@ -30,7 +53,7 @@ func TestEventWithoutProvisioning(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	config, err := server.New(ctx, wg, defaultConfig)
+	config, clientBroker, err := server.New(ctx, wg, defaultConfig)
 	if err != nil {
 		t.Error(err)
 		return
@@ -71,7 +94,7 @@ func TestEventWithoutProvisioning(t *testing.T) {
 	})
 
 	t.Run("send mqtt message", func(t *testing.T) {
-		sendMqttEvent(t, config, "senergy/"+device.Id+"/"+serviceLocalId, msg)
+		sendMqttEvent(t, clientBroker, "senergy/"+device.Id+"/"+serviceLocalId, msg, authMethod, mqttVersion)
 		time.Sleep(10 * time.Second) //wait for cqrs
 	})
 
@@ -80,20 +103,49 @@ func TestEventWithoutProvisioning(t *testing.T) {
 	})
 }
 
-func TestEventPlainText(t *testing.T) {
-	defaultConfig, err := lib.LoadConfigLocation("../config.json")
+func TestEventPlainTextPw4(t *testing.T) {
+	testEventPlainText(t, "password", client.MQTT4)
+}
+
+func TestEventPlainTextPw5(t *testing.T) {
+	if testing.Short() {
+		t.Skip("short")
+	}
+	testEventPlainText(t, "password", client.MQTT5)
+}
+
+func TestEventPlainTextCert4(t *testing.T) {
+	if testing.Short() {
+		t.Skip("short")
+	}
+	testEventPlainText(t, "certificate", client.MQTT4)
+}
+
+func TestEventPlainTextCert5(t *testing.T) {
+	if testing.Short() {
+		t.Skip("short")
+	}
+	testEventPlainText(t, "certificate", client.MQTT5)
+}
+
+func testEventPlainText(t *testing.T, authMethod string, mqttVersion client.MqttVersion) {
+	defaultConfig, err := configuration.Load("../config.json")
 	if err != nil {
 		t.Error(err)
 		return
 	}
 	defaultConfig.PublishToPostgres = true
+	defaultConfig.MqttAuthMethod = authMethod
+	if mqttVersion == client.MQTT5 {
+		defaultConfig.MqttVersion = "5"
+	}
 
 	wg := &sync.WaitGroup{}
 	defer wg.Wait()
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	config, err := server.New(ctx, wg, defaultConfig)
+	config, clientBroker, err := server.New(ctx, wg, defaultConfig)
 	if err != nil {
 		t.Error(err)
 		return
@@ -134,7 +186,7 @@ func TestEventPlainText(t *testing.T) {
 	})
 
 	t.Run("send mqtt message", func(t *testing.T) {
-		sendMqttEvent(t, config, "senergy/"+device.Id+"/"+serviceLocalId, msg)
+		sendMqttEvent(t, clientBroker, "senergy/"+device.Id+"/"+serviceLocalId, msg, authMethod, mqttVersion)
 		time.Sleep(10 * time.Second) //wait for cqrs
 	})
 
@@ -186,19 +238,21 @@ func TestEventPlainText(t *testing.T) {
 	})
 }
 
-func sendMqttEvent(t *testing.T, config lib.Config, topic string, msg string) {
-	mqtt, err := lib.NewMqtt(lib.Config{AuthClientId: "sepl", AuthClientSecret: "sepl", MqttBroker: config.MqttBroker, Qos: config.Qos})
+func sendMqttEvent(t *testing.T, broker string, topic string, msg string, authMethod string, mqttVersion client.MqttVersion) {
+	mqtt, err := client.New(broker, "sepl", "sepl", uuid.NewString(), authMethod, mqttVersion, true, true)
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
+		return
 	}
-	defer mqtt.Close()
-	err = mqtt.Publish(topic, msg)
+	defer mqtt.Stop()
+	err = mqtt.PublishRaw(topic, []byte(msg), 2)
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
+		return
 	}
 }
 
-func trySensorFromDevice(t *testing.T, config lib.Config, ctx context.Context, deviceType model.DeviceType, device model.Device, serviceLocalId string, msg string) {
+func trySensorFromDevice(t *testing.T, config configuration.Config, ctx context.Context, deviceType model.DeviceType, device model.Device, serviceLocalId string, msg string) {
 	service := model.Service{}
 	for _, s := range deviceType.Services {
 		if s.LocalId == serviceLocalId {
@@ -211,7 +265,7 @@ func trySensorFromDevice(t *testing.T, config lib.Config, ctx context.Context, d
 	log.Println("DEBUG CONSUME:", model.ServiceIdToTopic(service.Id))
 	err := kafka.NewConsumer(ctx, kafka.ConsumerConfig{
 		KafkaUrl: config.KafkaUrl,
-		GroupId:  "testing_" + uuid.NewV4().String(),
+		GroupId:  "testing_" + uuid.NewString(),
 		Topic:    model.ServiceIdToTopic(service.Id),
 		MinBytes: 1000,
 		MaxBytes: 1000000,

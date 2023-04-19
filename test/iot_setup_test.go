@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/SENERGY-Platform/mqtt-platform-connector/lib"
+	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/configuration"
 	"github.com/SENERGY-Platform/mqtt-platform-connector/test/helper"
 	"github.com/SENERGY-Platform/platform-connector-lib/model"
 	"io/ioutil"
@@ -15,7 +15,7 @@ import (
 	"time"
 )
 
-func createTestProtocol(t *testing.T, config lib.Config) model.Protocol {
+func createTestProtocol(t *testing.T, config configuration.Config) model.Protocol {
 	protocol := model.Protocol{}
 	err := helper.AdminJwt.PostJSON(config.DeviceManagerUrl+"/protocols", model.Protocol{
 		Name:             config.Protocol,
@@ -29,7 +29,7 @@ func createTestProtocol(t *testing.T, config lib.Config) model.Protocol {
 	return protocol
 }
 
-func createTestDeviceType(t *testing.T, config lib.Config, protocol model.Protocol, serviceLocalId string, serviceId string) (result model.DeviceType) {
+func createTestDeviceType(t *testing.T, config configuration.Config, protocol model.Protocol, serviceLocalId string, serviceId string) (result model.DeviceType) {
 	if reflect.DeepEqual(protocol, model.Protocol{}) {
 		t.Error("invalid protocol")
 		return model.DeviceType{}
@@ -94,7 +94,7 @@ func createTestDeviceType(t *testing.T, config lib.Config, protocol model.Protoc
 	return
 }
 
-func createTestDeviceTypeWithTextPayload(t *testing.T, config lib.Config, protocol model.Protocol, serviceLocalId string, serviceId string) (result model.DeviceType) {
+func createTestDeviceTypeWithTextPayload(t *testing.T, config configuration.Config, protocol model.Protocol, serviceLocalId string, serviceId string) (result model.DeviceType) {
 	if reflect.DeepEqual(protocol, model.Protocol{}) {
 		t.Error("invalid protocol")
 		return model.DeviceType{}
@@ -130,7 +130,7 @@ func createTestDeviceTypeWithTextPayload(t *testing.T, config lib.Config, protoc
 	return
 }
 
-func createTestDevice(t *testing.T, config lib.Config, dt model.DeviceType, deviceLocalId string, deviceId string) (result model.Device) {
+func createTestDevice(t *testing.T, config configuration.Config, dt model.DeviceType, deviceLocalId string, deviceId string) (result model.Device) {
 	if reflect.DeepEqual(dt, model.DeviceType{}) {
 		t.Error("invalid device-type")
 		return
@@ -150,7 +150,7 @@ func createTestDevice(t *testing.T, config lib.Config, dt model.DeviceType, devi
 	return
 }
 
-func checkDevice(t *testing.T, config lib.Config, deviceLocalId string, deviceTypeId string) (result model.Device) {
+func checkDevice(t *testing.T, config configuration.Config, deviceLocalId string, deviceTypeId string) (result model.Device) {
 	client := http.Client{
 		Timeout: 5 * time.Second,
 	}

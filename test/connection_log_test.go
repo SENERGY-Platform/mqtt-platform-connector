@@ -20,10 +20,11 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/SENERGY-Platform/mqtt-platform-connector/lib"
+	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/configuration"
+	"github.com/SENERGY-Platform/mqtt-platform-connector/test/client"
 	"github.com/SENERGY-Platform/mqtt-platform-connector/test/server"
 	"github.com/SENERGY-Platform/platform-connector-lib/kafka"
 	"github.com/SENERGY-Platform/platform-connector-lib/model"
-	paho "github.com/eclipse/paho.mqtt.golang"
 	"log"
 	"reflect"
 	"sort"
@@ -34,18 +35,56 @@ import (
 )
 
 func TestConnectionLogDevice1Minimal(t *testing.T) {
-	defaultConfig, err := lib.LoadConfigLocation("../config.json")
+	t.Skip("collection of tests")
+	t.Run("TestConnectionLogDevice1MinimalMqtt4", TestConnectionLogDevice1MinimalMqtt4)
+	t.Run("TestConnectionLogDevice1MinimalCertMqtt4", TestConnectionLogDevice1MinimalCertMqtt4)
+}
+
+func TestConnectionLogDevice1MinimalMqtt4(t *testing.T) {
+	testConnectionLogDevice1Minimal(t, "password", client.MQTT4)
+}
+
+func TestConnectionLogDevice1MinimalMqtt5(t *testing.T) {
+	if testing.Short() {
+		t.Skip("short")
+	}
+	testConnectionLogDevice1Minimal(t, "password", client.MQTT5)
+}
+
+func TestConnectionLogDevice1MinimalCertMqtt4(t *testing.T) {
+	if testing.Short() {
+		t.Skip("short")
+	}
+	testConnectionLogDevice1Minimal(t, "certificate", client.MQTT4)
+}
+
+func TestConnectionLogDevice1MinimalCertMqtt5(t *testing.T) {
+	if testing.Short() {
+		t.Skip("short")
+	}
+	testConnectionLogDevice1Minimal(t, "certificate", client.MQTT5)
+}
+
+func testConnectionLogDevice1Minimal(t *testing.T, authMethod string, mqttVersion client.MqttVersion) {
+	if mqttVersion == client.MQTT5 {
+		t.Skip("clean-start=false is currently not supported by mqtt 5 paho client")
+	}
+	defaultConfig, err := configuration.Load("../config.json")
 	if err != nil {
 		t.Error(err)
 		return
 	}
-
+	defaultConfig.MqttAuthMethod = authMethod
+	if mqttVersion == client.MQTT5 {
+		defaultConfig.MqttVersion = "5"
+	}
+	defer t.Log("test done")
 	wg := &sync.WaitGroup{}
 	defer wg.Wait()
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	config, err := server.NewWithConnectionLog(ctx, wg, defaultConfig)
+	config, brokerForClients, err := server.NewWithConnectionLog(ctx, wg, defaultConfig)
 	if err != nil {
 		t.Error(err)
 		return
@@ -87,28 +126,23 @@ func TestConnectionLogDevice1Minimal(t *testing.T) {
 	expected := []DeviceLog{}
 
 	t.Run("run", func(t *testing.T) {
-		client1 := paho.NewClient(paho.NewClientOptions().
-			SetPassword("foo").
-			SetUsername("bar").
-			SetClientID("client1").
-			SetAutoReconnect(false).
-			SetCleanSession(false).
-			AddBroker(config.MqttBroker))
-		if token := client1.Connect(); token.Wait() && token.Error() != nil {
-			t.Error(token.Error())
+		client1, err := client.New(brokerForClients, "bar", "foo", "client1", authMethod, mqttVersion, false, false)
+		if err != nil {
+			t.Error(err)
 			return
 		}
+		defer client1.Stop()
 
-		token := client1.Subscribe(device.Id+"/"+serviceLocalId, 2, func(client paho.Client, message paho.Message) {})
-		if token.Wait() && token.Error() != nil {
-			t.Error(token.Error())
+		err = client1.Subscribe(device.Id+"/"+serviceLocalId, 2, func(topic string, pl []byte) {})
+		if err != nil {
+			t.Error(err)
 			return
 		}
 		expected = append(expected, DeviceLog{Id: device.Id, Connected: true})
 
-		token = client1.Subscribe(device.Id+"/"+serviceLocalId+"_2", 2, func(client paho.Client, message paho.Message) {})
-		if token.Wait() && token.Error() != nil {
-			t.Error(token.Error())
+		err = client1.Subscribe(device.Id+"/"+serviceLocalId+"_2", 2, func(topic string, pl []byte) {})
+		if err != nil {
+			t.Error(err)
 			return
 		}
 		expected = append(expected, DeviceLog{Id: device.Id, Connected: true})
@@ -116,9 +150,9 @@ func TestConnectionLogDevice1Minimal(t *testing.T) {
 		time.Sleep(2 * time.Second)
 
 		//disconnect device[1]
-		token = client1.Unsubscribe(device.Id+"/"+serviceLocalId, device.Id+"/"+serviceLocalId+"_2")
-		if token.Wait() && token.Error() != nil {
-			t.Error(token.Error())
+		err = client1.Unsubscribe(device.Id+"/"+serviceLocalId, device.Id+"/"+serviceLocalId+"_2")
+		if err != nil {
+			t.Error(err)
 			return
 		}
 		expected = append(expected, DeviceLog{Id: device.Id, Connected: false})
@@ -159,11 +193,43 @@ func TestConnectionLogDevice1Minimal(t *testing.T) {
 	})
 }
 
-func TestConnectionLog(t *testing.T) {
-	defaultConfig, err := lib.LoadConfigLocation("../config.json")
+func TestConnectionLogMqtt4(t *testing.T) {
+	testConnectionLog(t, "password", client.MQTT4)
+}
+
+func TestConnectionLogMqtt5(t *testing.T) {
+	if testing.Short() {
+		t.Skip("short")
+	}
+	testConnectionLog(t, "password", client.MQTT5)
+}
+
+func TestConnectionLogCertMqtt4(t *testing.T) {
+	if testing.Short() {
+		t.Skip("short")
+	}
+	testConnectionLog(t, "certificate", client.MQTT4)
+}
+
+func TestConnectionLogCertMqtt5(t *testing.T) {
+	if testing.Short() {
+		t.Skip("short")
+	}
+	testConnectionLog(t, "certificate", client.MQTT5)
+}
+
+func testConnectionLog(t *testing.T, authMethod string, mqttVersion client.MqttVersion) {
+	if mqttVersion == client.MQTT5 {
+		t.Skip("clean-start=false is currently not supported by mqtt 5 paho client")
+	}
+	defaultConfig, err := configuration.Load("../config.json")
 	if err != nil {
 		t.Error(err)
 		return
+	}
+	defaultConfig.MqttAuthMethod = authMethod
+	if mqttVersion == client.MQTT5 {
+		defaultConfig.MqttVersion = "5"
 	}
 
 	wg := &sync.WaitGroup{}
@@ -171,7 +237,7 @@ func TestConnectionLog(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	config, err := server.NewWithConnectionLog(ctx, wg, defaultConfig)
+	config, brokerForClients, err := server.NewWithConnectionLog(ctx, wg, defaultConfig)
 	if err != nil {
 		t.Error(err)
 		return
@@ -221,176 +287,10 @@ func TestConnectionLog(t *testing.T) {
 		time.Sleep(10 * time.Second) //wait for cqrs
 	})
 
-	expected := []DeviceLog{}
+	logMessages := []DeviceLog{}
+	logMessagesMux := sync.Mutex{}
 
-	t.Run("run", func(t *testing.T) {
-		client1 := paho.NewClient(paho.NewClientOptions().
-			SetPassword("foo").
-			SetUsername("bar").
-			SetClientID("client1").
-			SetAutoReconnect(false).
-			SetCleanSession(false).
-			AddBroker(config.MqttBroker))
-		if token := client1.Connect(); token.Wait() && token.Error() != nil {
-			t.Error(token.Error())
-			return
-		}
-
-		for i := 0; i < 8; i++ {
-			device := devices[i]
-			token := client1.Subscribe(device.Id+"/"+serviceLocalId, 2, func(client paho.Client, message paho.Message) {})
-			if token.Wait() && token.Error() != nil {
-				t.Error(token.Error())
-				return
-			}
-			expected = append(expected, DeviceLog{Id: devices[i].Id, Connected: true})
-
-			token = client1.Subscribe(device.Id+"/"+serviceLocalId+"_2", 2, func(client paho.Client, message paho.Message) {})
-			if token.Wait() && token.Error() != nil {
-				t.Error(token.Error())
-				return
-			}
-			expected = append(expected, DeviceLog{Id: devices[i].Id, Connected: true})
-		}
-
-		client2 := paho.NewClient(paho.NewClientOptions().
-			SetPassword("foo").
-			SetUsername("bar").
-			SetClientID("client2").
-			SetAutoReconnect(false).
-			SetCleanSession(true).
-			AddBroker(config.MqttBroker))
-		if token := client2.Connect(); token.Wait() && token.Error() != nil {
-			t.Error(token.Error())
-			return
-		}
-
-		for i := 4; i < 12; i++ {
-			device := devices[i]
-			token := client2.Subscribe(device.Id+"/"+serviceLocalId, 2, func(client paho.Client, message paho.Message) {})
-			if token.Wait() && token.Error() != nil {
-				t.Error(token.Error())
-				return
-			}
-			expected = append(expected, DeviceLog{Id: devices[i].Id, Connected: true})
-
-			token = client2.Subscribe(device.Id+"/"+serviceLocalId+"_2", 2, func(client paho.Client, message paho.Message) {})
-			if token.Wait() && token.Error() != nil {
-				t.Error(token.Error())
-				return
-			}
-			expected = append(expected, DeviceLog{Id: devices[i].Id, Connected: true})
-		}
-
-		time.Sleep(2 * time.Second)
-
-		//no disconnect because second service is still used
-		token := client1.Unsubscribe(devices[0].Id + "/" + serviceLocalId)
-		if token.Wait() && token.Error() != nil {
-			t.Error(token.Error())
-			return
-		}
-
-		//disconnect device[1]
-		token = client1.Unsubscribe(devices[1].Id+"/"+serviceLocalId, devices[1].Id+"/"+serviceLocalId+"_2")
-		if token.Wait() && token.Error() != nil {
-			t.Error(token.Error())
-			return
-		}
-		expected = append(expected, DeviceLog{Id: devices[1].Id, Connected: false})
-
-		//no disconnect because client2 uses device[4]
-		token = client1.Unsubscribe(devices[4].Id+"/"+serviceLocalId, devices[4].Id+"/"+serviceLocalId+"_2")
-		if token.Wait() && token.Error() != nil {
-			t.Error(token.Error())
-			return
-		}
-
-		//no disconnect because second service is still used
-		token = client2.Unsubscribe(devices[11].Id + "/" + serviceLocalId)
-		if token.Wait() && token.Error() != nil {
-			t.Error(token.Error())
-			return
-		}
-
-		//disconnect device[10]
-		token = client2.Unsubscribe(devices[10].Id+"/"+serviceLocalId, devices[10].Id+"/"+serviceLocalId+"_2")
-		if token.Wait() && token.Error() != nil {
-			t.Error(token.Error())
-			return
-		}
-		expected = append(expected, DeviceLog{Id: devices[10].Id, Connected: false})
-
-		//no disconnect because client1 uses device[7]
-		token = client2.Unsubscribe(devices[7].Id+"/"+serviceLocalId, devices[7].Id+"/"+serviceLocalId+"_2")
-		if token.Wait() && token.Error() != nil {
-			t.Error(token.Error())
-			return
-		}
-
-		//disconnect client 2 --> disconnect devices 4, 8, 9, 11
-		client2.Disconnect(0)
-		expected = append(expected, DeviceLog{Id: devices[4].Id, Connected: false})
-		expected = append(expected, DeviceLog{Id: devices[8].Id, Connected: false})
-		expected = append(expected, DeviceLog{Id: devices[9].Id, Connected: false})
-		expected = append(expected, DeviceLog{Id: devices[11].Id, Connected: false})
-		time.Sleep(1 * time.Second)
-
-		//disconnect client 1 --> disconnect devices 0, 2, 3, 5, 6, 7
-		client1.Disconnect(0)
-		expected = append(expected, DeviceLog{Id: devices[0].Id, Connected: false})
-		expected = append(expected, DeviceLog{Id: devices[2].Id, Connected: false})
-		expected = append(expected, DeviceLog{Id: devices[3].Id, Connected: false})
-		expected = append(expected, DeviceLog{Id: devices[5].Id, Connected: false})
-		expected = append(expected, DeviceLog{Id: devices[6].Id, Connected: false})
-		expected = append(expected, DeviceLog{Id: devices[7].Id, Connected: false})
-		time.Sleep(1 * time.Second)
-
-		//reconnect client2 --> no device connect because clean session = true
-		client2 = paho.NewClient(paho.NewClientOptions().
-			SetPassword("foo").
-			SetUsername("bar").
-			SetClientID("client2").
-			SetAutoReconnect(false).
-			SetCleanSession(true).
-			AddBroker(config.MqttBroker))
-		if token := client2.Connect(); token.Wait() && token.Error() != nil {
-			t.Error(token.Error())
-			return
-		}
-
-		//reconnect client 1 --> connect devices 0, 2, 3, 5, 6, 7 because clean session = false
-		client1 = paho.NewClient(paho.NewClientOptions().
-			SetPassword("foo").
-			SetUsername("bar").
-			SetClientID("client1").
-			SetAutoReconnect(false).
-			SetCleanSession(false).
-			AddBroker(config.MqttBroker))
-		if token := client1.Connect(); token.Wait() && token.Error() != nil {
-			t.Error(token.Error())
-			return
-		}
-		expected = append(expected, DeviceLog{Id: devices[0].Id, Connected: true})
-		expected = append(expected, DeviceLog{Id: devices[2].Id, Connected: true})
-		expected = append(expected, DeviceLog{Id: devices[3].Id, Connected: true})
-		expected = append(expected, DeviceLog{Id: devices[5].Id, Connected: true})
-		expected = append(expected, DeviceLog{Id: devices[6].Id, Connected: true})
-		expected = append(expected, DeviceLog{Id: devices[7].Id, Connected: true})
-
-		//disconnect all --> disconnect devices 0, 2, 3, 5, 6, 7
-		client1.Disconnect(0)
-		client2.Disconnect(0)
-		expected = append(expected, DeviceLog{Id: devices[0].Id, Connected: false})
-		expected = append(expected, DeviceLog{Id: devices[2].Id, Connected: false})
-		expected = append(expected, DeviceLog{Id: devices[3].Id, Connected: false})
-		expected = append(expected, DeviceLog{Id: devices[5].Id, Connected: false})
-		expected = append(expected, DeviceLog{Id: devices[6].Id, Connected: false})
-		expected = append(expected, DeviceLog{Id: devices[7].Id, Connected: false})
-	})
-
-	t.Run("check", func(t *testing.T) {
-		logMessages := []DeviceLog{}
+	t.Run("consume device-logs", func(t *testing.T) {
 		log.Println("consume", config.DeviceLogTopic)
 		err = kafka.NewConsumer(ctx,
 			kafka.ConsumerConfig{
@@ -404,6 +304,8 @@ func TestConnectionLog(t *testing.T) {
 					t.Error(err)
 					return nil
 				}
+				logMessagesMux.Lock()
+				defer logMessagesMux.Unlock()
 				logMessages = append(logMessages, logmsg)
 				return nil
 			}, func(err error) {
@@ -413,16 +315,254 @@ func TestConnectionLog(t *testing.T) {
 			t.Error(err)
 			return
 		}
-		time.Sleep(20 * time.Second)
-
-		sortedReadableExpected := makeMessagesReadable(expected, devices)
-		sortedReadableActual := makeMessagesReadable(logMessages, devices)
-		if !reflect.DeepEqual(sortedReadableExpected, sortedReadableActual) {
-			expectedJson, _ := json.Marshal(sortedReadableExpected)
-			actualJson, _ := json.Marshal(sortedReadableActual)
-			t.Error(string(expectedJson), "\n", string(actualJson))
-		}
 	})
+
+	expected := []DeviceLog{}
+
+	t.Run("run", func(t *testing.T) {
+		client1, err := client.New(brokerForClients, "bar", "foo", "client1", authMethod, mqttVersion, false, false)
+		if err != nil {
+			t.Error(err)
+			return
+		}
+		defer client1.Stop()
+
+		for i := 0; i < 8; i++ {
+			device := devices[i]
+			err := client1.Subscribe(device.Id+"/"+serviceLocalId, 2, func(topic string, pl []byte) {})
+			if err != nil {
+				t.Error(err)
+				return
+			}
+			expected = append(expected, DeviceLog{Id: devices[i].Id, Connected: true})
+
+			err = client1.Subscribe(device.Id+"/"+serviceLocalId+"_2", 2, func(topic string, pl []byte) {})
+			if err != nil {
+				t.Error(err)
+				return
+			}
+			expected = append(expected, DeviceLog{Id: devices[i].Id, Connected: true})
+		}
+
+		t.Run("check 1", func(t *testing.T) {
+			time.Sleep(10 * time.Second)
+			logMessagesMux.Lock()
+			defer logMessagesMux.Unlock()
+			sortedReadableExpected := makeMessagesReadable(expected, devices)
+			sortedReadableActual := makeMessagesReadable(logMessages, devices)
+			if !reflect.DeepEqual(sortedReadableExpected, sortedReadableActual) {
+				expectedJson, _ := json.Marshal(sortedReadableExpected)
+				actualJson, _ := json.Marshal(sortedReadableActual)
+				t.Error(string(expectedJson), "\n", string(actualJson))
+			}
+		})
+
+		client2, err := client.New(brokerForClients, "bar", "foo", "client2", authMethod, mqttVersion, true, false)
+		if err != nil {
+			t.Error(err)
+			return
+		}
+		defer client2.Stop()
+
+		for i := 4; i < 12; i++ {
+			device := devices[i]
+			err = client2.Subscribe(device.Id+"/"+serviceLocalId, 2, func(topic string, pl []byte) {})
+			if err != nil {
+				t.Error(err)
+				return
+			}
+			expected = append(expected, DeviceLog{Id: devices[i].Id, Connected: true})
+
+			err = client2.Subscribe(device.Id+"/"+serviceLocalId+"_2", 2, func(topic string, pl []byte) {})
+			if err != nil {
+				t.Error(err)
+				return
+			}
+			expected = append(expected, DeviceLog{Id: devices[i].Id, Connected: true})
+		}
+
+		t.Run("check 2", func(t *testing.T) {
+			time.Sleep(10 * time.Second)
+			logMessagesMux.Lock()
+			defer logMessagesMux.Unlock()
+			sortedReadableExpected := makeMessagesReadable(expected, devices)
+			sortedReadableActual := makeMessagesReadable(logMessages, devices)
+			if !reflect.DeepEqual(sortedReadableExpected, sortedReadableActual) {
+				expectedJson, _ := json.Marshal(sortedReadableExpected)
+				actualJson, _ := json.Marshal(sortedReadableActual)
+				t.Error(string(expectedJson), "\n", string(actualJson))
+			}
+		})
+
+		//no disconnect because second service is still used
+		err = client1.Unsubscribe(devices[0].Id + "/" + serviceLocalId)
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		//disconnect device[1]
+		err = client1.Unsubscribe(devices[1].Id+"/"+serviceLocalId, devices[1].Id+"/"+serviceLocalId+"_2")
+		if err != nil {
+			t.Error(err)
+			return
+		}
+		expected = append(expected, DeviceLog{Id: devices[1].Id, Connected: false})
+
+		//no disconnect because client2 uses device[4]
+		err = client1.Unsubscribe(devices[4].Id+"/"+serviceLocalId, devices[4].Id+"/"+serviceLocalId+"_2")
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		//no disconnect because second service is still used
+		err = client2.Unsubscribe(devices[11].Id + "/" + serviceLocalId)
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		t.Run("check 3", func(t *testing.T) {
+			time.Sleep(10 * time.Second)
+			logMessagesMux.Lock()
+			defer logMessagesMux.Unlock()
+			sortedReadableExpected := makeMessagesReadable(expected, devices)
+			sortedReadableActual := makeMessagesReadable(logMessages, devices)
+			if !reflect.DeepEqual(sortedReadableExpected, sortedReadableActual) {
+				expectedJson, _ := json.Marshal(sortedReadableExpected)
+				actualJson, _ := json.Marshal(sortedReadableActual)
+				t.Error(string(expectedJson), "\n", string(actualJson))
+			}
+		})
+
+		//disconnect device[10]
+		err = client2.Unsubscribe(devices[10].Id+"/"+serviceLocalId, devices[10].Id+"/"+serviceLocalId+"_2")
+		if err != nil {
+			t.Error(err)
+			return
+		}
+		expected = append(expected, DeviceLog{Id: devices[10].Id, Connected: false})
+
+		//no disconnect because client1 uses device[7]
+		err = client2.Unsubscribe(devices[7].Id+"/"+serviceLocalId, devices[7].Id+"/"+serviceLocalId+"_2")
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		t.Run("check 4", func(t *testing.T) {
+			time.Sleep(10 * time.Second)
+			logMessagesMux.Lock()
+			defer logMessagesMux.Unlock()
+			sortedReadableExpected := makeMessagesReadable(expected, devices)
+			sortedReadableActual := makeMessagesReadable(logMessages, devices)
+			if !reflect.DeepEqual(sortedReadableExpected, sortedReadableActual) {
+				expectedJson, _ := json.Marshal(sortedReadableExpected)
+				actualJson, _ := json.Marshal(sortedReadableActual)
+				t.Error(string(expectedJson), "\n", string(actualJson))
+			}
+		})
+
+		//disconnect client 2 --> disconnect devices 4, 8, 9, 11
+		client2.Stop()
+		expected = append(expected, DeviceLog{Id: devices[4].Id, Connected: false})
+		expected = append(expected, DeviceLog{Id: devices[8].Id, Connected: false})
+		expected = append(expected, DeviceLog{Id: devices[9].Id, Connected: false})
+		expected = append(expected, DeviceLog{Id: devices[11].Id, Connected: false})
+
+		t.Run("check 5", func(t *testing.T) {
+			time.Sleep(10 * time.Second)
+			logMessagesMux.Lock()
+			defer logMessagesMux.Unlock()
+			sortedReadableExpected := makeMessagesReadable(expected, devices)
+			sortedReadableActual := makeMessagesReadable(logMessages, devices)
+			if !reflect.DeepEqual(sortedReadableExpected, sortedReadableActual) {
+				expectedJson, _ := json.Marshal(sortedReadableExpected)
+				actualJson, _ := json.Marshal(sortedReadableActual)
+				t.Error(string(expectedJson), "\n", string(actualJson))
+			}
+		})
+
+		//disconnect client 1 --> disconnect devices 0, 2, 3, 5, 6, 7
+		client1.Stop()
+		expected = append(expected, DeviceLog{Id: devices[0].Id, Connected: false})
+		expected = append(expected, DeviceLog{Id: devices[2].Id, Connected: false})
+		expected = append(expected, DeviceLog{Id: devices[3].Id, Connected: false})
+		expected = append(expected, DeviceLog{Id: devices[5].Id, Connected: false})
+		expected = append(expected, DeviceLog{Id: devices[6].Id, Connected: false})
+		expected = append(expected, DeviceLog{Id: devices[7].Id, Connected: false})
+
+		t.Run("check 6", func(t *testing.T) {
+			time.Sleep(10 * time.Second)
+			logMessagesMux.Lock()
+			defer logMessagesMux.Unlock()
+			sortedReadableExpected := makeMessagesReadable(expected, devices)
+			sortedReadableActual := makeMessagesReadable(logMessages, devices)
+			if !reflect.DeepEqual(sortedReadableExpected, sortedReadableActual) {
+				expectedJson, _ := json.Marshal(sortedReadableExpected)
+				actualJson, _ := json.Marshal(sortedReadableActual)
+				t.Error(string(expectedJson), "\n", string(actualJson))
+			}
+		})
+
+		//reconnect client2 --> no device connect because clean session = true
+		client2, err = client.New(brokerForClients, "bar", "foo", "client2", authMethod, mqttVersion, true, false)
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		//reconnect client 1 --> connect devices 0, 2, 3, 5, 6, 7 because clean session = false
+		client1, err = client.New(brokerForClients, "bar", "foo", "client1", authMethod, mqttVersion, false, false)
+		if err != nil {
+			t.Error(err)
+			return
+		}
+		expected = append(expected, DeviceLog{Id: devices[0].Id, Connected: true})
+		expected = append(expected, DeviceLog{Id: devices[2].Id, Connected: true})
+		expected = append(expected, DeviceLog{Id: devices[3].Id, Connected: true})
+		expected = append(expected, DeviceLog{Id: devices[5].Id, Connected: true})
+		expected = append(expected, DeviceLog{Id: devices[6].Id, Connected: true})
+		expected = append(expected, DeviceLog{Id: devices[7].Id, Connected: true})
+
+		t.Run("check 7", func(t *testing.T) {
+			time.Sleep(10 * time.Second)
+			logMessagesMux.Lock()
+			defer logMessagesMux.Unlock()
+			sortedReadableExpected := makeMessagesReadable(expected, devices)
+			sortedReadableActual := makeMessagesReadable(logMessages, devices)
+			if !reflect.DeepEqual(sortedReadableExpected, sortedReadableActual) {
+				expectedJson, _ := json.Marshal(sortedReadableExpected)
+				actualJson, _ := json.Marshal(sortedReadableActual)
+				t.Error(string(expectedJson), "\n", string(actualJson))
+			}
+		})
+
+		//disconnect all --> disconnect devices 0, 2, 3, 5, 6, 7
+		client1.Stop()
+		client2.Stop()
+		expected = append(expected, DeviceLog{Id: devices[0].Id, Connected: false})
+		expected = append(expected, DeviceLog{Id: devices[2].Id, Connected: false})
+		expected = append(expected, DeviceLog{Id: devices[3].Id, Connected: false})
+		expected = append(expected, DeviceLog{Id: devices[5].Id, Connected: false})
+		expected = append(expected, DeviceLog{Id: devices[6].Id, Connected: false})
+		expected = append(expected, DeviceLog{Id: devices[7].Id, Connected: false})
+
+		t.Run("final check", func(t *testing.T) {
+			time.Sleep(10 * time.Second)
+			logMessagesMux.Lock()
+			defer logMessagesMux.Unlock()
+			sortedReadableExpected := makeMessagesReadable(expected, devices)
+			sortedReadableActual := makeMessagesReadable(logMessages, devices)
+			if !reflect.DeepEqual(sortedReadableExpected, sortedReadableActual) {
+				expectedJson, _ := json.Marshal(sortedReadableExpected)
+				actualJson, _ := json.Marshal(sortedReadableActual)
+				t.Error(string(expectedJson), "\n", string(actualJson))
+			}
+		})
+	})
+
 }
 
 func makeMessagesReadable(messages []DeviceLog, devices []model.Device) (result []DeviceLog) {

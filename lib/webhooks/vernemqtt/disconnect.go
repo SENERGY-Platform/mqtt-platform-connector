@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 InfAI (CC SES)
+ * Copyright 2020 InfAI (CC SES)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,16 +14,36 @@
  * limitations under the License.
  */
 
-package lib
+package vernemqtt
 
 import (
-	"context"
+	"encoding/json"
+	"fmt"
 	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/configuration"
 	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/connectionlog"
-	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/webhooks/vernemqtt"
-	"github.com/SENERGY-Platform/platform-connector-lib"
+	"log"
+	"net/http"
+	"runtime/debug"
 )
 
-func AuthWebhooks(ctx context.Context, config configuration.Config, connector *platform_connector_lib.Connector, connectionLog connectionlog.ConnectionLog) {
-	vernemqtt.InitWebhooks(ctx, config, connector, connectionLog)
+func disconnect(writer http.ResponseWriter, request *http.Request, config configuration.Config, connectionLog connectionlog.ConnectionLog) {
+	defer func() {
+		if p := recover(); p != nil {
+			debug.PrintStack()
+			sendError(writer, fmt.Sprint(p), config.Debug)
+			return
+		} else {
+			fmt.Fprintf(writer, "{}")
+		}
+	}()
+	msg := DisconnectWebhookMsg{}
+	err := json.NewDecoder(request.Body).Decode(&msg)
+	if err != nil {
+		log.Println("ERROR: InitWebhooks::disconnect::jsondecoding", err)
+		return
+	}
+	if config.Debug {
+		log.Println("DEBUG: /disconnect", msg)
+	}
+	connectionLog.Disconnect(msg.ClientId)
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/configuration"
 	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/connectionlog"
 	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/topic"
 	platform_connector_lib "github.com/SENERGY-Platform/platform-connector-lib"
@@ -17,7 +18,7 @@ import (
 	"time"
 )
 
-func Start(basectx context.Context, config Config) (err error) {
+func Start(basectx context.Context, config configuration.Config) (err error) {
 	ctx, cancel := context.WithCancel(basectx)
 	defer func() {
 		if err != nil {
@@ -139,14 +140,10 @@ func Start(basectx context.Context, config Config) (err error) {
 
 	time.Sleep(1 * time.Second) //ensure http server startup before continue
 
-	mqtt, err := NewMqtt(config)
+	mqtt, err := MqttStart(ctx, config)
 	if err != nil {
 		return err
 	}
-	go func() {
-		<-ctx.Done()
-		mqtt.Close()
-	}()
 
 	if config.CommandWorkerCount > 1 {
 		err = connector.SetAsyncCommandHandler(CreateQueuedCommandHandler(ctx, config, mqtt)).StartConsumer(ctx)
@@ -163,7 +160,7 @@ type commandQueueValue struct {
 	t              time.Time
 }
 
-func CreateQueuedCommandHandler(ctx context.Context, config Config, mqtt *MqttClient) platform_connector_lib.AsyncCommandHandler {
+func CreateQueuedCommandHandler(ctx context.Context, config configuration.Config, mqtt Mqtt) platform_connector_lib.AsyncCommandHandler {
 	queue := make(chan commandQueueValue, config.CommandWorkerCount)
 	handler := CreateCommandHandler(config, mqtt)
 	for i := int64(0); i < config.CommandWorkerCount; i++ {
@@ -195,7 +192,7 @@ func CreateQueuedCommandHandler(ctx context.Context, config Config, mqtt *MqttCl
 	}
 }
 
-func CreateCommandHandler(config Config, mqtt *MqttClient) platform_connector_lib.AsyncCommandHandler {
+func CreateCommandHandler(config configuration.Config, mqtt Mqtt) platform_connector_lib.AsyncCommandHandler {
 	return func(commandRequest model.ProtocolMsg, requestMsg platform_connector_lib.CommandRequestMsg, t time.Time) (err error) {
 		endpoint := ""
 		endpoint, err = topic.New(nil, config.ActuatorTopicPattern).Create(commandRequest.Metadata.Device.Id, commandRequest.Metadata.Service.LocalId)

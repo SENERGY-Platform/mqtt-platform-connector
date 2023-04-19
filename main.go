@@ -20,6 +20,7 @@ import (
 	"context"
 	"flag"
 	"github.com/SENERGY-Platform/mqtt-platform-connector/lib"
+	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/configuration"
 	"log"
 	"os"
 	"os/signal"
@@ -34,7 +35,7 @@ func main() {
 	configLocation := flag.String("config", "config.json", "configuration file")
 	flag.Parse()
 
-	config, err := lib.LoadConfigLocation(*configLocation)
+	config, err := configuration.Load(*configLocation)
 	if err != nil {
 		log.Fatal(err)
 	}

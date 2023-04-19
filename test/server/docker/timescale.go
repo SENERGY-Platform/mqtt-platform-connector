@@ -2,54 +2,52 @@ package docker
 
 import (
 	"context"
-	"database/sql"
-	"fmt"
 	_ "github.com/lib/pq"
-	"github.com/ory/dockertest/v3"
+	"github.com/testcontainers/testcontainers-go"
+	"github.com/testcontainers/testcontainers-go/wait"
 	"log"
 	"sync"
 )
 
-func Timescale(pool *dockertest.Pool, ctx context.Context, wg *sync.WaitGroup) (host string, port int, user string, pw string, db string, err error) {
-	log.Println("start postgres")
+func Timescale(ctx context.Context, wg *sync.WaitGroup) (host string, port int, user string, pw string, db string, err error) {
+	log.Println("start timescale")
 	pw = "postgrespw"
 	user = "postgres"
 	db = "postgres"
-	container, err := pool.Run("timescale/timescaledb", "2.3.0-pg13", []string{
-		"POSTGRES_PASSWORD=" + pw,
+	c, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
+		ContainerRequest: testcontainers.ContainerRequest{
+			Image:           "timescale/timescaledb:2.3.0-pg13",
+			Tmpfs:           map[string]string{},
+			WaitingFor:      wait.ForListeningPort("5432/tcp"),
+			ExposedPorts:    []string{"5432/tcp"},
+			AlwaysPullImage: true,
+			Env: map[string]string{
+				"POSTGRES_PASSWORD": pw,
+			},
+		},
+		Started: true,
 	})
 	if err != nil {
-		return "", 0, "", "", "", err
+		return host, port, user, pw, db, err
 	}
-	go Dockerlog(pool, ctx, container, "TIMESCALE")
+	host, err = c.ContainerIP(ctx)
+	if err != nil {
+		return host, port, user, pw, db, err
+	}
+	port = 5432
 	wg.Add(1)
 	go func() {
+		defer wg.Done()
 		<-ctx.Done()
-		log.Println("DEBUG: remove container " + container.Container.Name)
-		container.Close()
-		wg.Done()
+		log.Println("DEBUG: remove container timescale", c.Terminate(context.Background()))
 	}()
-	host = container.Container.NetworkSettings.IPAddress
-	port = 5432
-	err = pool.Retry(func() error {
-		log.Println("DEBUG: try to connect to db")
-		psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", host,
-			port, user, pw, "postgres")
 
-		// open database
-		db, err := sql.Open("postgres", psqlconn)
+	/*
+		err = Dockerlog(ctx, c, "TIMESCALE")
 		if err != nil {
-			return err
+			return "", "", err
 		}
-		defer func(db *sql.DB) {
-			_ = db.Close()
-		}(db)
-		err = db.Ping()
-		if err != nil {
-			log.Println("DB not ready yet. Connecting with " + psqlconn)
-			return err
-		}
-		return nil
-	})
-	return
+	*/
+
+	return host, port, user, pw, db, err
 }

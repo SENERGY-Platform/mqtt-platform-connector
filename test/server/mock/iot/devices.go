@@ -3,8 +3,8 @@ package iot
 import (
 	"encoding/json"
 	"github.com/SENERGY-Platform/platform-connector-lib/model"
+	"github.com/google/uuid"
 	"github.com/julienschmidt/httprouter"
-	uuid "github.com/satori/go.uuid"
 	"log"
 	"net/http"
 )
@@ -35,7 +35,7 @@ func DevicesEndpoints(control *Controller, router *httprouter.Router) {
 			return
 		}
 		if device.Id == "" {
-			device.Id = "urn:infai:ses:device:" + uuid.NewV4().String()
+			device.Id = "urn:infai:ses:device:" + uuid.NewString()
 		}
 		result, err, errCode := control.PublishDeviceCreate(device)
 		if err != nil {

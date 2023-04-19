@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 InfAI (CC SES)
+ * Copyright 2020 InfAI (CC SES)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package lib
+package configuration
 
 import (
 	"encoding/json"
@@ -56,10 +56,12 @@ type Config struct {
 	SyncKafkaIdempotent  bool     `json:"sync_kafka_idempotent"`
 	Debug                bool     `json:"debug"`
 
-	MqttBroker   string `json:"mqtt_broker"`
-	MqttClientId string `json:"mqtt_client_id"`
-	Qos          byte   `json:"qos"`
-	MqttLogLevel string `json:"mqtt_log_level"`
+	MqttBroker     string `json:"mqtt_broker"`
+	MqttClientId   string `json:"mqtt_client_id"`
+	Qos            byte   `json:"qos"`
+	MqttLogLevel   string `json:"mqtt_log_level"`
+	MqttVersion    string `json:"mqtt_version"`
+	MqttAuthMethod string `json:"mqtt_auth_method"` // Whether the MQTT broker uses a username/password or client certificate authetication
 
 	WebhookPort             string `json:"webhook_port"`
 	HttpCommandConsumerPort string `json:"http_command_consumer_port"`
@@ -119,10 +121,10 @@ func LoadConfig() (result Config, err error) {
 func LoadConfigFlag(configLocationFlag string) (result Config, err error) {
 	configLocation := flag.String(configLocationFlag, "config.json", "configuration file")
 	flag.Parse()
-	return LoadConfigLocation(*configLocation)
+	return Load(*configLocation)
 }
 
-func LoadConfigLocation(location string) (result Config, err error) {
+func Load(location string) (result Config, err error) {
 	file, err := os.Open(location)
 	if err != nil {
 		log.Println("error on config load: ", err)

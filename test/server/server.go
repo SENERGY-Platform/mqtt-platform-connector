@@ -2,11 +2,11 @@ package server
 
 import (
 	"context"
-	"github.com/SENERGY-Platform/mqtt-platform-connector/lib"
+	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/configuration"
 	"github.com/SENERGY-Platform/mqtt-platform-connector/test/server/docker"
 	"github.com/SENERGY-Platform/mqtt-platform-connector/test/server/mock/auth"
 	"github.com/SENERGY-Platform/mqtt-platform-connector/test/server/mock/iot"
-	"github.com/ory/dockertest/v3"
+	"github.com/testcontainers/testcontainers-go"
 	"log"
 	"net"
 	"runtime/debug"
@@ -15,111 +15,84 @@ import (
 	"sync"
 )
 
-func NewWithConnectionLog(basectx context.Context, wg *sync.WaitGroup, defaults lib.Config) (config lib.Config, err error) {
-	ctx, cancel := context.WithCancel(basectx)
-	config, err = New(ctx, wg, defaults)
+func NewWithConnectionLog(ctx context.Context, wg *sync.WaitGroup, defaults configuration.Config) (config configuration.Config, brokerUrlForClients string, err error) {
+	config, brokerUrlForClients, err = New(ctx, wg, defaults)
 	if err != nil {
 		return
 	}
-	config.SubscriptionDbConStr,  _, _, err = docker.Postgres(ctx, wg, "subscriptions")
-	if err != nil {
-		cancel()
-		return config, err
-	}
-	return config, nil
+	config.SubscriptionDbConStr, err = docker.Postgres(ctx, wg, "subscriptions")
+
+	return config, brokerUrlForClients, err
 }
 
-func New(basectx context.Context, wg *sync.WaitGroup, defaults lib.Config) (config lib.Config, err error) {
+func New(ctx context.Context, wg *sync.WaitGroup, defaults configuration.Config) (config configuration.Config, brokerUrlForClients string, err error) {
 	config = defaults
 	config.KafkaPartitionNum = 1
 	config.KafkaReplicationFactor = 1
 
-	ctx, cancel := context.WithCancel(basectx)
-
 	err = auth.Mock(&config, ctx)
 	if err != nil {
-		cancel()
-		return config, err
+		return config, "", err
 	}
 
 	whPort, err := getFreePort()
 	if err != nil {
 		log.Println("unable to find free port", err)
-		return config, err
+		return config, "", err
 	}
 	config.WebhookPort = strconv.Itoa(whPort)
 
-	pool, err := dockertest.NewPool("")
-	if err != nil {
-		log.Println("Could not connect to docker: ", err)
-		return config, err
-	}
-
-	_, zk, err := docker.Zookeeper(pool, ctx)
+	_, zk, err := docker.Zookeeper(ctx, wg)
 	if err != nil {
 		log.Println("ERROR:", err)
 		debug.PrintStack()
-		cancel()
-		return config, err
+		return config, "", err
 	}
 	zkUrl := zk + ":2181"
 
-	config.KafkaUrl, err = docker.Kafka(pool, ctx, wg, zkUrl)
+	config.KafkaUrl, err = docker.Kafka(ctx, wg, zkUrl)
 	if err != nil {
 		log.Println("ERROR:", err)
 		debug.PrintStack()
-		cancel()
-		return config, err
+		return config, "", err
 	}
 
 	config.DeviceManagerUrl, config.DeviceRepoUrl, err = iot.Mock(ctx, config)
 	if err != nil {
-		cancel()
-		return config, err
+		return config, "", err
 	}
 
-	_, memcacheIp, err := docker.Memcached(pool, ctx, wg)
+	_, memcacheIp, err := docker.Memcached(ctx, wg)
 	if err != nil {
 		log.Println("ERROR:", err)
 		debug.PrintStack()
-		cancel()
-		return config, err
+		return config, "", err
 	}
 
 	config.IotCacheUrl = []string{memcacheIp + ":11211"}
 	config.TokenCacheUrl = []string{memcacheIp + ":11211"}
 
-	network, err := pool.Client.NetworkInfo("bridge")
+	provider, err := testcontainers.NewDockerProvider(testcontainers.DefaultNetwork("bridge"))
 	if err != nil {
-		log.Println("ERROR:", err)
-		debug.PrintStack()
-		cancel()
-		return config, err
+		return config, "", err
 	}
-	hostIp := network.IPAM.Config[0].Gateway
-	config.MqttBroker, err = docker.Vernemqtt(pool, ctx, wg, hostIp+":"+config.WebhookPort)
+	hostIp, err := provider.GetGatewayIP(ctx)
 	if err != nil {
-		log.Println("ERROR:", err)
-		debug.PrintStack()
-		cancel()
-		return config, err
+		return config, "", err
 	}
 
-	config.PostgresHost, config.PostgresPort, config.PostgresUser, config.PostgresPw, config.PostgresDb, err = docker.Timescale(pool, ctx, wg)
+	config.MqttBroker, brokerUrlForClients, err = docker.Vernemqtt(ctx, wg, hostIp+":"+config.WebhookPort, config.MqttAuthMethod == "certificate", config.MqttVersion)
 	if err != nil {
 		log.Println("ERROR:", err)
 		debug.PrintStack()
-		cancel()
-		return config, err
+		return config, "", err
 	}
 
-	hostIp = "127.0.0.1"
-	networks, _ := pool.Client.ListNetworks()
-	for _, network := range networks {
-		if network.Name == "bridge" {
-			hostIp = network.IPAM.Config[0].Gateway
-			break
-		}
+	config.PostgresHost, config.PostgresPort, config.PostgresUser, config.PostgresPw, config.PostgresDb, err = docker.Timescale(ctx, wg)
+	if err != nil {
+		log.Println("ERROR:", err)
+		debug.PrintStack()
+		return config, "", err
 	}
 
 	//transform local-address to address in docker container
@@ -127,15 +100,14 @@ func New(basectx context.Context, wg *sync.WaitGroup, defaults lib.Config) (conf
 	deviceManagerUrl := "http://" + hostIp + ":" + deviceManagerUrlStruct[len(deviceManagerUrlStruct)-1]
 	log.Println("DEBUG: semantic url transformation:", config.DeviceManagerUrl, "-->", deviceManagerUrl)
 
-	err = docker.Tableworker(pool, ctx, wg, config.PostgresHost, config.PostgresPort, config.PostgresUser, config.PostgresPw, config.PostgresDb, config.KafkaUrl, deviceManagerUrl)
+	err = docker.Tableworker(ctx, wg, config.PostgresHost, config.PostgresPort, config.PostgresUser, config.PostgresPw, config.PostgresDb, config.KafkaUrl, deviceManagerUrl)
 	if err != nil {
 		log.Println("ERROR:", err)
 		debug.PrintStack()
-		cancel()
-		return config, err
+		return config, "", err
 	}
 
-	return config, nil
+	return config, brokerUrlForClients, nil
 }
 
 func getFreePortStr() (string, error) {

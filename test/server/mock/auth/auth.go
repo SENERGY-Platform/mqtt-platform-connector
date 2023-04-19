@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/SENERGY-Platform/mqtt-platform-connector/lib"
+	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/configuration"
 	"github.com/SENERGY-Platform/platform-connector-lib/security"
 	"github.com/julienschmidt/httprouter"
 	"log"
@@ -15,7 +15,7 @@ import (
 	"time"
 )
 
-func Mock(config *lib.Config, ctx context.Context) (err error) {
+func Mock(config *configuration.Config, ctx context.Context) (err error) {
 	router, err := getRouter()
 	if err != nil {
 		return err
