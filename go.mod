@@ -3,13 +3,13 @@ module github.com/SENERGY-Platform/mqtt-platform-connector
 go 1.20
 
 require (
-	github.com/SENERGY-Platform/platform-connector-lib v0.0.0-20230414071410-091d73d966ea
+	github.com/SENERGY-Platform/platform-connector-lib v0.0.0-20230426092511-675dc3eb42ee
 	github.com/Shopify/sarama v1.38.1
 	github.com/eclipse/paho.golang v0.11.0
 	github.com/eclipse/paho.mqtt.golang v1.4.2
 	github.com/google/uuid v1.3.0
 	github.com/julienschmidt/httprouter v1.3.0
-	github.com/lib/pq v1.10.8
+	github.com/lib/pq v1.10.9
 	github.com/segmentio/kafka-go v0.4.39
 	github.com/testcontainers/testcontainers-go v0.19.0
 	github.com/wvanbergen/kazoo-go v0.0.0-20180202103751-f72d8611297a
@@ -22,6 +22,7 @@ require (
 	github.com/RyanCarrier/dijkstra v1.2.0 // indirect
 	github.com/SENERGY-Platform/converter v0.0.0-20230413113429-b490a96aabba // indirect
 	github.com/SENERGY-Platform/models/go v0.0.0-20230406081245-2b17534509d4 // indirect
+	github.com/SENERGY-Platform/permission-search v0.0.0-20230426081704-b2797db04370 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bradfitz/gomemcache v0.0.0-20230124162541-5f7a7d875746 // indirect
 	github.com/cenkalti/backoff/v4 v4.2.0 // indirect
