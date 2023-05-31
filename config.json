@@ -55,7 +55,7 @@
     "async_compression": "snappy",
     "sync_compression": "snappy",
 
-    "kafka_consumer_max_wait": "100ms",
+    "kafka_consumer_max_wait": "1s",
     "kafka_consumer_min_bytes": 1000,
     "kafka_consumer_max_bytes": 1000000,
 
