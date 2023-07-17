@@ -75,9 +75,7 @@ func publish(writer http.ResponseWriter, request *http.Request, config configura
 			"payload": string(payload),
 		}, platform_connector_lib.Qos(msg.Qos))
 		if err != nil {
-			if config.Debug {
-				log.Println("WARNING: InitWebhooks::publish::HandleDeviceIdentEventWithAuthToken", err, device.Id, device.LocalId, service.Id, service.LocalId, msg.Topic)
-			}
+			log.Println("WARNING: InitWebhooks::publish::HandleDeviceIdentEventWithAuthToken", err, "\n", device.Id, device.LocalId, service.Id, service.LocalId, msg.Topic)
 			fmt.Fprintf(writer, `{"result": "ok"}`)
 			return
 		}
