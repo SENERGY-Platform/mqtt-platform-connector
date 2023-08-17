@@ -76,6 +76,7 @@
 
     "notifications_ignore_duplicates_within_s": 3600,
     "notification_user_overwrite": "",
+    "notification_slack_webhook_url": "",
 
     "kafka_topic_configs": {
         "device-types": [

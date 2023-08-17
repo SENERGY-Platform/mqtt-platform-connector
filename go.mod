@@ -6,7 +6,7 @@ toolchain go1.21.0
 
 require (
 	github.com/IBM/sarama v1.40.1
-	github.com/SENERGY-Platform/platform-connector-lib v0.0.0-20230817071608-7ce4db35e829
+	github.com/SENERGY-Platform/platform-connector-lib v0.0.0-20230817103542-46804c716f94
 	github.com/eclipse/paho.golang v0.11.0
 	github.com/eclipse/paho.mqtt.golang v1.4.3
 	github.com/google/uuid v1.3.0
@@ -82,6 +82,7 @@ require (
 	github.com/prometheus/procfs v0.11.1 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
+	github.com/slack-go/slack v0.12.2 // indirect
 	golang.org/x/crypto v0.12.0 // indirect
 	golang.org/x/exp v0.0.0-20230801115018-d63ba01acd4b // indirect
 	golang.org/x/mod v0.12.0 // indirect
