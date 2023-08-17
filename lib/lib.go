@@ -110,6 +110,7 @@ func Start(basectx context.Context, config configuration.Config) (err error) {
 		PermQueryUrl:                         config.PermQueryUrl,
 		NotificationUrl:                      config.NotificationUrl,
 		NotificationsIgnoreDuplicatesWithinS: config.NotificationsIgnoreDuplicatesWithinS,
+		NotificationUserOverwrite:            config.NotificationUserOverwrite,
 	}
 
 	connector := platform_connector_lib.New(libConf)

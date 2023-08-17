@@ -109,7 +109,8 @@ type Config struct {
 	NotificationUrl string `json:"notification_url"`
 	PermQueryUrl    string `json:"perm_query_url"`
 
-	NotificationsIgnoreDuplicatesWithinS int `json:"notifications_ignore_duplicates_within_s"`
+	NotificationsIgnoreDuplicatesWithinS int    `json:"notifications_ignore_duplicates_within_s"`
+	NotificationUserOverwrite            string `json:"notification_user_overwrite"`
 
 	KafkaTopicConfigs map[string][]kafka.ConfigEntry `json:"kafka_topic_configs"`
 }

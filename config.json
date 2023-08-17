@@ -75,6 +75,7 @@
     "perm_query_url": "",
 
     "notifications_ignore_duplicates_within_s": 3600,
+    "notification_user_overwrite": "",
 
     "kafka_topic_configs": {
         "device-types": [
