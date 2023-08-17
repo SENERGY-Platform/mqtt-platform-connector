@@ -71,11 +71,6 @@ func PostgresWithNetwork(ctx context.Context, wg *sync.WaitGroup, dbname string)
 		log.Println("DEBUG: remove container mongo", c.Terminate(context.Background()))
 	}()
 
-	//err = Dockerlog(ctx, c, "POSTGRES")
-	if err != nil {
-		return "", containerIp, hostPort, err
-	}
-
 	containerIp, err = c.ContainerIP(ctx)
 	if err != nil {
 		return "", containerIp, hostPort, err

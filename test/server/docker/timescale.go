@@ -42,12 +42,5 @@ func Timescale(ctx context.Context, wg *sync.WaitGroup) (host string, port int, 
 		log.Println("DEBUG: remove container timescale", c.Terminate(context.Background()))
 	}()
 
-	/*
-		err = Dockerlog(ctx, c, "TIMESCALE")
-		if err != nil {
-			return "", "", err
-		}
-	*/
-
 	return host, port, user, pw, db, err
 }

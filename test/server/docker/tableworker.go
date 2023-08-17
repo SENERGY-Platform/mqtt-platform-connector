@@ -39,12 +39,5 @@ func Tableworker(ctx context.Context, wg *sync.WaitGroup, postgresHost string, p
 		log.Println("DEBUG: remove container tableworker", c.Terminate(context.Background()))
 	}()
 
-	/*
-		err = Dockerlog(ctx, c, "TABLEWORKER")
-		if err != nil {
-			return "", "", err
-		}
-	*/
-
 	return err
 }

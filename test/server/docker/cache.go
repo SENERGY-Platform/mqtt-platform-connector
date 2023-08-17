@@ -29,13 +29,6 @@ func Memcached(ctx context.Context, wg *sync.WaitGroup) (hostPort string, ipAddr
 		log.Println("DEBUG: remove container memcached", c.Terminate(context.Background()))
 	}()
 
-	/*
-		err = Dockerlog(ctx, c, "MEMCACHED")
-		if err != nil {
-			return "", "", err
-		}
-	*/
-
 	ipAddress, err = c.ContainerIP(ctx)
 	if err != nil {
 		return "", "", err
