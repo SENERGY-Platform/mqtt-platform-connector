@@ -20,8 +20,8 @@ github.com/SENERGY-Platform/models/go v0.0.0-20230724134144-c26fd506045f h1:oBq0
 github.com/SENERGY-Platform/models/go v0.0.0-20230724134144-c26fd506045f/go.mod h1:bCREPNRN4P8oxLgpC3/ZKK4jXSy4MSPXoiomhohE+aw=
 github.com/SENERGY-Platform/permission-search v0.0.0-20230814064430-b5ed112b136a h1:UOWNCCwsTWPuwvHSsQ3jwcL7soEyivmGHc7wkt/jyXo=
 github.com/SENERGY-Platform/permission-search v0.0.0-20230814064430-b5ed112b136a/go.mod h1:BrTuD4BECfM7u8u5B5TmaNTemckqRTaY/MWPv4hMTGY=
-github.com/SENERGY-Platform/platform-connector-lib v0.0.0-20230817103542-46804c716f94 h1:peTJSRS3KLxLIUjDWB13zFwrjUzZoW6/c79qU1BvzdM=
-github.com/SENERGY-Platform/platform-connector-lib v0.0.0-20230817103542-46804c716f94/go.mod h1:LqueOhbmQb4rFccPtEOOQU2sMk1F0qKjcCjYSSQNH+M=
+github.com/SENERGY-Platform/platform-connector-lib v0.0.0-20230818110255-eebccddfcbb7 h1:Qu/8TrYa+ZPLACpcH6My19mSpIX+Iwi1n76eM6Njm0k=
+github.com/SENERGY-Platform/platform-connector-lib v0.0.0-20230818110255-eebccddfcbb7/go.mod h1:LqueOhbmQb4rFccPtEOOQU2sMk1F0qKjcCjYSSQNH+M=
 github.com/Shopify/toxiproxy/v2 v2.5.0 h1:i4LPT+qrSlKNtQf5QliVjdP08GyAH8+BUIc9gT0eahc=
 github.com/Shopify/toxiproxy/v2 v2.5.0/go.mod h1:yhM2epWtAmel9CB8r2+L+PCmhH6yH2pITaPAo7jxJl0=
 github.com/beorn7/perks v1.0.1 h1:VlbKKnNfV8bJzeqoa4cOKqO6bYr3WgKZxO8Z16+hsOM=
