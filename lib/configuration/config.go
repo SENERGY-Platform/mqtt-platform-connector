@@ -38,20 +38,20 @@ type Config struct {
 	DeviceManagerUrl string `json:"device_manager_url"`
 	DeviceRepoUrl    string `json:"device_repo_url"`
 
-	AuthClientId             string  `json:"auth_client_id"`
-	AuthClientSecret         string  `json:"auth_client_secret"`
+	AuthClientId             string  `json:"auth_client_id" config:"secret"`
+	AuthClientSecret         string  `json:"auth_client_secret" config:"secret"`
 	AuthExpirationTimeBuffer float64 `json:"auth_expiration_time_buffer"`
 	AuthEndpoint             string  `json:"auth_endpoint"`
 
-	JwtPrivateKey string `json:"jwt_private_key"`
+	JwtPrivateKey string `json:"jwt_private_key" config:"secret"`
 	JwtExpiration int64  `json:"jwt_expiration"`
-	JwtIssuer     string `json:"jwt_issuer"`
+	JwtIssuer     string `json:"jwt_issuer" config:"secret"`
 
 	DeviceExpiration     int32    `json:"device_expiration"`
 	DeviceTypeExpiration int32    `json:"device_type_expiration"`
 	TokenCacheExpiration int32    `json:"token_cache_expiration"`
 	IotCacheUrl          []string `json:"iot_cache_url"`
-	TokenCacheUrl        []string `json:"token_cache_url"`
+	TokenCacheUrl        []string `json:"token_cache_url" config:"secret"`
 	SyncKafka            bool     `json:"sync_kafka"`
 	SyncKafkaIdempotent  bool     `json:"sync_kafka_idempotent"`
 	Debug                bool     `json:"debug"`
@@ -82,8 +82,8 @@ type Config struct {
 	PublishToPostgres bool   `json:"publish_to_postgres"`
 	PostgresHost      string `json:"postgres_host"`
 	PostgresPort      int    `json:"postgres_port"`
-	PostgresUser      string `json:"postgres_user"`
-	PostgresPw        string `json:"postgres_pw"`
+	PostgresUser      string `json:"postgres_user" config:"secret"`
+	PostgresPw        string `json:"postgres_pw" config:"secret"`
 	PostgresDb        string `json:"postgres_db"`
 
 	AsyncPgThreadMax    int64  `json:"async_pg_thread_max"`
@@ -111,7 +111,7 @@ type Config struct {
 
 	NotificationsIgnoreDuplicatesWithinS int    `json:"notifications_ignore_duplicates_within_s"`
 	NotificationUserOverwrite            string `json:"notification_user_overwrite"`
-	NotificationSlackWebhookUrl          string `json:"notification_slack_webhook_url"`
+	NotificationSlackWebhookUrl          string `json:"notification_slack_webhook_url" config:"secret"`
 
 	KafkaTopicConfigs map[string][]kafka.ConfigEntry `json:"kafka_topic_configs"`
 }
@@ -163,10 +163,13 @@ func handleEnvironmentVars(config interface{}) {
 	configType := configValue.Type()
 	for index := 0; index < configType.NumField(); index++ {
 		fieldName := configType.Field(index).Name
+		fieldConfig := configType.Field(index).Tag.Get("config")
 		envName := fieldNameToEnvName(fieldName)
 		envValue := os.Getenv(envName)
 		if envValue != "" {
-			log.Println("use environment variable: ", envName, " = ", envValue)
+			if !strings.Contains(fieldConfig, "secret") {
+				log.Println("use environment variable: ", envName, " = ", envValue)
+			}
 			if configValue.FieldByName(fieldName).Kind() == reflect.Int64 {
 				i, _ := strconv.ParseInt(envValue, 10, 64)
 				configValue.FieldByName(fieldName).SetInt(i)
