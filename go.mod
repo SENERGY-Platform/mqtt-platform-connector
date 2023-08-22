@@ -5,11 +5,11 @@ go 1.21
 toolchain go1.21.0
 
 require (
-	github.com/IBM/sarama v1.40.1
-	github.com/SENERGY-Platform/platform-connector-lib v0.0.0-20230818110255-eebccddfcbb7
+	github.com/IBM/sarama v1.41.0
+	github.com/SENERGY-Platform/platform-connector-lib v0.0.0-20230822064734-abffa8c3f01a
 	github.com/eclipse/paho.golang v0.11.0
 	github.com/eclipse/paho.mqtt.golang v1.4.3
-	github.com/google/uuid v1.3.0
+	github.com/google/uuid v1.3.1
 	github.com/julienschmidt/httprouter v1.3.0
 	github.com/lib/pq v1.10.9
 	github.com/segmentio/kafka-go v0.4.42
