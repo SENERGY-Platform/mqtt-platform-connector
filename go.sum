@@ -16,12 +16,12 @@ github.com/RyanCarrier/dijkstra v1.3.0 h1:lqrLMwKy8PtyDpWqZpcbzr9KkqnLJrDdQ9u3iN
 github.com/RyanCarrier/dijkstra v1.3.0/go.mod h1:9egjhC7eVsfREX6NrYS+1wHzk9C/9v2Cz26/bqpjjTc=
 github.com/SENERGY-Platform/converter v0.0.0-20230413113429-b490a96aabba h1:7//DKY77RZdJoRBjkUohTkjegy5Lv9JFKgjlC2r2me0=
 github.com/SENERGY-Platform/converter v0.0.0-20230413113429-b490a96aabba/go.mod h1:MftDXexxLegRn0BKpbfBlBLo6OU9xSYiVtIi21DujUk=
-github.com/SENERGY-Platform/models/go v0.0.0-20230724134144-c26fd506045f h1:oBq0lbW2zWB5do7DTsLjO+E5Z2AKkYPeRe2CRgb43v0=
-github.com/SENERGY-Platform/models/go v0.0.0-20230724134144-c26fd506045f/go.mod h1:bCREPNRN4P8oxLgpC3/ZKK4jXSy4MSPXoiomhohE+aw=
+github.com/SENERGY-Platform/models/go v0.0.0-20230824080159-16585960df38 h1:PDvFwIJBnFyKt1KeepkABNIS57+WhVj4vBw7X5JGZJw=
+github.com/SENERGY-Platform/models/go v0.0.0-20230824080159-16585960df38/go.mod h1:bCREPNRN4P8oxLgpC3/ZKK4jXSy4MSPXoiomhohE+aw=
 github.com/SENERGY-Platform/permission-search v0.0.0-20230814064430-b5ed112b136a h1:UOWNCCwsTWPuwvHSsQ3jwcL7soEyivmGHc7wkt/jyXo=
 github.com/SENERGY-Platform/permission-search v0.0.0-20230814064430-b5ed112b136a/go.mod h1:BrTuD4BECfM7u8u5B5TmaNTemckqRTaY/MWPv4hMTGY=
-github.com/SENERGY-Platform/platform-connector-lib v0.0.0-20230823124528-6150a84f2351 h1:zwwBWUNse8abBWkMpmnsL9qQ3CbGGRMa5pVbBBOmn2s=
-github.com/SENERGY-Platform/platform-connector-lib v0.0.0-20230823124528-6150a84f2351/go.mod h1:LqueOhbmQb4rFccPtEOOQU2sMk1F0qKjcCjYSSQNH+M=
+github.com/SENERGY-Platform/platform-connector-lib v0.0.0-20230824093541-9ebc03639b9b h1:KoauuMeY5EUgCDAnTcZjg+rOyVMCyNsbx0UporD3P6k=
+github.com/SENERGY-Platform/platform-connector-lib v0.0.0-20230824093541-9ebc03639b9b/go.mod h1:VUlGE5JlNKXZ+bUz9baKXO7rHuNHhIt9GU6J+ry7xAY=
 github.com/beorn7/perks v1.0.1 h1:VlbKKnNfV8bJzeqoa4cOKqO6bYr3WgKZxO8Z16+hsOM=
 github.com/beorn7/perks v1.0.1/go.mod h1:G2ZrVWU2WbWT9wwq4/hrbKbnv/1ERSJQ0ibhJ6rlkpw=
 github.com/bradfitz/gomemcache v0.0.0-20230611145640-acc696258285 h1:Dr+ezPI5ivhMn/3WOoB86XzMhie146DNaBbhaQWZHMY=
