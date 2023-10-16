@@ -100,9 +100,7 @@ func (this *Client) SubscribeMqtt5(topic string, qos byte, callback func(topic s
 
 	timeout, _ := context.WithTimeout(context.Background(), time.Minute)
 	_, err := this.mqtt5.Subscribe(timeout, &paho.Subscribe{
-		Subscriptions: map[string]paho.SubscribeOptions{
-			topic: {QoS: qos},
-		},
+		Subscriptions: []paho.SubscribeOptions{{Topic: topic, QoS: qos}},
 	})
 	if err != nil {
 		log.Println("Error on Client.Subscribe(): ", err)
@@ -140,10 +138,10 @@ func (this *Client) PublishMqtt5(topic string, payload []byte, qos byte) (err er
 
 func (this *Client) loadOldSubscriptionsMqtt5() (err error) {
 	subs := this.getSubscriptions()
-	mqtt5Subs := map[string]paho.SubscribeOptions{}
+	mqtt5Subs := []paho.SubscribeOptions{}
 	for _, sub := range subs {
 		log.Println("resubscribe to", sub.Topic)
-		mqtt5Subs[sub.Topic] = paho.SubscribeOptions{QoS: sub.Qos}
+		mqtt5Subs = append(mqtt5Subs, paho.SubscribeOptions{Topic: sub.Topic, QoS: sub.Qos})
 	}
 	if len(mqtt5Subs) > 0 {
 		timeout, _ := context.WithTimeout(context.Background(), time.Minute)
