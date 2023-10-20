@@ -111,7 +111,7 @@ func Start(basectx context.Context, config configuration.Config) (err error) {
 		NotificationUrl:                      config.NotificationUrl,
 		NotificationsIgnoreDuplicatesWithinS: config.NotificationsIgnoreDuplicatesWithinS,
 		NotificationUserOverwrite:            config.NotificationUserOverwrite,
-		NotificationSlackWebhookUrl:          config.NotificationSlackWebhookUrl,
+		DeveloperNotificationUrl:             config.DeveloperNotificationUrl,
 	}
 
 	connector := platform_connector_lib.New(libConf)

@@ -111,7 +111,7 @@ type Config struct {
 
 	NotificationsIgnoreDuplicatesWithinS int    `json:"notifications_ignore_duplicates_within_s"`
 	NotificationUserOverwrite            string `json:"notification_user_overwrite"`
-	NotificationSlackWebhookUrl          string `json:"notification_slack_webhook_url" config:"secret"`
+	DeveloperNotificationUrl             string `json:"developer_notification_url"`
 
 	KafkaTopicConfigs map[string][]kafka.ConfigEntry `json:"kafka_topic_configs"`
 }
