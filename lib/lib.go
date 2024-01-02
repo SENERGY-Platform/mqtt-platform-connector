@@ -114,7 +114,10 @@ func Start(basectx context.Context, config configuration.Config) (err error) {
 		DeveloperNotificationUrl:             config.DeveloperNotificationUrl,
 	}
 
-	connector := platform_connector_lib.New(libConf)
+	connector, err := platform_connector_lib.New(libConf)
+	if err != nil {
+		return err
+	}
 
 	if config.Debug {
 		connector.SetKafkaLogger(log.New(os.Stdout, "[CONNECTOR-KAFKA] ", 0))
