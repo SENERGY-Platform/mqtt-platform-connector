@@ -7,7 +7,7 @@ toolchain go1.21.0
 require (
 	github.com/IBM/sarama v1.42.1
 	github.com/SENERGY-Platform/permission-search v0.0.1
-	github.com/SENERGY-Platform/platform-connector-lib v0.0.0-20240109112823-b1a686164036
+	github.com/SENERGY-Platform/platform-connector-lib v0.0.0-20240109133203-1b76d430cc65
 	github.com/SENERGY-Platform/service-commons v0.0.0-20231115074650-7021aeae60e4
 	github.com/eclipse/paho.golang v0.12.0
 	github.com/eclipse/paho.mqtt.golang v1.4.3

@@ -27,7 +27,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"strings"
 )
 
 func publish(writer http.ResponseWriter, request *http.Request, config configuration.Config, connector *platform_connector_lib.Connector, topicParser *topic.Topic) {
@@ -86,7 +85,7 @@ func publish(writer http.ResponseWriter, request *http.Request, config configura
 			"payload": string(payload),
 		}, platform_connector_lib.Qos(msg.Qos))
 		if info.DeviceId != "" && info.DeviceTypeId != "" {
-			statistics.DeviceMsgReceive(msgSize, msg.Username, info.DeviceId, info.DeviceTypeId, strings.Join(info.ServiceIds, ","))
+			statistics.DeviceMsgReceive(msgSize, msg.Username, info.DeviceId, info.DeviceTypeId, info.ServiceIds)
 		}
 		if err != nil {
 			log.Println("WARNING: InitWebhooks::publish::HandleDeviceIdentEventWithAuthToken", err, "\n", device.Id, device.LocalId, service.Id, service.LocalId, msg.Topic)
@@ -94,7 +93,7 @@ func publish(writer http.ResponseWriter, request *http.Request, config configura
 			return
 		}
 		statistics.SourceReceiveHandled(msgSize, msg.Username)
-		statistics.DeviceMsgHandled(msgSize, msg.Username, info.DeviceId, info.DeviceTypeId, strings.Join(info.ServiceIds, ","))
+		statistics.DeviceMsgHandled(msgSize, msg.Username, info.DeviceId, info.DeviceTypeId, info.ServiceIds)
 	}
 	fmt.Fprintf(writer, `{"result": "ok"}`)
 }
