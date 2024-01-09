@@ -24,13 +24,21 @@ import (
 	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/topic"
 	platform_connector_lib "github.com/SENERGY-Platform/platform-connector-lib"
 	"github.com/SENERGY-Platform/platform-connector-lib/statistics"
+	"io"
 	"log"
 	"net/http"
+	"strings"
 )
 
 func publish(writer http.ResponseWriter, request *http.Request, config configuration.Config, connector *platform_connector_lib.Connector, topicParser *topic.Topic) {
+	buf, err := io.ReadAll(request.Body)
+	if err != nil {
+		sendError(writer, err.Error(), true)
+		return
+	}
+	msgSize := float64(len(buf))
 	msg := PublishWebhookMsg{}
-	err := json.NewDecoder(request.Body).Decode(&msg)
+	err = json.Unmarshal(buf, &msg)
 	if err != nil {
 		log.Println("ERROR: InitWebhooks::publish::jsondecoding", err)
 		sendError(writer, err.Error(), config.Debug)
@@ -43,7 +51,7 @@ func publish(writer http.ResponseWriter, request *http.Request, config configura
 			sendError(writer, err.Error(), config.Debug)
 			return
 		}
-		statistics.SourceReceive(float64(len(payload)), msg.Username)
+		statistics.SourceReceive(msgSize, msg.Username)
 		token, err := connector.Security().GetCachedUserToken(msg.Username)
 		if err != nil {
 			log.Println("ERROR: InitWebhooks::publish::GetUserToken", err)
@@ -73,14 +81,20 @@ func publish(writer http.ResponseWriter, request *http.Request, config configura
 			sendError(writer, err.Error(), config.Debug)
 			return
 		}
-		err = connector.HandleDeviceIdentEventWithAuthToken(token, device.Id, device.LocalId, service.Id, service.LocalId, map[string]string{
+		var info platform_connector_lib.HandledDeviceInfo
+		info, err = connector.HandleDeviceIdentEventWithAuthToken(token, device.Id, device.LocalId, service.Id, service.LocalId, map[string]string{
 			"payload": string(payload),
 		}, platform_connector_lib.Qos(msg.Qos))
+		if info.DeviceId != "" && info.DeviceTypeId != "" {
+			statistics.DeviceMsgReceive(msgSize, msg.Username, info.DeviceId, info.DeviceTypeId, strings.Join(info.ServiceIds, ","))
+		}
 		if err != nil {
 			log.Println("WARNING: InitWebhooks::publish::HandleDeviceIdentEventWithAuthToken", err, "\n", device.Id, device.LocalId, service.Id, service.LocalId, msg.Topic)
 			fmt.Fprintf(writer, `{"result": "ok"}`)
 			return
 		}
+		statistics.SourceReceiveHandled(msgSize, msg.Username)
+		statistics.DeviceMsgHandled(msgSize, msg.Username, info.DeviceId, info.DeviceTypeId, strings.Join(info.ServiceIds, ","))
 	}
 	fmt.Fprintf(writer, `{"result": "ok"}`)
 }

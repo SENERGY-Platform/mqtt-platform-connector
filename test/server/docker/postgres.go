@@ -20,6 +20,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"github.com/SENERGY-Platform/service-commons/pkg/testing/docker"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
 	"log"
@@ -47,7 +48,7 @@ func PostgresWithNetwork(ctx context.Context, wg *sync.WaitGroup, dbname string)
 			WaitingFor: wait.ForAll(
 				wait.ForLog("server started"),
 				wait.ForListeningPort("5432/tcp"),
-				wait.ForNop(waitretry(time.Minute, func(ctx context.Context, target wait.StrategyTarget) error {
+				wait.ForNop(docker.Waitretry(time.Minute, func(ctx context.Context, target wait.StrategyTarget) error {
 					p, err := target.MappedPort(ctx, "5432/tcp")
 					if err != nil {
 						log.Println(err)
@@ -81,7 +82,7 @@ func PostgresWithNetwork(ctx context.Context, wg *sync.WaitGroup, dbname string)
 	}
 	hostPort = temp.Port()
 	conStr = fmt.Sprintf("postgres://usr:pw@%s:%s/%s?sslmode=disable", containerIp, "5432", dbname)
-	err = retry(time.Minute, func() error {
+	err = docker.Retry(time.Minute, func() error {
 		return tryPostgresConn(conStr)
 	})
 	if err != nil {
