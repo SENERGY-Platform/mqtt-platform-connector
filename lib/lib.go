@@ -11,6 +11,7 @@ import (
 	platform_connector_lib "github.com/SENERGY-Platform/platform-connector-lib"
 	"github.com/SENERGY-Platform/platform-connector-lib/kafka"
 	"github.com/SENERGY-Platform/platform-connector-lib/model"
+	"github.com/SENERGY-Platform/platform-connector-lib/statistics"
 	paho "github.com/eclipse/paho.mqtt.golang"
 	"log"
 	"os"
@@ -149,6 +150,8 @@ func Start(basectx context.Context, config configuration.Config) (err error) {
 	if err != nil {
 		return err
 	}
+
+	statistics.Init() //ensure start of prometheus metrics endpoint
 
 	if config.CommandWorkerCount > 1 {
 		err = connector.SetAsyncCommandHandler(CreateQueuedCommandHandler(ctx, config, mqtt)).StartConsumer(ctx)
