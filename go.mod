@@ -1,14 +1,12 @@
 module github.com/SENERGY-Platform/mqtt-platform-connector
 
-go 1.21
-
-toolchain go1.21.0
+go 1.22
 
 require (
-	github.com/IBM/sarama v1.42.1
-	github.com/SENERGY-Platform/permission-search v0.0.1
-	github.com/SENERGY-Platform/platform-connector-lib v0.0.0-20240207071148-978df333014b
-	github.com/SENERGY-Platform/service-commons v0.0.0-20231115074650-7021aeae60e4
+	github.com/IBM/sarama v1.42.2
+	github.com/SENERGY-Platform/permission-search v0.0.2
+	github.com/SENERGY-Platform/platform-connector-lib v0.0.0-20240212092416-089333ed5d80
+	github.com/SENERGY-Platform/service-commons v0.0.0-20240212071101-f06b2d8b0885
 	github.com/eclipse/paho.golang v0.20.0
 	github.com/eclipse/paho.mqtt.golang v1.4.3
 	github.com/google/uuid v1.6.0
@@ -25,8 +23,8 @@ require (
 	github.com/Microsoft/go-winio v0.6.1 // indirect
 	github.com/Microsoft/hcsshim v0.11.4 // indirect
 	github.com/RyanCarrier/dijkstra v1.3.0 // indirect
-	github.com/SENERGY-Platform/converter v0.0.4 // indirect
-	github.com/SENERGY-Platform/developer-notifications v0.0.1 // indirect
+	github.com/SENERGY-Platform/converter v0.0.5 // indirect
+	github.com/SENERGY-Platform/developer-notifications v0.0.2 // indirect
 	github.com/SENERGY-Platform/models/go v0.0.0-20230824080159-16585960df38 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bradfitz/gomemcache v0.0.0-20230905024940-24af94b03874 // indirect
@@ -98,15 +96,15 @@ require (
 	github.com/tklauser/numcpus v0.7.0 // indirect
 	github.com/yusufpapurcu/wmi v1.2.4 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.48.0 // indirect
-	go.opentelemetry.io/otel v1.23.0 // indirect
-	go.opentelemetry.io/otel/metric v1.23.0 // indirect
-	go.opentelemetry.io/otel/trace v1.23.0 // indirect
-	golang.org/x/crypto v0.18.0 // indirect
+	go.opentelemetry.io/otel v1.23.1 // indirect
+	go.opentelemetry.io/otel/metric v1.23.1 // indirect
+	go.opentelemetry.io/otel/trace v1.23.1 // indirect
+	golang.org/x/crypto v0.19.0 // indirect
 	golang.org/x/exp v0.0.0-20240205201215-2c58cdc269a3 // indirect
 	golang.org/x/mod v0.15.0 // indirect
-	golang.org/x/net v0.20.0 // indirect
+	golang.org/x/net v0.21.0 // indirect
 	golang.org/x/sync v0.6.0 // indirect
-	golang.org/x/sys v0.16.0 // indirect
+	golang.org/x/sys v0.17.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/tools v0.17.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240205150955-31a09d347014 // indirect
