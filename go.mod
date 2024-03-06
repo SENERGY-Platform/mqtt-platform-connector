@@ -5,7 +5,7 @@ go 1.22
 require (
 	github.com/IBM/sarama v1.43.0
 	github.com/SENERGY-Platform/permission-search v0.0.4
-	github.com/SENERGY-Platform/platform-connector-lib v0.0.0-20240306094138-284a472fad85
+	github.com/SENERGY-Platform/platform-connector-lib v0.0.0-20240306111314-154015c02c9a
 	github.com/SENERGY-Platform/service-commons v0.0.0-20240305143349-19fa57c20f9f
 	github.com/eclipse/paho.golang v0.21.0
 	github.com/eclipse/paho.mqtt.golang v1.4.3
