@@ -24,8 +24,8 @@ github.com/SENERGY-Platform/models/go v0.0.0-20230824080159-16585960df38 h1:PDvF
 github.com/SENERGY-Platform/models/go v0.0.0-20230824080159-16585960df38/go.mod h1:bCREPNRN4P8oxLgpC3/ZKK4jXSy4MSPXoiomhohE+aw=
 github.com/SENERGY-Platform/permission-search v0.0.4 h1:Fq1iiNLTaQ57EO9pFEeOmEKRfduy3Dj0yKP4mtIhgnU=
 github.com/SENERGY-Platform/permission-search v0.0.4/go.mod h1:8AFA+jB9OQ3WX1k4LWmHfpL41vFZhP4kke2b1w8dK/4=
-github.com/SENERGY-Platform/platform-connector-lib v0.0.0-20240306130844-1605b6768712 h1:wY+RpoV7UiDHvrxXbATMslfZekLPyU1Moqh0EpmHSiI=
-github.com/SENERGY-Platform/platform-connector-lib v0.0.0-20240306130844-1605b6768712/go.mod h1:vvCrpFoo6NaHXzXRBDt1bRSz2Hs09qfrepq6mDUEi8o=
+github.com/SENERGY-Platform/platform-connector-lib v0.0.0-20240306134041-264f1950322f h1:kJvqifsY5Ug9zufsO74cIM0yhWS26oFc0raRtYMngq4=
+github.com/SENERGY-Platform/platform-connector-lib v0.0.0-20240306134041-264f1950322f/go.mod h1:vvCrpFoo6NaHXzXRBDt1bRSz2Hs09qfrepq6mDUEi8o=
 github.com/SENERGY-Platform/service-commons v0.0.0-20240306125932-a3fb4550e86c h1:+6+lNvabYQV7CDfEAxk6ubSqb6S3eaZKkH7RxBTHQoU=
 github.com/SENERGY-Platform/service-commons v0.0.0-20240306125932-a3fb4550e86c/go.mod h1:dhzwaojTUKrylLAivQ8pRcuFgXK45OBvl6bmnhK4lTk=
 github.com/aws/aws-sdk-go v1.42.27/go.mod h1:OGr6lGMAKGlG9CVrYnWYDKIyb829c6EVBRjxqjmPepc=
@@ -286,10 +286,11 @@ github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/
 github.com/stretchr/testify v1.7.1/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/stretchr/testify v1.8.0/go.mod h1:yNjHg4UonilssWZ8iaSj1OCr/vHnekPRkoO+kdMU+MU=
 github.com/stretchr/testify v1.8.1/go.mod h1:w2LPCIKwWwSfY2zedu0+kehJoqGctiVI29o6fzry7u4=
-github.com/stretchr/testify v1.8.4 h1:CcVxjf3Q8PM0mHUKJCdn+eZZtm5yQwehR5yeSVQQcUk=
 github.com/stretchr/testify v1.8.4/go.mod h1:sz/lmYIOXD/1dqDmKjjqLyZ2RngseejIcXlSw2iwfAo=
-github.com/testcontainers/testcontainers-go v0.28.0 h1:1HLm9qm+J5VikzFDYhOd+Zw12NtOl+8drH2E8nTY1r8=
-github.com/testcontainers/testcontainers-go v0.28.0/go.mod h1:COlDpUXbwW3owtpMkEB1zo9gwb1CoKVKlyrVPejF4AU=
+github.com/stretchr/testify v1.9.0 h1:HtqpIVDClZ4nwg75+f6Lvsy/wHu+3BoSGCbBAcpTsTg=
+github.com/stretchr/testify v1.9.0/go.mod h1:r2ic/lqez/lEtzL7wO/rwa5dbSLXVDPFyf8C91i36aY=
+github.com/testcontainers/testcontainers-go v0.29.1 h1:z8kxdFlovA2y97RWx98v/TQ+tR+SXZm6p35M+xB92zk=
+github.com/testcontainers/testcontainers-go v0.29.1/go.mod h1:SnKnKQav8UcgtKqjp/AD8bE1MqZm+3TDb/B8crE3XnI=
 github.com/tklauser/go-sysconf v0.3.12/go.mod h1:Ho14jnntGE1fpdOqQEEaiKRpvIavV0hSfmBq8nJbHYI=
 github.com/tklauser/go-sysconf v0.3.13 h1:GBUpcahXSpR2xN01jhkNAbTLRk2Yzgggk8IM08lq3r4=
 github.com/tklauser/go-sysconf v0.3.13/go.mod h1:zwleP4Q4OehZHGn4CYZDipCgg9usW5IJePewFCGVEa0=

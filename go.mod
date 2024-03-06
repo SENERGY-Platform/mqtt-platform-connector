@@ -5,7 +5,7 @@ go 1.22
 require (
 	github.com/IBM/sarama v1.43.0
 	github.com/SENERGY-Platform/permission-search v0.0.4
-	github.com/SENERGY-Platform/platform-connector-lib v0.0.0-20240306130844-1605b6768712
+	github.com/SENERGY-Platform/platform-connector-lib v0.0.0-20240306134041-264f1950322f
 	github.com/SENERGY-Platform/service-commons v0.0.0-20240306125932-a3fb4550e86c
 	github.com/eclipse/paho.golang v0.21.0
 	github.com/eclipse/paho.mqtt.golang v1.4.3
@@ -13,7 +13,7 @@ require (
 	github.com/julienschmidt/httprouter v1.3.0
 	github.com/lib/pq v1.10.9
 	github.com/segmentio/kafka-go v0.4.47
-	github.com/testcontainers/testcontainers-go v0.28.0
+	github.com/testcontainers/testcontainers-go v0.29.1
 )
 
 require (
