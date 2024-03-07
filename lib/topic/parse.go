@@ -31,7 +31,7 @@ var ErrNoDeviceIdCandidateFound = errors.New("no device id candidate found")
 var ErrNoServiceMatchFound = errors.New("no service match found")
 var ErrMultipleMatchingDevicesFound = errors.New("multiple matching devices found")
 
-//if no service is fount, ErrNoServiceMatchFound will be returned as error. but the device will be set if one was found
+// if no service is fount, ErrNoServiceMatchFound will be returned as error. but the device will be set if one was found
 func (this *Topic) Parse(token security.JwtToken, topic string) (device model.Device, service model.Service, err error) {
 	candidates, err := this.ParseForCandidates(token, topic)
 	if err != nil {
@@ -51,7 +51,7 @@ func (this *Topic) Parse(token security.JwtToken, topic string) (device model.De
 	return device, service, nil
 }
 
-//not exported, no one should care
+// not exported, no one should care
 type candidate struct {
 	device   model.Device
 	services []model.Service
@@ -152,9 +152,19 @@ func (this *Topic) findDeviceIdCandidates(topic string) (candidates []string, er
 }
 
 func findDeviceIdCandidates(topic string) (candidates []string) {
-	return regexp.MustCompile(`urn:infai:ses:device:[\w-]*`).FindAllString(topic, -1)
+	for _, part := range strings.Split(topic, "/") {
+		if regexp.MustCompile(`^urn:infai:ses:device:[\w-]*$`).MatchString(part) {
+			candidates = append(candidates, part)
+		}
+	}
+	return candidates
 }
 
 func findShortDeviceIdCandidates(topic string) (candidates []string) {
-	return regexp.MustCompile(`[\w-_]{22}`).FindAllString(topic, -1)
+	for _, part := range strings.Split(topic, "/") {
+		if regexp.MustCompile(`^[\w\-_]{22}$`).MatchString(part) {
+			candidates = append(candidates, part)
+		}
+	}
+	return candidates
 }
