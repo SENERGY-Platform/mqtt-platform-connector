@@ -39,6 +39,12 @@ func login(writer http.ResponseWriter, request *http.Request, config configurati
 
 	authenticationMethod := config.MqttAuthMethod
 
+	if authenticationMethod == "certificate" {
+		log.Println("/login", msg.PeerAddr, "cert", msg.ClientId, msg.CleanStart, msg.CleanSession)
+	} else {
+		log.Println("/login", msg.PeerAddr, msg.Username, msg.ClientId, msg.CleanStart, msg.CleanSession)
+	}
+
 	if msg.Username != config.AuthClientId {
 		var token security.JwtToken
 		var err error

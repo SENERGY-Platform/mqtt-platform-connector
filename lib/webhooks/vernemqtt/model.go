@@ -42,6 +42,8 @@ type UnsubscribeWebhookMsg struct {
 }
 
 type LoginWebhookMsg struct {
+	PeerAddr     string `json:"peer_addr"`
+	PeerPort     int    `json:"peer_port"`
 	Username     string `json:"username"`
 	Password     string `json:"password"`
 	ClientId     string `json:"client_id"`
