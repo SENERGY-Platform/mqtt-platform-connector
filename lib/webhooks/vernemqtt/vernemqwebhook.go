@@ -23,7 +23,10 @@ import (
 	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/topic"
 	"github.com/SENERGY-Platform/platform-connector-lib"
 	"log"
+	"log/slog"
 	"net/http"
+	"os"
+	"runtime/debug"
 	"time"
 )
 
@@ -31,8 +34,10 @@ func InitWebhooks(ctx context.Context, config configuration.Config, connector *p
 	topicParser := topic.New(connector.IotCache, config.ActuatorTopicPattern)
 	router := http.NewServeMux()
 
+	logger := GetLogger()
+
 	router.HandleFunc("/login", func(writer http.ResponseWriter, request *http.Request) {
-		login(writer, request, config, connector, connectionLog)
+		login(writer, request, config, connector, connectionLog, logger)
 	})
 
 	router.HandleFunc("/online", func(writer http.ResponseWriter, request *http.Request) {
@@ -40,7 +45,7 @@ func InitWebhooks(ctx context.Context, config configuration.Config, connector *p
 	})
 
 	router.HandleFunc("/disconnect", func(writer http.ResponseWriter, request *http.Request) {
-		disconnect(writer, request, config, connectionLog)
+		disconnect(writer, request, config, connectionLog, logger)
 	})
 
 	router.HandleFunc("/publish", func(writer http.ResponseWriter, request *http.Request) {
@@ -94,4 +99,14 @@ func (this *LoggerMiddleWare) log(request *http.Request) {
 	method := request.Method
 	path := request.URL
 	log.Printf("[%v] %v \n", method, path)
+}
+
+func GetLogger() *slog.Logger {
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+		Level: slog.LevelInfo,
+	}))
+	if info, ok := debug.ReadBuildInfo(); ok {
+		logger = logger.With("go-module", info.Path)
+	}
+	return logger.With("snrgy-log-type", "connector-webhook")
 }

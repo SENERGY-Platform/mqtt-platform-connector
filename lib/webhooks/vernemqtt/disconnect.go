@@ -22,11 +22,12 @@ import (
 	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/configuration"
 	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/connectionlog"
 	"log"
+	"log/slog"
 	"net/http"
 	"runtime/debug"
 )
 
-func disconnect(writer http.ResponseWriter, request *http.Request, config configuration.Config, connectionLog connectionlog.ConnectionLog) {
+func disconnect(writer http.ResponseWriter, request *http.Request, config configuration.Config, connectionLog connectionlog.ConnectionLog, logger *slog.Logger) {
 	defer func() {
 		if p := recover(); p != nil {
 			debug.PrintStack()
@@ -42,8 +43,6 @@ func disconnect(writer http.ResponseWriter, request *http.Request, config config
 		log.Println("ERROR: InitWebhooks::disconnect::jsondecoding", err)
 		return
 	}
-	if config.Debug {
-		log.Println("DEBUG: /disconnect", msg)
-	}
+	logger.Info("disconnect", "action", "disconnect", "clientId", msg.ClientId)
 	connectionLog.Disconnect(msg.ClientId)
 }

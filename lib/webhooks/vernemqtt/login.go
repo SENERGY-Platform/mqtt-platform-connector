@@ -24,10 +24,11 @@ import (
 	platform_connector_lib "github.com/SENERGY-Platform/platform-connector-lib"
 	"github.com/SENERGY-Platform/platform-connector-lib/security"
 	"log"
+	"log/slog"
 	"net/http"
 )
 
-func login(writer http.ResponseWriter, request *http.Request, config configuration.Config, connector *platform_connector_lib.Connector, connectionLog connectionlog.ConnectionLog) {
+func login(writer http.ResponseWriter, request *http.Request, config configuration.Config, connector *platform_connector_lib.Connector, connectionLog connectionlog.ConnectionLog, logger *slog.Logger) {
 	//{"peer_addr":"172.20.0.30","peer_port":41310,"mountpoint":"","client_id":"sepl_mqtt_connector_1","username":"sepl","password":"sepl","clean_session":true}
 	msg := LoginWebhookMsg{}
 	err := json.NewDecoder(request.Body).Decode(&msg)
@@ -40,9 +41,9 @@ func login(writer http.ResponseWriter, request *http.Request, config configurati
 	authenticationMethod := config.MqttAuthMethod
 
 	if authenticationMethod == "certificate" {
-		log.Println("/login", msg.PeerAddr, "cert", msg.ClientId, msg.CleanStart, msg.CleanSession)
+		logger.Info("login", "action", "login", "peerAddr", msg.PeerAddr, "loginType", "cert", "clientId", msg.ClientId, "cleanStart", msg.CleanStart, "cleanSession", msg.CleanSession)
 	} else {
-		log.Println("/login", msg.PeerAddr, msg.Username, msg.ClientId, msg.CleanStart, msg.CleanSession)
+		logger.Info("login", "action", "login", "peerAddr", msg.PeerAddr, "loginType", "pw", "username", msg.Username, "clientId", msg.ClientId, "cleanStart", msg.CleanStart, "cleanSession", msg.CleanSession)
 	}
 
 	if msg.Username != config.AuthClientId {
