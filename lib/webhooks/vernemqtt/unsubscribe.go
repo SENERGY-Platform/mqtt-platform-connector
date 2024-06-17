@@ -23,6 +23,7 @@ import (
 	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/connectionlog"
 	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/topic"
 	platform_connector_lib "github.com/SENERGY-Platform/platform-connector-lib"
+	"github.com/SENERGY-Platform/platform-connector-lib/model"
 	"log"
 	"net/http"
 	"runtime/debug"
@@ -48,7 +49,7 @@ func unsubscribe(writer http.ResponseWriter, request *http.Request, config confi
 	//defer json.NewEncoder(writer).Encode(map[string]interface{}{"result": "ok", "topics": msg.Topics})
 	defer json.NewEncoder(writer).Encode(map[string]interface{}{"result": "ok", "topics": msg.Topics})
 	if msg.Username != config.AuthClientId {
-		token, err := connector.Security().GetCachedUserToken(msg.Username)
+		token, err := connector.Security().GetCachedUserToken(msg.Username, model.RemoteInfo{})
 		if err != nil {
 			log.Println("ERROR: InitWebhooks::unsubscribe::GenerateUserToken", err)
 			return

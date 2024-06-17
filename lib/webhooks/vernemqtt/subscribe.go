@@ -22,6 +22,7 @@ import (
 	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/connectionlog"
 	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/topic"
 	platform_connector_lib "github.com/SENERGY-Platform/platform-connector-lib"
+	"github.com/SENERGY-Platform/platform-connector-lib/model"
 	"log"
 	"net/http"
 )
@@ -37,7 +38,7 @@ func subscribe(writer http.ResponseWriter, request *http.Request, config configu
 	}
 	resultTopics := []WebhookmsgTopic{}
 	if msg.Username != config.AuthClientId {
-		token, err := connector.Security().GetCachedUserToken(msg.Username)
+		token, err := connector.Security().GetCachedUserToken(msg.Username, model.RemoteInfo{})
 		if err != nil {
 			sendError(writer, err.Error(), config.Debug)
 			return

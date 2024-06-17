@@ -23,6 +23,7 @@ import (
 	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/configuration"
 	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/topic"
 	platform_connector_lib "github.com/SENERGY-Platform/platform-connector-lib"
+	"github.com/SENERGY-Platform/platform-connector-lib/model"
 	"github.com/SENERGY-Platform/platform-connector-lib/statistics"
 	"io"
 	"log"
@@ -51,7 +52,7 @@ func publish(writer http.ResponseWriter, request *http.Request, config configura
 			return
 		}
 		statistics.SourceReceive(msgSize, msg.Username)
-		token, err := connector.Security().GetCachedUserToken(msg.Username)
+		token, err := connector.Security().GetCachedUserToken(msg.Username, model.RemoteInfo{})
 		if err != nil {
 			log.Println("ERROR: InitWebhooks::publish::GetUserToken", err)
 			sendError(writer, err.Error(), config.Debug)

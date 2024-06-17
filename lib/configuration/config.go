@@ -113,6 +113,8 @@ type Config struct {
 	NotificationUserOverwrite            string `json:"notification_user_overwrite"`
 	DeveloperNotificationUrl             string `json:"developer_notification_url"`
 
+	SecRemoteProtocol string `json:"sec_remote_protocol"`
+
 	KafkaTopicConfigs map[string][]kafka.ConfigEntry `json:"kafka_topic_configs"`
 }
 
