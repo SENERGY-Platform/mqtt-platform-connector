@@ -78,7 +78,7 @@
     "notification_user_overwrite": "",
     "developer_notification_url": "http://api.developer-notifications:8080",
 
-    "sec_remote_protocol": "mqtt",
+    "sec_remote_protocol": "https",
 
     "kafka_topic_configs": {
         "device-types": [
