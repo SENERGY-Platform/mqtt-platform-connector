@@ -132,7 +132,7 @@ func (this *Topic) findDeviceCandidates(token security.JwtToken, topic string) (
 		if err == nil {
 			candidates = append(candidates, device)
 		} else {
-			if err != security.ErrorNotFound && err != security.ErrorAccessDenied {
+			if !errors.Is(err, security.ErrorNotFound) && !errors.Is(err, security.ErrorAccessDenied) {
 				return candidates, err
 			}
 		}
