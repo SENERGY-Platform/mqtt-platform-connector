@@ -113,6 +113,7 @@ func Start(basectx context.Context, config configuration.Config) (err error) {
 		NotificationsIgnoreDuplicatesWithinS: config.NotificationsIgnoreDuplicatesWithinS,
 		NotificationUserOverwrite:            config.NotificationUserOverwrite,
 		DeveloperNotificationUrl:             config.DeveloperNotificationUrl,
+		MutedUserNotificationTitles:          config.MutedUserNotificationTitles,
 	}
 
 	connector, err := platform_connector_lib.New(libConf)

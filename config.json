@@ -77,6 +77,7 @@
     "notifications_ignore_duplicates_within_s": 3600,
     "notification_user_overwrite": "",
     "developer_notification_url": "http://api.developer-notifications:8080",
+    "muted_user_notification_titles": ["Device-Message Format-Error", "Client-Error"],
 
     "sec_remote_protocol": "https",
 

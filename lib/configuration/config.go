@@ -109,9 +109,10 @@ type Config struct {
 	NotificationUrl string `json:"notification_url"`
 	PermQueryUrl    string `json:"perm_query_url"`
 
-	NotificationsIgnoreDuplicatesWithinS int    `json:"notifications_ignore_duplicates_within_s"`
-	NotificationUserOverwrite            string `json:"notification_user_overwrite"`
-	DeveloperNotificationUrl             string `json:"developer_notification_url"`
+	NotificationsIgnoreDuplicatesWithinS int      `json:"notifications_ignore_duplicates_within_s"`
+	NotificationUserOverwrite            string   `json:"notification_user_overwrite"`
+	DeveloperNotificationUrl             string   `json:"developer_notification_url"`
+	MutedUserNotificationTitles          []string `json:"muted_user_notification_titles"`
 
 	SecRemoteProtocol string `json:"sec_remote_protocol"`
 
