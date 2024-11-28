@@ -108,7 +108,7 @@ func Start(basectx context.Context, config configuration.Config) (err error) {
 		IotCacheMaxIdleConns:                 int(config.IotCacheMaxIdleConns),
 		KafkaTopicConfigs:                    config.KafkaTopicConfigs,
 		DeviceTypeTopic:                      config.DeviceTypeTopic,
-		PermQueryUrl:                         config.PermQueryUrl,
+		PermissionsV2Url:                     config.PermissionsV2Url,
 		NotificationUrl:                      config.NotificationUrl,
 		NotificationsIgnoreDuplicatesWithinS: config.NotificationsIgnoreDuplicatesWithinS,
 		NotificationUserOverwrite:            config.NotificationUserOverwrite,

@@ -106,8 +106,8 @@ type Config struct {
 
 	DeviceTypeTopic string `json:"device_type_topic"`
 
-	NotificationUrl string `json:"notification_url"`
-	PermQueryUrl    string `json:"perm_query_url"`
+	NotificationUrl  string `json:"notification_url"`
+	PermissionsV2Url string `json:"permissions_v2_url"`
 
 	NotificationsIgnoreDuplicatesWithinS int      `json:"notifications_ignore_duplicates_within_s"`
 	NotificationUserOverwrite            string   `json:"notification_user_overwrite"`

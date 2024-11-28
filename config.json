@@ -72,7 +72,7 @@
     "device_type_topic": "device-types",
 
     "notification_url": "",
-    "perm_query_url": "",
+    "permissions_v2_url": "http://permv2.permissions:8080",
 
     "notifications_ignore_duplicates_within_s": 3600,
     "notification_user_overwrite": "",
