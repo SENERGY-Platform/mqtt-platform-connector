@@ -24,7 +24,6 @@ import (
 	"log"
 	"os"
 	"os/signal"
-	"runtime/debug"
 	"syscall"
 	"time"
 )
@@ -44,7 +43,6 @@ func main() {
 
 	err = lib.Start(ctx, config)
 	if err != nil {
-		debug.PrintStack()
 		log.Fatal(err)
 	}
 

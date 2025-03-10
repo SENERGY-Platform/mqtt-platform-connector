@@ -22,7 +22,6 @@ import (
 	"github.com/SENERGY-Platform/platform-connector-lib/kafka"
 	_ "github.com/lib/pq"
 	"log"
-	"runtime/debug"
 )
 
 type ConnectionLog interface {
@@ -55,13 +54,11 @@ func (this *ConnectionLogImpl) Subscribe(client string, topic string, deviceId s
 	err := this.storeSubscription(client, topic, deviceId)
 	if err != nil {
 		log.Println("ERROR: ", err)
-		debug.PrintStack()
 		return
 	}
 	err = this.logger.LogDeviceConnect(deviceId)
 	if err != nil {
 		log.Println("ERROR: ", err)
-		debug.PrintStack()
 		return
 	}
 	return
@@ -71,20 +68,17 @@ func (this *ConnectionLogImpl) Unsubscribe(client string, topic string, deviceId
 	err := this.removeSubscription(client, topic)
 	if err != nil {
 		log.Println("ERROR: ", err)
-		debug.PrintStack()
 		return
 	}
 	noSub, err := this.noDeviceSubscriptionStored(deviceId)
 	if err != nil {
 		log.Println("ERROR: ", err)
-		debug.PrintStack()
 		return
 	}
 	if noSub {
 		err = this.logger.LogDeviceDisconnect(deviceId)
 		if err != nil {
 			log.Println("ERROR: ", err)
-			debug.PrintStack()
 			return
 		}
 	}
@@ -95,13 +89,11 @@ func (this *ConnectionLogImpl) Disconnect(client string) {
 	cleanSession, err := this.isCleanSession(client)
 	if err != nil {
 		log.Println("ERROR: ", err)
-		debug.PrintStack()
 		return
 	}
 	devices, err := this.loadSubscriptions(client)
 	if err != nil {
 		log.Println("ERROR: ", err)
-		debug.PrintStack()
 		return
 	}
 	if cleanSession {
@@ -111,20 +103,17 @@ func (this *ConnectionLogImpl) Disconnect(client string) {
 	}
 	if err != nil {
 		log.Println("ERROR: ", err)
-		debug.PrintStack()
 		return
 	}
 	filtered, err := this.filterByStoredDevices(devices)
 	if err != nil {
 		log.Println("ERROR: ", err)
-		debug.PrintStack()
 		return
 	}
 	for _, d := range filtered {
 		err = this.logger.LogDeviceDisconnect(d)
 		if err != nil {
 			log.Println("ERROR: ", err)
-			debug.PrintStack()
 			continue
 		}
 	}
@@ -134,7 +123,6 @@ func (this *ConnectionLogImpl) Connect(client string) {
 	cleanSession, err := this.isCleanSession(client)
 	if err != nil {
 		log.Println("ERROR: ", err)
-		debug.PrintStack()
 		return
 	}
 	if cleanSession {
@@ -143,20 +131,17 @@ func (this *ConnectionLogImpl) Connect(client string) {
 	err = this.setClientInactive(client, false)
 	if err != nil {
 		log.Println("ERROR: ", err)
-		debug.PrintStack()
 		return
 	}
 	devices, err := this.loadSubscriptions(client)
 	if err != nil {
 		log.Println("ERROR: ", err)
-		debug.PrintStack()
 		return
 	}
 	for _, d := range devices {
 		err = this.logger.LogDeviceConnect(d)
 		if err != nil {
 			log.Println("ERROR: ", err)
-			debug.PrintStack()
 			continue
 		}
 	}
@@ -166,7 +151,6 @@ func (this *ConnectionLogImpl) SetCleanSession(client string, clean bool) {
 	err := this.setCleanSession(client, clean)
 	if err != nil {
 		log.Println("ERROR: ", err)
-		debug.PrintStack()
 		return
 	}
 }

@@ -32,7 +32,9 @@ import (
 func unsubscribe(writer http.ResponseWriter, request *http.Request, config configuration.Config, connector *platform_connector_lib.Connector, topicParser *topic.Topic, connectionLog connectionlog.ConnectionLog) {
 	defer func() {
 		if p := recover(); p != nil {
-			debug.PrintStack()
+			if config.Debug {
+				debug.PrintStack()
+			}
 			sendError(writer, fmt.Sprint(p), config.Debug)
 			return
 		}
