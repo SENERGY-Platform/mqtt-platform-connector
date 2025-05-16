@@ -117,6 +117,9 @@ type Config struct {
 	SecRemoteProtocol string `json:"sec_remote_protocol"`
 
 	KafkaTopicConfigs map[string][]kafka.ConfigEntry `json:"kafka_topic_configs"`
+
+	ConnectionCheckUrl         string
+	ConnectionCheckHttpTimeout string
 }
 
 func LoadConfig() (result Config, err error) {

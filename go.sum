@@ -16,6 +16,8 @@ github.com/Microsoft/go-winio v0.6.2 h1:F2VQgta7ecxGYO8k3ZZz3RS8fVIXVxONVUPlNERo
 github.com/Microsoft/go-winio v0.6.2/go.mod h1:yd8OoFMLzJbo9gZq8j5qaps8bJ9aShtEA8Ipt1oGCvU=
 github.com/RyanCarrier/dijkstra v1.4.0 h1:wkEVdTBLUiXjeBvDrSuagr72pOt36rUQoIfnnGxFYoQ=
 github.com/RyanCarrier/dijkstra v1.4.0/go.mod h1:9egjhC7eVsfREX6NrYS+1wHzk9C/9v2Cz26/bqpjjTc=
+github.com/SENERGY-Platform/connection-check-v2/lib v0.0.2 h1:00gVi32eO3Ql+UDgls8h1agPXrEs2dhaQyoqCkCMrzo=
+github.com/SENERGY-Platform/connection-check-v2/lib v0.0.2/go.mod h1:L5b+1+FN7YCRyyvnBAnIaiGnC5IoqIMZYKsNMnMQcnA=
 github.com/SENERGY-Platform/converter v0.0.10 h1:Af7+n6XNZHBQ+Af+5wSbLWF5EWSYcruTyI3q34tnpg4=
 github.com/SENERGY-Platform/converter v0.0.10/go.mod h1:rMEbO/JjpxyLTDm4D1uahYfJWqMMmQfnIXOwLHXk99U=
 github.com/SENERGY-Platform/developer-notifications v0.0.4 h1:SmblhfWavNhE1mDxzrkhmWl2AoPPqKD+7YcZCQ7a5Tg=
@@ -26,8 +28,8 @@ github.com/SENERGY-Platform/models/go v0.0.0-20241007061544-de7132ae94e4 h1:zS65
 github.com/SENERGY-Platform/models/go v0.0.0-20241007061544-de7132ae94e4/go.mod h1:bCREPNRN4P8oxLgpC3/ZKK4jXSy4MSPXoiomhohE+aw=
 github.com/SENERGY-Platform/permissions-v2 v0.0.27 h1:4Sf5zNW0KMrSSJrv90MmyKD5RMnS8CT26yE7W9Za/x0=
 github.com/SENERGY-Platform/permissions-v2 v0.0.27/go.mod h1:w5AghpFIQ2Hi+HKfcuqXcizR4pCYuMLXcWAdAmOPAF4=
-github.com/SENERGY-Platform/platform-connector-lib v0.0.0-20250310074057-29d5661dc398 h1:RZCFn6y12zsV8V5tNAr8n2hSwFcFqogSn70bwYEK7K4=
-github.com/SENERGY-Platform/platform-connector-lib v0.0.0-20250310074057-29d5661dc398/go.mod h1:/gvfqiaCsdBAqE7r4VCr+JTW4j5eTIMKChRHV0lX5jY=
+github.com/SENERGY-Platform/platform-connector-lib v0.0.0-20250515085751-54e25594b235 h1:ISZ5RMTEaLsIkLGsjbkaMBKWtUabHXZzHEEgnC69qjk=
+github.com/SENERGY-Platform/platform-connector-lib v0.0.0-20250515085751-54e25594b235/go.mod h1:/gvfqiaCsdBAqE7r4VCr+JTW4j5eTIMKChRHV0lX5jY=
 github.com/SENERGY-Platform/service-commons v0.0.0-20250123095636-6dfc659ee43e h1:JyCPmb5tYkGlET39UG23MMw+CNNKHqoXdYL2oC3ChiI=
 github.com/SENERGY-Platform/service-commons v0.0.0-20250123095636-6dfc659ee43e/go.mod h1:1p2CQPNtler5leXqNgaOfr7DlgZUydrQlQYA97ycm4k=
 github.com/beorn7/perks v1.0.1 h1:VlbKKnNfV8bJzeqoa4cOKqO6bYr3WgKZxO8Z16+hsOM=

@@ -137,7 +137,7 @@ func Start(basectx context.Context, config configuration.Config) (err error) {
 		if err != nil {
 			return err
 		}
-		logging, err = connectionlog.New(producer, config.SubscriptionDbConStr, config.DeviceLogTopic)
+		logging, err = connectionlog.New(producer, config.SubscriptionDbConStr, config.DeviceLogTopic, config.ConnectionCheckUrl, config.ConnectionCheckHttpTimeout)
 		if err != nil {
 			return err
 		}

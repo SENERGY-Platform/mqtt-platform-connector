@@ -18,10 +18,13 @@ package connectionlog
 
 import (
 	"database/sql"
+	connection_check_lib "github.com/SENERGY-Platform/connection-check-v2/lib"
 	"github.com/SENERGY-Platform/platform-connector-lib/connectionlog"
 	"github.com/SENERGY-Platform/platform-connector-lib/kafka"
 	_ "github.com/lib/pq"
 	"log"
+	"net/http"
+	"time"
 )
 
 type ConnectionLog interface {
@@ -32,9 +35,19 @@ type ConnectionLog interface {
 	SetCleanSession(id string, session bool)
 }
 
-func New(producer kafka.ProducerInterface, conStr string, deviceLogTopic string) (result ConnectionLog, err error) {
+func New(producer kafka.ProducerInterface, conStr string, deviceLogTopic string, connCheckUrl string, httpTimeoutStr string) (result ConnectionLog, err error) {
 	logger := &ConnectionLogImpl{}
-	logger.logger, err = connectionlog.NewWithProducer(producer, deviceLogTopic, "")
+	if connCheckUrl != "" {
+		var httpTimeout time.Duration
+		httpTimeout, err = time.ParseDuration(httpTimeoutStr)
+		if err != nil && httpTimeoutStr != "" {
+			log.Println("WARNING: invalid ConnectionCheckHttpTimeout; use default 15s")
+			httpTimeout = 15 * time.Second
+		}
+		logger.logger, err = connectionlog.NewWithProducerAndConnCheck(producer, connection_check_lib.New(&http.Client{Timeout: httpTimeout}, connCheckUrl), deviceLogTopic, "")
+	} else {
+		logger.logger, err = connectionlog.NewWithProducer(producer, deviceLogTopic, "")
+	}
 	if err != nil {
 		return logger, err
 	}
