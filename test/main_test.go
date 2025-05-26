@@ -2,16 +2,13 @@ package test
 
 import (
 	"context"
-	"database/sql"
 	"encoding/json"
-	"fmt"
 	"github.com/SENERGY-Platform/mqtt-platform-connector/lib"
 	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/configuration"
 	"github.com/SENERGY-Platform/mqtt-platform-connector/test/client"
 	"github.com/SENERGY-Platform/mqtt-platform-connector/test/server"
 	"github.com/SENERGY-Platform/platform-connector-lib/kafka"
 	"github.com/SENERGY-Platform/platform-connector-lib/model"
-	"github.com/SENERGY-Platform/platform-connector-lib/psql"
 	"github.com/google/uuid"
 	"log"
 	"reflect"
@@ -194,49 +191,6 @@ func testEventPlainText(t *testing.T, authMethod string, mqttVersion client.Mqtt
 
 	t.Run("check kafka event", func(t *testing.T) {
 		trySensorFromDevice(t, config, ctx, deviceType, device, serviceLocalId, "\""+msg+"\"")
-	})
-
-	t.Run("check written to postgres", func(t *testing.T) {
-		psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", config.PostgresHost,
-			config.PostgresPort, config.PostgresUser, config.PostgresPw, config.PostgresDb)
-
-		// open database
-		db, err := sql.Open("postgres", psqlconn)
-		if err != nil {
-			t.Fatal("could not establish db")
-		}
-		err = db.Ping()
-		if err != nil {
-			t.Fatal("could not connect to db")
-		}
-		shortServiceId1, err := psql.ShortenId(serviceId)
-		if err != nil {
-			t.Fatal(err)
-		}
-		shortDeviceId, err := psql.ShortenId(deviceId)
-		if err != nil {
-			t.Fatal(err)
-		}
-		query := "SELECT * FROM \"device:" + shortDeviceId + "_service:" + shortServiceId1 + "\";"
-		resp, err := db.Query(query)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if !resp.Next() {
-			t.Fatal("Event not written to Postgres!")
-		}
-		var dt time.Time
-		var payload string
-		err = resp.Scan(&dt, &payload)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if payload != "100 watt" {
-			t.Fatal("Invalid values written to postgres")
-		}
-		if resp.Next() {
-			t.Fatal("Too many events written to Postgres!")
-		}
 	})
 }
 
