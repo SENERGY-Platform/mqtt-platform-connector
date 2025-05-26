@@ -178,6 +178,6 @@
                 "ConfigValue": "0.1"
             }
         ]
-    }
-
+    },
+    "ConnectionCheckHttpTimeout": "15s"
 }
