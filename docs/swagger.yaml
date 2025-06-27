@@ -1,0 +1,309 @@
+basePath: /
+definitions:
+  vernemqtt.DisconnectWebhookMsg:
+    properties:
+      client_id:
+        type: string
+    type: object
+  vernemqtt.EmptyResponse:
+    type: object
+  vernemqtt.ErrorResponse:
+    properties:
+      result:
+        $ref: '#/definitions/vernemqtt.ErrorResponseResult'
+    type: object
+  vernemqtt.ErrorResponseResult:
+    properties:
+      error:
+        type: string
+    type: object
+  vernemqtt.LoginWebhookMsg:
+    properties:
+      clean_session:
+        description: v4
+        type: boolean
+      clean_start:
+        description: v5
+        type: boolean
+      client_id:
+        type: string
+      password:
+        type: string
+      peer_addr:
+        type: string
+      peer_port:
+        type: integer
+      username:
+        type: string
+    type: object
+  vernemqtt.OkResponse:
+    properties:
+      result:
+        default: ok
+        example: ok
+        type: string
+    type: object
+  vernemqtt.OnlineWebhookMsg:
+    properties:
+      client_id:
+        type: string
+    type: object
+  vernemqtt.PublishWebhookMsg:
+    properties:
+      client_id:
+        type: string
+      payload:
+        type: string
+      qos:
+        type: integer
+      topic:
+        type: string
+      username:
+        type: string
+    type: object
+  vernemqtt.RedirectModifiers:
+    properties:
+      payload:
+        example: base-64-encoded-payload
+        type: string
+      qos:
+        type: integer
+      retain:
+        type: boolean
+      topic:
+        type: string
+    type: object
+  vernemqtt.RedirectResponse:
+    properties:
+      modifiers:
+        $ref: '#/definitions/vernemqtt.RedirectModifiers'
+      result:
+        default: ok
+        example: ok
+        type: string
+    type: object
+  vernemqtt.SubscribeWebhookMsg:
+    properties:
+      client_id:
+        type: string
+      topics:
+        items:
+          $ref: '#/definitions/vernemqtt.WebhookmsgTopic'
+        type: array
+      username:
+        type: string
+    type: object
+  vernemqtt.SubscribeWebhookResult:
+    properties:
+      result:
+        type: string
+      topics:
+        items:
+          $ref: '#/definitions/vernemqtt.WebhookmsgTopic'
+        type: array
+    type: object
+  vernemqtt.UnsubResponse:
+    properties:
+      result:
+        default: ok
+        example: ok
+        type: string
+      topics:
+        items:
+          type: string
+        type: array
+    type: object
+  vernemqtt.UnsubscribeWebhookMsg:
+    properties:
+      client_id:
+        type: string
+      topics:
+        items:
+          type: string
+        type: array
+      username:
+        type: string
+    type: object
+  vernemqtt.WebhookmsgTopic:
+    properties:
+      qos:
+        type: integer
+      topic:
+        type: string
+    type: object
+info:
+  contact: {}
+  description: webhooks for vernemqtt; all responses are with code=200, differences
+    in swagger doc are because of technical incompatibilities of the documentation
+    format
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  title: Mqtt-Connector-Webhooks
+  version: "0.1"
+paths:
+  /disconnect:
+    post:
+      consumes:
+      - application/json
+      description: logs user hubs and devices as disconnected; all responses are with
+        code=200, differences in swagger doc are because of technical incompatibilities
+        of the documentation format
+      parameters:
+      - description: disconnect info
+        in: body
+        name: message
+        required: true
+        schema:
+          $ref: '#/definitions/vernemqtt.DisconnectWebhookMsg'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/vernemqtt.EmptyResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/vernemqtt.ErrorResponse'
+      summary: disconnected webhook
+  /login:
+    post:
+      consumes:
+      - application/json
+      description: checks auth; all responses are with code=200, differences in swagger
+        doc are because of technical incompatibilities of the documentation format
+      parameters:
+      - description: login infos
+        in: body
+        name: message
+        required: true
+        schema:
+          $ref: '#/definitions/vernemqtt.LoginWebhookMsg'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/vernemqtt.OkResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/vernemqtt.ErrorResponse'
+      summary: login webhook
+  /online:
+    post:
+      consumes:
+      - application/json
+      description: logs hub as connected; all responses are with code=200, differences
+        in swagger doc are because of technical incompatibilities of the documentation
+        format
+      parameters:
+      - description: client infos
+        in: body
+        name: message
+        required: true
+        schema:
+          $ref: '#/definitions/vernemqtt.OnlineWebhookMsg'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/vernemqtt.EmptyResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/vernemqtt.ErrorResponse'
+      summary: online webhook
+  /publish:
+    post:
+      consumes:
+      - application/json
+      description: checks auth for the published message and forwards it to kafka;
+        all responses are with code=200, differences in swagger doc are because of
+        technical incompatibilities of the documentation format
+      parameters:
+      - description: publish message
+        in: body
+        name: message
+        required: true
+        schema:
+          $ref: '#/definitions/vernemqtt.PublishWebhookMsg'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/vernemqtt.OkResponse'
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/vernemqtt.RedirectResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/vernemqtt.ErrorResponse'
+      summary: publish webhook
+  /subscribe:
+    post:
+      consumes:
+      - application/json
+      description: checks auth for the subscription; SubscriptionResponse.Topics.Qos==128
+        signals rejected subscription; all responses are with code=200, differences
+        in swagger doc are because of technical incompatibilities of the documentation
+        format
+      parameters:
+      - description: subscription message
+        in: body
+        name: message
+        required: true
+        schema:
+          $ref: '#/definitions/vernemqtt.SubscribeWebhookMsg'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/vernemqtt.OkResponse'
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/vernemqtt.SubscribeWebhookResult'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/vernemqtt.ErrorResponse'
+      summary: subscribe webhook
+  /unsubscribe:
+    post:
+      consumes:
+      - application/json
+      description: logs device as disconnected; all responses are with code=200, differences
+        in swagger doc are because of technical incompatibilities of the documentation
+        format
+      parameters:
+      - description: topic infos
+        in: body
+        name: message
+        required: true
+        schema:
+          $ref: '#/definitions/vernemqtt.UnsubscribeWebhookMsg'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/vernemqtt.UnsubResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/vernemqtt.ErrorResponse'
+      summary: unsubscribe webhook
+swagger: "2.0"

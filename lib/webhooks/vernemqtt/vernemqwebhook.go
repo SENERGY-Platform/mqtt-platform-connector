@@ -22,19 +22,42 @@ import (
 	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/connectionlog"
 	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/topic"
 	"github.com/SENERGY-Platform/platform-connector-lib"
+	"github.com/swaggo/swag"
 	"log"
 	"log/slog"
 	"net/http"
 	"os"
 	"runtime/debug"
+	"strings"
 	"time"
 )
 
+//go:generate go tool swag init -o ../../../docs --parseDependency -d .. -g vernemqtt/vernemqwebhook.go
+
+// InitWebhooks doc
+// @title         Mqtt-Connector-Webhooks
+// @description   webhooks for vernemqtt; all responses are with code=200, differences in swagger doc are because of technical incompatibilities of the documentation format
+// @version       0.1
+// @license.name  Apache 2.0
+// @license.url   http://www.apache.org/licenses/LICENSE-2.0.html
+// @BasePath  /
 func InitWebhooks(ctx context.Context, config configuration.Config, connector *platform_connector_lib.Connector, connectionLog connectionlog.ConnectionLog) {
 	topicParser := topic.New(connector.IotCache, config.ActuatorTopicPattern)
 	router := http.NewServeMux()
 
 	logger := GetLogger()
+
+	router.HandleFunc("GET /doc", func(writer http.ResponseWriter, request *http.Request) {
+		writer.Header().Set("Content-Type", "application/json; charset=utf-8")
+		doc, err := swag.ReadDoc()
+		if err != nil {
+			http.Error(writer, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		}
+		//remove empty host to enable developer-swagger-api service to replace it; can not use cleaner delete on json object, because developer-swagger-api is sensible to formatting; better alternative is refactoring of developer-swagger-api/apis/db/db.py
+		doc = strings.Replace(doc, `"host": "",`, "", 1)
+		_, _ = writer.Write([]byte(doc))
+	})
 
 	router.HandleFunc("/login", func(writer http.ResponseWriter, request *http.Request) {
 		login(writer, request, config, connector, connectionLog, logger)

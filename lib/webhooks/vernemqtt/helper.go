@@ -28,7 +28,7 @@ func sendError(writer http.ResponseWriter, msg string, logging bool) {
 	if logging {
 		log.Println("DEBUG: send error:", msg)
 	}
-	err := json.NewEncoder(writer).Encode(map[string]map[string]string{"result": {"error": msg}})
+	err := json.NewEncoder(writer).Encode(ErrorResponse{Result: ErrorResponseResult{Error: msg}})
 	if err != nil {
 		log.Println("ERROR: unable to send error msg:", err, msg)
 	}
@@ -36,14 +36,15 @@ func sendError(writer http.ResponseWriter, msg string, logging bool) {
 
 func sendIgnoreRedirect(writer http.ResponseWriter, topic string, msg string) {
 	log.Println("WARNING: send ignore redirect:", topic, msg)
-	err := json.NewEncoder(writer).Encode(map[string]interface{}{
-		"result": "ok",
-		"modifiers": map[string]interface{}{
-			"topic":   "ignored/" + topic,
-			"payload": base64.StdEncoding.EncodeToString([]byte(msg)),
-			"retain":  false,
-			"qos":     0,
-		}})
+	err := json.NewEncoder(writer).Encode(RedirectResponse{
+		Result: "ok",
+		Modifiers: RedirectModifiers{
+			Topic:   "ignored/" + topic,
+			Payload: base64.StdEncoding.EncodeToString([]byte(msg)),
+			Retain:  false,
+			Qos:     0,
+		},
+	})
 	if err != nil {
 		log.Println("ERROR: unable to send ignore redirect:", err, msg)
 	}
@@ -60,21 +61,20 @@ func sendIgnoreRedirectAndNotification(writer http.ResponseWriter, connector *pl
 }
 
 func sendSubscriptionResult(writer http.ResponseWriter, ok []WebhookmsgTopic, rejected []WebhookmsgTopic) {
-	topics := []interface{}{}
+	topics := []WebhookmsgTopic{}
 	for _, topic := range ok {
 		topics = append(topics, topic)
 	}
 	for _, topic := range rejected {
-		topics = append(topics, map[string]interface{}{
-			"topic": topic.Topic,
-			"qos":   128,
+		topics = append(topics, WebhookmsgTopic{
+			Topic: topic.Topic,
+			Qos:   128,
 		})
 	}
-	msg := map[string]interface{}{
-		"result": "ok",
-		"topics": topics,
-	}
-	err := json.NewEncoder(writer).Encode(msg)
+	err := json.NewEncoder(writer).Encode(SubscribeWebhookResult{
+		Result: "ok",
+		Topics: topics,
+	})
 	if err != nil {
 		log.Println("ERROR: unable to send sendSubscriptionResult msg:", err)
 	}

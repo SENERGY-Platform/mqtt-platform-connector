@@ -10,7 +10,6 @@
     "mqtt_auth_method": "password",
 
     "actuator_topic_pattern": "something/{{.LocalDeviceId}}/{{.LocalServiceId}}",
-    "sensor_topic_pattern": "{{.Ignore}}/{{.LocalDeviceId}}/{{.LocalServiceId}}",
 
     "kafka_url":"kafka:9092",
     "kafka_response_topic":"response",

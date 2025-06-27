@@ -63,3 +63,34 @@ type SubscribeWebhookResult struct {
 	Result string            `json:"result"`
 	Topics []WebhookmsgTopic `json:"topics"`
 }
+
+type OkResponse struct {
+	Result string `json:"result" example:"ok" default:"ok"`
+}
+
+type ErrorResponse struct {
+	Result ErrorResponseResult `json:"result"`
+}
+
+type ErrorResponseResult struct {
+	Error string `json:"error"`
+}
+
+type EmptyResponse struct{}
+
+type RedirectResponse struct {
+	Result    string            `json:"result" example:"ok" default:"ok"`
+	Modifiers RedirectModifiers `json:"modifiers"`
+}
+
+type RedirectModifiers struct {
+	Topic   string `json:"topic"`
+	Payload string `json:"payload" example:"base-64-encoded-payload"`
+	Retain  bool   `json:"retain"`
+	Qos     int    `json:"qos"`
+}
+
+type UnsubResponse struct {
+	Result string   `json:"result" example:"ok" default:"ok"`
+	Topics []string `json:"topics"`
+}

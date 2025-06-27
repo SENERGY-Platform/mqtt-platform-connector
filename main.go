@@ -19,9 +19,12 @@ package main
 import (
 	"context"
 	"flag"
+	"github.com/SENERGY-Platform/api-docs-provider/lib/client"
+	"github.com/SENERGY-Platform/mqtt-platform-connector/docs"
 	"github.com/SENERGY-Platform/mqtt-platform-connector/lib"
 	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/configuration"
 	"log"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -46,10 +49,22 @@ func main() {
 		log.Fatal(err)
 	}
 
+	if config.ApiDocsProviderBaseUrl != "" && config.ApiDocsProviderBaseUrl != "-" {
+		err = PublishAsyncApiDoc(config)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
 	shutdown := make(chan os.Signal, 1)
 	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL)
 	sig := <-shutdown
 	log.Println("received shutdown signal", sig)
 	cancel()
 	time.Sleep(1 * time.Second) //let time for ctx.Done() listener
+}
+
+func PublishAsyncApiDoc(conf configuration.Config) error {
+	ctx, _ := context.WithTimeout(context.Background(), 30*time.Second)
+	return client.New(http.DefaultClient, conf.ApiDocsProviderBaseUrl).AsyncapiPutDoc(ctx, "github_com_SENERGY-Platform_mqtt-platform-connector", docs.AsyncApiDoc)
 }

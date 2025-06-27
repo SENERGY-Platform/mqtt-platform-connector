@@ -27,6 +27,15 @@ import (
 	"runtime/debug"
 )
 
+// disconnect godoc
+// @Summary      disconnected webhook
+// @Description  logs user hubs and devices as disconnected; all responses are with code=200, differences in swagger doc are because of technical incompatibilities of the documentation format
+// @Accept       json
+// @Produce      json
+// @Param        message body DisconnectWebhookMsg true "disconnect info"
+// @Success      200 {object}  EmptyResponse
+// @Failure      400 {object}  ErrorResponse
+// @Router       /disconnect [POST]
 func disconnect(writer http.ResponseWriter, request *http.Request, config configuration.Config, connectionLog connectionlog.ConnectionLog, logger *slog.Logger) {
 	defer func() {
 		if p := recover(); p != nil {

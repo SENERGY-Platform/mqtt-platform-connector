@@ -26,6 +26,15 @@ import (
 	"runtime/debug"
 )
 
+// online godoc
+// @Summary      online webhook
+// @Description  logs hub as connected; all responses are with code=200, differences in swagger doc are because of technical incompatibilities of the documentation format
+// @Accept       json
+// @Produce      json
+// @Param message body OnlineWebhookMsg true "client infos"
+// @Success      200 {object} EmptyResponse
+// @Failure      400 {object} ErrorResponse
+// @Router       /online [POST]
 func online(writer http.ResponseWriter, request *http.Request, config configuration.Config, connectionLog connectionlog.ConnectionLog) {
 	defer func() {
 		if p := recover(); p != nil {

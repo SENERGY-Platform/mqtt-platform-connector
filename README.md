@@ -3,3 +3,13 @@
 </a>
 
 Connector to handle the mqtt protocol by providing web-hooks for a vernemq mqtt-broker
+
+## Docs
+
+[AsyncApi-Generation-README](docs/asyncapi-gen/README.md)
+
+[AsyncApi](docs/asyncapi.json)
+
+[swagger.yaml](docs/swagger.yaml)
+
+[swagger.json](docs/swagger.json)

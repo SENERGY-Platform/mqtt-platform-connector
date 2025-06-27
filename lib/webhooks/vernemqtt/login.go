@@ -30,6 +30,15 @@ import (
 	"strconv"
 )
 
+// login godoc
+// @Summary      login webhook
+// @Description  checks auth; all responses are with code=200, differences in swagger doc are because of technical incompatibilities of the documentation format
+// @Accept       json
+// @Produce      json
+// @Param        message body LoginWebhookMsg true "login infos"
+// @Success      200 {object}  OkResponse
+// @Failure      400 {object}  ErrorResponse
+// @Router       /login [POST]
 func login(writer http.ResponseWriter, request *http.Request, config configuration.Config, connector *platform_connector_lib.Connector, connectionLog connectionlog.ConnectionLog, logger *slog.Logger) {
 	//{"peer_addr":"172.20.0.30","peer_port":41310,"mountpoint":"","client_id":"sepl_mqtt_connector_1","username":"sepl","password":"sepl","clean_session":true}
 	msg := LoginWebhookMsg{}

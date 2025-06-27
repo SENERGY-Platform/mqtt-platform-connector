@@ -120,6 +120,8 @@ type Config struct {
 
 	ConnectionCheckUrl         string
 	ConnectionCheckHttpTimeout string
+
+	ApiDocsProviderBaseUrl string `json:"api_docs_provider_base_url"`
 }
 
 func LoadConfig() (result Config, err error) {

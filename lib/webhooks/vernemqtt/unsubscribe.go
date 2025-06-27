@@ -29,6 +29,15 @@ import (
 	"runtime/debug"
 )
 
+// unsubscribe godoc
+// @Summary      unsubscribe webhook
+// @Description  logs device as disconnected; all responses are with code=200, differences in swagger doc are because of technical incompatibilities of the documentation format
+// @Accept       json
+// @Produce      json
+// @Param message body UnsubscribeWebhookMsg true "topic infos"
+// @Success      200 {object} UnsubResponse
+// @Failure      400 {object} ErrorResponse
+// @Router       /unsubscribe [POST]
 func unsubscribe(writer http.ResponseWriter, request *http.Request, config configuration.Config, connector *platform_connector_lib.Connector, topicParser *topic.Topic, connectionLog connectionlog.ConnectionLog) {
 	defer func() {
 		if p := recover(); p != nil {
@@ -49,7 +58,7 @@ func unsubscribe(writer http.ResponseWriter, request *http.Request, config confi
 		log.Println("DEBUG: /unsubscribe", msg)
 	}
 	//defer json.NewEncoder(writer).Encode(map[string]interface{}{"result": "ok", "topics": msg.Topics})
-	defer json.NewEncoder(writer).Encode(map[string]interface{}{"result": "ok", "topics": msg.Topics})
+	defer json.NewEncoder(writer).Encode(UnsubResponse{Result: "ok", Topics: msg.Topics})
 	if msg.Username != config.AuthClientId {
 		token, err := connector.Security().GetCachedUserToken(msg.Username, model.RemoteInfo{})
 		if err != nil {

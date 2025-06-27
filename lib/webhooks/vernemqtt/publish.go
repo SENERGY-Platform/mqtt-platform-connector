@@ -19,6 +19,7 @@ package vernemqtt
 import (
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/configuration"
 	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/topic"
@@ -30,6 +31,16 @@ import (
 	"net/http"
 )
 
+// publish godoc
+// @Summary      publish webhook
+// @Description  checks auth for the published message and forwards it to kafka; all responses are with code=200, differences in swagger doc are because of technical incompatibilities of the documentation format
+// @Accept       json
+// @Produce      json
+// @Param        message body PublishWebhookMsg true "publish message"
+// @Success      200 {object}  OkResponse
+// @Success      201 {object}  RedirectResponse
+// @Failure      400 {object}  ErrorResponse
+// @Router       /publish [POST]
 func publish(writer http.ResponseWriter, request *http.Request, config configuration.Config, connector *platform_connector_lib.Connector, topicParser *topic.Topic) {
 	buf, err := io.ReadAll(request.Body)
 	if err != nil {
@@ -60,7 +71,7 @@ func publish(writer http.ResponseWriter, request *http.Request, config configura
 		}
 
 		device, service, err := topicParser.Parse(token, msg.Topic)
-		if err == topic.ErrNoDeviceIdCandidateFound {
+		if errors.Is(err, topic.ErrNoDeviceIdCandidateFound) {
 			//topics that cant possibly be connected to a device may be handled at will
 			if config.Debug {
 				log.Println("WARNING: InitWebhooks::publish::ParseTopic", err, msg.Topic)
@@ -68,7 +79,7 @@ func publish(writer http.ResponseWriter, request *http.Request, config configura
 			fmt.Fprintf(writer, `{"result": "ok"}`)
 			return
 		}
-		if err == topic.ErrNoServiceMatchFound {
+		if errors.Is(err, topic.ErrNoServiceMatchFound) {
 			//we want to only check device access
 			if config.Debug {
 				log.Println("WARNING: InitWebhooks::publish::ParseTopic", err, msg.Topic)
