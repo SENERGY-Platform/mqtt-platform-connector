@@ -2,7 +2,8 @@
     "asyncapi": "3.0.0",
     "info": {
         "title": "Mqtt-Platform-Connector",
-        "version": ""
+        "version": "",
+        "description": "topics or parts of topics in '[]' are placeholders"
     },
     "servers": {
         "kafka": {

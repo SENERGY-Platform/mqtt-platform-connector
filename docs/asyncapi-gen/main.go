@@ -49,6 +49,7 @@ func main() {
 
 	asyncAPI := spec.AsyncAPI{}
 	asyncAPI.Info.Title = "Mqtt-Platform-Connector"
+	asyncAPI.Info.Description = "topics or parts of topics in '[]' are placeholders"
 
 	asyncAPI.AddServer("kafka", spec.Server{
 		URL:      conf.KafkaUrl,
