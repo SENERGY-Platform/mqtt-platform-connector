@@ -29,6 +29,7 @@ func New(ctx context.Context, wg *sync.WaitGroup, defaults configuration.Config)
 	config = defaults
 	config.KafkaPartitionNum = 1
 	config.KafkaReplicationFactor = 1
+	config.InitTopics = true
 
 	err = auth.Mock(&config, ctx)
 	if err != nil {

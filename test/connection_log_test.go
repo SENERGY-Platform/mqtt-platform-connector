@@ -74,6 +74,8 @@ func testConnectionLogDevice1Minimal(t *testing.T, authMethod string, mqttVersio
 		t.Error(err)
 		return
 	}
+	defaultConfig.InitTopics = true
+
 	defaultConfig.MqttAuthMethod = authMethod
 	if mqttVersion == client.MQTT5 {
 		defaultConfig.MqttVersion = "5"
@@ -227,6 +229,7 @@ func testConnectionLog(t *testing.T, authMethod string, mqttVersion client.MqttV
 		t.Error(err)
 		return
 	}
+	defaultConfig.InitTopics = true
 	defaultConfig.MqttAuthMethod = authMethod
 	if mqttVersion == client.MQTT5 {
 		defaultConfig.MqttVersion = "5"

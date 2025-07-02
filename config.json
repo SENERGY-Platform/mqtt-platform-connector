@@ -80,6 +80,8 @@
 
     "sec_remote_protocol": "https",
 
+    "init_topics": false,
+
     "kafka_topic_configs": {
         "device-types": [
             {

@@ -114,6 +114,7 @@ func Start(basectx context.Context, config configuration.Config) (err error) {
 		NotificationUserOverwrite:            config.NotificationUserOverwrite,
 		DeveloperNotificationUrl:             config.DeveloperNotificationUrl,
 		MutedUserNotificationTitles:          config.MutedUserNotificationTitles,
+		InitTopics:                           config.InitTopics,
 	}
 
 	connector, err := platform_connector_lib.New(libConf)

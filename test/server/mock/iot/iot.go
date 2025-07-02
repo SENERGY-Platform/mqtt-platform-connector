@@ -19,7 +19,7 @@ import (
 )
 
 func Mock(ctx context.Context, config configuration.Config) (deviceManagerUrl string, deviceRepoUrl string, err error) {
-	kafkaProducer, err := kafka.PrepareProducer(ctx, config.KafkaUrl, false, false, 1, 1)
+	kafkaProducer, err := kafka.PrepareProducer(ctx, config.KafkaUrl, false, false, 1, 1, true)
 	if err != nil {
 		return "", "", err
 	}
