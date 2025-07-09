@@ -63,7 +63,7 @@ func subscribe(writer http.ResponseWriter, request *http.Request, config configu
 			if err == nil {
 				connectionLog.Subscribe(msg.ClientId, mqtttopic.Topic, device.Id)
 			}
-			if errors.Is(err, topic.ErrMultipleMatchingDevicesFound) || errors.Is(err, topic.ErrNoDeviceMatchFound) {
+			if errors.Is(err, topic.ErrMultipleMatchingDevicesFound) || errors.Is(err, topic.ErrNoDeviceMatchFound) || errors.Is(err, topic.ErrNoDeviceIdCandidateFound) {
 				//no err but disallow subscription
 				mqtttopic.Qos = 128
 				err = nil
@@ -76,6 +76,7 @@ func subscribe(writer http.ResponseWriter, request *http.Request, config configu
 			resultTopics = append(resultTopics, mqtttopic)
 		}
 	}
+	log.Printf("DEBUG: /subscribe req=%#v resp=%#v", msg, SubscribeWebhookResult{Result: "ok", Topics: resultTopics}) //TODO: remove
 	err = json.NewEncoder(writer).Encode(SubscribeWebhookResult{
 		Result: "ok",
 		Topics: resultTopics,

@@ -71,20 +71,8 @@ func publish(writer http.ResponseWriter, request *http.Request, config configura
 		}
 
 		device, service, err := topicParser.Parse(token, msg.Topic)
-		if errors.Is(err, topic.ErrNoDeviceIdCandidateFound) {
-			//topics that cant possibly be connected to a device may be handled at will
-			if config.Debug {
-				log.Println("WARNING: InitWebhooks::publish::ParseTopic", err, msg.Topic)
-			}
-			fmt.Fprintf(writer, `{"result": "ok"}`)
-			return
-		}
-		if errors.Is(err, topic.ErrNoServiceMatchFound) {
-			//we want to only check device access
-			if config.Debug {
-				log.Println("WARNING: InitWebhooks::publish::ParseTopic", err, msg.Topic)
-			}
-			fmt.Fprintf(writer, `{"result": "ok"}`)
+		if errors.Is(err, topic.ErrNoDeviceIdCandidateFound) || errors.Is(err, topic.ErrNoDeviceMatchFound) || errors.Is(err, topic.ErrNoServiceMatchFound) {
+			sendIgnoreRedirect(writer, msg.Topic, msg.Payload)
 			return
 		}
 		if err != nil {

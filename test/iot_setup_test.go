@@ -7,6 +7,7 @@ import (
 	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/configuration"
 	"github.com/SENERGY-Platform/mqtt-platform-connector/test/helper"
 	"github.com/SENERGY-Platform/platform-connector-lib/model"
+	"github.com/SENERGY-Platform/platform-connector-lib/security"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -136,6 +137,26 @@ func createTestDevice(t *testing.T, config configuration.Config, dt model.Device
 		return
 	}
 	err := helper.AdminJwt.PostJSON(config.DeviceManagerUrl+"/devices", model.Device{
+		Id:           deviceId,
+		LocalId:      deviceLocalId,
+		Name:         "test-device",
+		DeviceTypeId: dt.Id,
+	}, &result)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result.Id == "" {
+		t.Fatal("unexpected result", result)
+	}
+	return
+}
+
+func createTestDeviceWithUserToken(t *testing.T, token string, config configuration.Config, dt model.DeviceType, deviceLocalId string, deviceId string) (result model.Device) {
+	if reflect.DeepEqual(dt, model.DeviceType{}) {
+		t.Error("invalid device-type")
+		return
+	}
+	err := security.JwtToken(token).PostJSON(config.DeviceManagerUrl+"/devices", model.Device{
 		Id:           deviceId,
 		LocalId:      deviceLocalId,
 		Name:         "test-device",
