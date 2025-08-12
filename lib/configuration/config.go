@@ -19,13 +19,14 @@ package configuration
 import (
 	"encoding/json"
 	"flag"
-	"github.com/segmentio/kafka-go"
 	"log"
 	"os"
 	"reflect"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/segmentio/kafka-go"
 )
 
 type Config struct {
@@ -122,6 +123,8 @@ type Config struct {
 	ConnectionCheckHttpTimeout string
 
 	ApiDocsProviderBaseUrl string `json:"api_docs_provider_base_url"`
+
+	StartupDelay int64 `json:"startup_delay"`
 
 	InitTopics bool `json:"init_topics"`
 }

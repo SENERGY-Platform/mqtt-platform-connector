@@ -4,6 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
+	"os"
+	"strings"
+	"time"
+
 	"github.com/IBM/sarama"
 	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/configuration"
 	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/connectionlog"
@@ -13,10 +18,6 @@ import (
 	"github.com/SENERGY-Platform/platform-connector-lib/model"
 	"github.com/SENERGY-Platform/platform-connector-lib/statistics"
 	paho "github.com/eclipse/paho.mqtt.golang"
-	"log"
-	"os"
-	"strings"
-	"time"
 )
 
 func Start(basectx context.Context, config configuration.Config) (err error) {
@@ -146,9 +147,18 @@ func Start(basectx context.Context, config configuration.Config) (err error) {
 
 	AuthWebhooks(ctx, config, connector, logging)
 
-	time.Sleep(1 * time.Second) //ensure http server startup before continue
+	if config.StartupDelay != 0 {
+		time.Sleep(time.Duration(config.StartupDelay) * time.Second)
+	}
 
-	mqtt, err := MqttStart(ctx, config)
+	var mqtt Mqtt
+	for i := 0; i < 10; i++ {
+		mqtt, err = MqttStart(ctx, config)
+		if err == nil {
+			break
+		}
+		time.Sleep(5 * time.Second)
+	}
 	if err != nil {
 		return err
 	}

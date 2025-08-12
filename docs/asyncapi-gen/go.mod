@@ -4,7 +4,7 @@ go 1.24.0
 
 require (
 	github.com/SENERGY-Platform/mqtt-platform-connector v0.2.8
-	github.com/SENERGY-Platform/platform-connector-lib v0.0.0-20250702080138-532fc33901d1
+	github.com/SENERGY-Platform/platform-connector-lib v0.0.0-20250702103132-b906bb46e9f3
 	github.com/swaggest/go-asyncapi v0.8.0
 )
 
