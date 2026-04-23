@@ -124,7 +124,6 @@ func Start(basectx context.Context, config configuration.Config) (err error) {
 	}
 
 	if config.Debug {
-		connector.SetKafkaLogger(log.New(os.Stdout, "[CONNECTOR-KAFKA] ", 0))
 		connector.IotCache.Debug = true
 	}
 

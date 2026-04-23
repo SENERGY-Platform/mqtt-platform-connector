@@ -5,17 +5,19 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/configuration"
-	"github.com/SENERGY-Platform/platform-connector-lib/kafka"
-	"github.com/SENERGY-Platform/platform-connector-lib/model"
-	"github.com/google/uuid"
-	"github.com/julienschmidt/httprouter"
 	"log"
 	"net"
 	"net/http"
 	"net/http/httptest"
 	"runtime/debug"
 	"sync"
+	"time"
+
+	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/configuration"
+	"github.com/SENERGY-Platform/platform-connector-lib/kafka"
+	"github.com/SENERGY-Platform/platform-connector-lib/model"
+	"github.com/google/uuid"
+	"github.com/julienschmidt/httprouter"
 )
 
 func Mock(ctx context.Context, config configuration.Config) (deviceManagerUrl string, deviceRepoUrl string, err error) {
@@ -52,6 +54,10 @@ func Mock(ctx context.Context, config configuration.Config) (deviceManagerUrl st
 }
 
 type MockProducer struct {
+}
+
+func (this MockProducer) ProduceWithTimestamp(topic string, message string, key string, timestamp time.Time) (err error) {
+	return nil
 }
 
 func (this MockProducer) Produce(topic string, message string) (err error) {

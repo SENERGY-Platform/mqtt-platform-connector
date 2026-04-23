@@ -20,15 +20,17 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"log/slog"
+	"net/http"
+	"net/url"
+	"testing"
+	"time"
+
 	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/topic"
 	"github.com/SENERGY-Platform/mqtt-platform-connector/test/helper"
 	iotmock "github.com/SENERGY-Platform/mqtt-platform-connector/test/server/mock/iot"
 	"github.com/SENERGY-Platform/platform-connector-lib/iot"
 	"github.com/SENERGY-Platform/platform-connector-lib/model"
-	"net/http"
-	"net/url"
-	"testing"
-	"time"
 )
 
 const unknownShortDeviceIdExample = "a9B7ddfMShqI26yT9hqnsu"
@@ -42,7 +44,7 @@ func TestParse(t *testing.T) {
 		t.Error(err)
 		return
 	}
-	iotRepo := iot.New(deviceManagerUrl, deviceRepoUrl, "")
+	iotRepo := iot.New(deviceManagerUrl, deviceRepoUrl, "", slog.Default())
 	iotCache, err := iot.NewCache(iotRepo, 60, 60, 60, 2, 200*time.Millisecond)
 	if err != nil {
 		t.Error(err)

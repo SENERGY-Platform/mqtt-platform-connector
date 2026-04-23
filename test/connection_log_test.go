@@ -19,12 +19,6 @@ package test
 import (
 	"context"
 	"encoding/json"
-	"github.com/SENERGY-Platform/mqtt-platform-connector/lib"
-	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/configuration"
-	"github.com/SENERGY-Platform/mqtt-platform-connector/test/client"
-	"github.com/SENERGY-Platform/mqtt-platform-connector/test/server"
-	"github.com/SENERGY-Platform/platform-connector-lib/kafka"
-	"github.com/SENERGY-Platform/platform-connector-lib/model"
 	"log"
 	"reflect"
 	"sort"
@@ -32,6 +26,14 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/SENERGY-Platform/mqtt-platform-connector/lib"
+	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/configuration"
+	"github.com/SENERGY-Platform/mqtt-platform-connector/test/client"
+	"github.com/SENERGY-Platform/mqtt-platform-connector/test/server"
+	"github.com/SENERGY-Platform/platform-connector-lib/kafka"
+	"github.com/SENERGY-Platform/platform-connector-lib/model"
+	"github.com/google/uuid"
 )
 
 func TestConnectionLogDevice1Minimal(t *testing.T) {
@@ -293,32 +295,31 @@ func testConnectionLog(t *testing.T, authMethod string, mqttVersion client.MqttV
 	logMessages := []DeviceLog{}
 	logMessagesMux := sync.Mutex{}
 
-	t.Run("consume device-logs", func(t *testing.T) {
-		log.Println("consume", config.DeviceLogTopic)
-		err = kafka.NewConsumer(ctx,
-			kafka.ConsumerConfig{
-				KafkaUrl: config.KafkaUrl,
-				Topic:    config.DeviceLogTopic,
-				GroupId:  "check_consumer",
-			}, func(topic string, msg []byte, time time.Time) error {
-				logmsg := DeviceLog{}
-				err = json.Unmarshal(msg, &logmsg)
-				if err != nil {
-					t.Error(err)
-					return nil
-				}
-				logMessagesMux.Lock()
-				defer logMessagesMux.Unlock()
-				logMessages = append(logMessages, logmsg)
+	err = kafka.NewConsumer(ctx,
+		kafka.ConsumerConfig{
+			KafkaUrl: config.KafkaUrl,
+			Topic:    config.DeviceLogTopic,
+			GroupId:  "check_consumer" + uuid.NewString(),
+			MaxWait:  100 * time.Millisecond,
+		}, func(topic string, msg []byte, time time.Time) error {
+			logmsg := DeviceLog{}
+			err = json.Unmarshal(msg, &logmsg)
+			if err != nil {
+				t.Error(err)
 				return nil
-			}, func(err error) {
-				log.Println("consumer error:", err)
-			})
-		if err != nil {
-			t.Error(err)
-			return
-		}
-	})
+			}
+			logMessagesMux.Lock()
+			defer logMessagesMux.Unlock()
+			logMessages = append(logMessages, logmsg)
+			return nil
+		}, func(err error) {
+			log.Println("consumer error:", err)
+			t.Error("consumer error", err)
+		})
+	if err != nil {
+		t.Error(err)
+		return
+	}
 
 	expected := []DeviceLog{}
 
@@ -347,8 +348,9 @@ func testConnectionLog(t *testing.T, authMethod string, mqttVersion client.MqttV
 			expected = append(expected, DeviceLog{Id: devices[i].Id, Connected: true})
 		}
 
+		time.Sleep(10 * time.Second)
+
 		t.Run("check 1", func(t *testing.T) {
-			time.Sleep(10 * time.Second)
 			logMessagesMux.Lock()
 			defer logMessagesMux.Unlock()
 			sortedReadableExpected := makeMessagesReadable(expected, devices)
@@ -356,7 +358,7 @@ func testConnectionLog(t *testing.T, authMethod string, mqttVersion client.MqttV
 			if !reflect.DeepEqual(sortedReadableExpected, sortedReadableActual) {
 				expectedJson, _ := json.Marshal(sortedReadableExpected)
 				actualJson, _ := json.Marshal(sortedReadableActual)
-				t.Error(string(expectedJson), "\n", string(actualJson))
+				t.Error("\n", string(expectedJson), "\n", string(actualJson))
 			}
 		})
 
@@ -384,8 +386,9 @@ func testConnectionLog(t *testing.T, authMethod string, mqttVersion client.MqttV
 			expected = append(expected, DeviceLog{Id: devices[i].Id, Connected: true})
 		}
 
+		time.Sleep(10 * time.Second)
+
 		t.Run("check 2", func(t *testing.T) {
-			time.Sleep(10 * time.Second)
 			logMessagesMux.Lock()
 			defer logMessagesMux.Unlock()
 			sortedReadableExpected := makeMessagesReadable(expected, devices)
@@ -393,7 +396,7 @@ func testConnectionLog(t *testing.T, authMethod string, mqttVersion client.MqttV
 			if !reflect.DeepEqual(sortedReadableExpected, sortedReadableActual) {
 				expectedJson, _ := json.Marshal(sortedReadableExpected)
 				actualJson, _ := json.Marshal(sortedReadableActual)
-				t.Error(string(expectedJson), "\n", string(actualJson))
+				t.Error("\n", string(expectedJson), "\n", string(actualJson))
 			}
 		})
 
@@ -435,7 +438,7 @@ func testConnectionLog(t *testing.T, authMethod string, mqttVersion client.MqttV
 			if !reflect.DeepEqual(sortedReadableExpected, sortedReadableActual) {
 				expectedJson, _ := json.Marshal(sortedReadableExpected)
 				actualJson, _ := json.Marshal(sortedReadableActual)
-				t.Error(string(expectedJson), "\n", string(actualJson))
+				t.Error("\n", string(expectedJson), "\n", string(actualJson))
 			}
 		})
 
@@ -463,7 +466,7 @@ func testConnectionLog(t *testing.T, authMethod string, mqttVersion client.MqttV
 			if !reflect.DeepEqual(sortedReadableExpected, sortedReadableActual) {
 				expectedJson, _ := json.Marshal(sortedReadableExpected)
 				actualJson, _ := json.Marshal(sortedReadableActual)
-				t.Error(string(expectedJson), "\n", string(actualJson))
+				t.Error("\n", string(expectedJson), "\n", string(actualJson))
 			}
 		})
 
@@ -483,7 +486,7 @@ func testConnectionLog(t *testing.T, authMethod string, mqttVersion client.MqttV
 			if !reflect.DeepEqual(sortedReadableExpected, sortedReadableActual) {
 				expectedJson, _ := json.Marshal(sortedReadableExpected)
 				actualJson, _ := json.Marshal(sortedReadableActual)
-				t.Error(string(expectedJson), "\n", string(actualJson))
+				t.Error("\n", string(expectedJson), "\n", string(actualJson))
 			}
 		})
 
@@ -505,7 +508,7 @@ func testConnectionLog(t *testing.T, authMethod string, mqttVersion client.MqttV
 			if !reflect.DeepEqual(sortedReadableExpected, sortedReadableActual) {
 				expectedJson, _ := json.Marshal(sortedReadableExpected)
 				actualJson, _ := json.Marshal(sortedReadableActual)
-				t.Error(string(expectedJson), "\n", string(actualJson))
+				t.Error("\n", string(expectedJson), "\n", string(actualJson))
 			}
 		})
 
@@ -538,7 +541,7 @@ func testConnectionLog(t *testing.T, authMethod string, mqttVersion client.MqttV
 			if !reflect.DeepEqual(sortedReadableExpected, sortedReadableActual) {
 				expectedJson, _ := json.Marshal(sortedReadableExpected)
 				actualJson, _ := json.Marshal(sortedReadableActual)
-				t.Error(string(expectedJson), "\n", string(actualJson))
+				t.Error("\n", string(expectedJson), "\n", string(actualJson))
 			}
 		})
 
@@ -561,7 +564,7 @@ func testConnectionLog(t *testing.T, authMethod string, mqttVersion client.MqttV
 			if !reflect.DeepEqual(sortedReadableExpected, sortedReadableActual) {
 				expectedJson, _ := json.Marshal(sortedReadableExpected)
 				actualJson, _ := json.Marshal(sortedReadableActual)
-				t.Error(string(expectedJson), "\n", string(actualJson))
+				t.Error("\n", string(expectedJson), "\n", string(actualJson))
 			}
 		})
 	})

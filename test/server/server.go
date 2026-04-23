@@ -2,17 +2,18 @@ package server
 
 import (
 	"context"
-	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/configuration"
-	"github.com/SENERGY-Platform/mqtt-platform-connector/test/server/docker"
-	"github.com/SENERGY-Platform/mqtt-platform-connector/test/server/mock/auth"
-	"github.com/SENERGY-Platform/mqtt-platform-connector/test/server/mock/iot"
-	"github.com/testcontainers/testcontainers-go"
 	"log"
 	"net"
 	"runtime/debug"
 	"strconv"
 	"strings"
 	"sync"
+
+	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/configuration"
+	"github.com/SENERGY-Platform/mqtt-platform-connector/test/server/docker"
+	"github.com/SENERGY-Platform/mqtt-platform-connector/test/server/mock/auth"
+	"github.com/SENERGY-Platform/mqtt-platform-connector/test/server/mock/iot"
+	"github.com/testcontainers/testcontainers-go"
 )
 
 func NewWithConnectionLog(ctx context.Context, wg *sync.WaitGroup, defaults configuration.Config) (config configuration.Config, brokerUrlForClients string, err error) {
@@ -43,15 +44,7 @@ func New(ctx context.Context, wg *sync.WaitGroup, defaults configuration.Config)
 	}
 	config.WebhookPort = strconv.Itoa(whPort)
 
-	_, zk, err := docker.Zookeeper(ctx, wg)
-	if err != nil {
-		log.Println("ERROR:", err)
-		debug.PrintStack()
-		return config, "", err
-	}
-	zkUrl := zk + ":2181"
-
-	config.KafkaUrl, err = docker.Kafka(ctx, wg, zkUrl)
+	config.KafkaUrl, err = docker.Kafka(ctx, wg)
 	if err != nil {
 		log.Println("ERROR:", err)
 		debug.PrintStack()
