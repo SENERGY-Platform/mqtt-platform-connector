@@ -19,15 +19,16 @@ package vernemqtt
 import (
 	"encoding/json"
 	"fmt"
+	"log"
+	"log/slog"
+	"net/http"
+	"strconv"
+
 	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/configuration"
 	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/connectionlog"
 	platform_connector_lib "github.com/SENERGY-Platform/platform-connector-lib"
 	"github.com/SENERGY-Platform/platform-connector-lib/model"
 	"github.com/SENERGY-Platform/platform-connector-lib/security"
-	"log"
-	"log/slog"
-	"net/http"
-	"strconv"
 )
 
 // login godoc
@@ -76,7 +77,7 @@ func login(writer http.ResponseWriter, request *http.Request, config configurati
 			})
 		}
 		if err != nil {
-			log.Println("ERROR: InitWebhooks::login::GetOpenidPasswordToken", err, msg)
+			log.Println("ERROR: InitWebhooks::login::GetOpenidPasswordToken", err, fmt.Sprintf("%#v", msg))
 			sendError(writer, err.Error(), config.Debug)
 			return
 		}
