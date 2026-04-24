@@ -17,11 +17,11 @@
 package vernemqtt
 
 import (
-	"encoding/base64"
 	"encoding/json"
-	platform_connector_lib "github.com/SENERGY-Platform/platform-connector-lib"
 	"log"
 	"net/http"
+
+	platform_connector_lib "github.com/SENERGY-Platform/platform-connector-lib"
 )
 
 func sendError(writer http.ResponseWriter, msg string, logging bool) {
@@ -34,30 +34,30 @@ func sendError(writer http.ResponseWriter, msg string, logging bool) {
 	}
 }
 
-func sendIgnoreRedirect(writer http.ResponseWriter, topic string, msg string) {
-	log.Println("WARNING: send ignore redirect:", topic, msg)
+func sendIgnoreRedirect(writer http.ResponseWriter, topic string, base64Msg string) {
+	log.Println("WARNING: send ignore redirect:", topic, base64Msg)
 	err := json.NewEncoder(writer).Encode(RedirectResponse{
 		Result: "ok",
 		Modifiers: RedirectModifiers{
 			Topic:   "ignored/" + topic,
-			Payload: base64.StdEncoding.EncodeToString([]byte(msg)),
+			Payload: base64Msg,
 			Retain:  false,
 			Qos:     0,
 		},
 	})
 	if err != nil {
-		log.Println("ERROR: unable to send ignore redirect:", err, msg)
+		log.Println("ERROR: unable to send ignore redirect:", err, base64Msg)
 	}
 }
 
-func sendIgnoreRedirectAndNotification(writer http.ResponseWriter, connector *platform_connector_lib.Connector, user, clientId, topic, msg string) {
-	sendIgnoreRedirect(writer, topic, msg)
+func sendIgnoreRedirectAndNotification(writer http.ResponseWriter, connector *platform_connector_lib.Connector, user, clientId, topic, base64Msg string) {
+	sendIgnoreRedirect(writer, topic, base64Msg)
 	userId, err := connector.Security().GetUserId(user)
 	if err != nil {
 		log.Println("ERROR: unable to get user id", err)
 		return
 	}
-	connector.HandleClientError(userId, clientId, "ignore message to "+topic+": "+msg)
+	connector.HandleClientError(userId, clientId, "ignore message to "+topic+": "+base64Msg)
 }
 
 func sendSubscriptionResult(writer http.ResponseWriter, ok []WebhookmsgTopic, rejected []WebhookmsgTopic) {
