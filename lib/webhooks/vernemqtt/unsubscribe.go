@@ -19,14 +19,14 @@ package vernemqtt
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"runtime/debug"
+
 	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/configuration"
 	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/connectionlog"
 	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/topic"
 	platform_connector_lib "github.com/SENERGY-Platform/platform-connector-lib"
 	"github.com/SENERGY-Platform/platform-connector-lib/model"
-	"log"
-	"net/http"
-	"runtime/debug"
 )
 
 // unsubscribe godoc
@@ -54,21 +54,19 @@ func unsubscribe(writer http.ResponseWriter, request *http.Request, config confi
 		sendError(writer, err.Error(), config.Debug)
 		return
 	}
-	if config.Debug {
-		log.Println("DEBUG: /unsubscribe", msg)
-	}
+	config.GetLogger().Debug("unsubscribe", "msg", fmt.Sprintf("%#v", msg))
 	//defer json.NewEncoder(writer).Encode(map[string]interface{}{"result": "ok", "topics": msg.Topics})
 	defer json.NewEncoder(writer).Encode(UnsubResponse{Result: "ok", Topics: msg.Topics})
 	if msg.Username != config.AuthClientId {
 		token, err := connector.Security().GetCachedUserToken(msg.Username, model.RemoteInfo{})
 		if err != nil {
-			log.Println("ERROR: InitWebhooks::unsubscribe::GenerateUserToken", err)
+			config.GetLogger().Error("unable to get user token", "error", err, "username", msg.Username)
 			return
 		}
 		for _, topic := range msg.Topics {
 			device, _, err := topicParser.Parse(token, topic)
 			if err != nil {
-				log.Println("ERROR: InitWebhooks::unsubscribe::parseTopic", err)
+				config.GetLogger().Error("unable to parse topic", "error", err, "topic", topic)
 				return
 			}
 			connectionLog.Unsubscribe(msg.ClientId, topic, device.Id)

@@ -19,13 +19,14 @@ package vernemqtt
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
+	"net/http"
+
 	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/configuration"
 	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/connectionlog"
 	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/topic"
 	platform_connector_lib "github.com/SENERGY-Platform/platform-connector-lib"
 	"github.com/SENERGY-Platform/platform-connector-lib/model"
-	"log"
-	"net/http"
 )
 
 // subscribe godoc
@@ -43,7 +44,7 @@ func subscribe(writer http.ResponseWriter, request *http.Request, config configu
 	msg := SubscribeWebhookMsg{}
 	err := json.NewDecoder(request.Body).Decode(&msg)
 	if err != nil {
-		log.Println("ERROR: InitWebhooks::subscribe::jsondecoding", err)
+		config.GetLogger().Error("unable to decode subscribe webhook msg", "error", err)
 		sendError(writer, err.Error(), config.Debug)
 		return
 	}
@@ -69,19 +70,19 @@ func subscribe(writer http.ResponseWriter, request *http.Request, config configu
 				err = nil
 			}
 			if err != nil && !errors.Is(err, topic.ErrNoDeviceIdCandidateFound) {
-				log.Println("WARNING: InitWebhooks::subscribe::ParseTopic", err, mqtttopic.Topic)
+				config.GetLogger().Warn("unable to parse topic", "error", err, "topic", mqtttopic.Topic)
 				sendError(writer, err.Error(), config.Debug)
 				return
 			}
 			resultTopics = append(resultTopics, mqtttopic)
 		}
 	}
-	log.Printf("DEBUG: /subscribe req=%#v resp=%#v", msg, SubscribeWebhookResult{Result: "ok", Topics: resultTopics}) //TODO: remove
+	config.GetLogger().Debug("/subscribe", "msg", fmt.Sprintf("%#v", msg), "response", fmt.Sprintf("%#v", resultTopics))
 	err = json.NewEncoder(writer).Encode(SubscribeWebhookResult{
 		Result: "ok",
 		Topics: resultTopics,
 	})
 	if err != nil {
-		log.Println("ERROR: InitWebhooks::subscribe::SubscribeWebhookResult", err)
+		config.GetLogger().Error("unable to encode subscribe webhook result", "error", err)
 	}
 }

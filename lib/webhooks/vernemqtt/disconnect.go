@@ -19,12 +19,12 @@ package vernemqtt
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/configuration"
-	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/connectionlog"
-	"log"
 	"log/slog"
 	"net/http"
 	"runtime/debug"
+
+	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/configuration"
+	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/connectionlog"
 )
 
 // disconnect godoc
@@ -51,7 +51,7 @@ func disconnect(writer http.ResponseWriter, request *http.Request, config config
 	msg := DisconnectWebhookMsg{}
 	err := json.NewDecoder(request.Body).Decode(&msg)
 	if err != nil {
-		log.Println("ERROR: InitWebhooks::disconnect::jsondecoding", err)
+		logger.Error("unable to decode disconnect webhook message", "err", err)
 		return
 	}
 	logger.Info("disconnect", "action", "disconnect", "clientId", msg.ClientId)

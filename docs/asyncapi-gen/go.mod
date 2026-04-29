@@ -19,7 +19,7 @@ require (
 	github.com/SENERGY-Platform/go-service-base/struct-logger v0.6.0 // indirect
 	github.com/SENERGY-Platform/models/go v0.0.0-20260302084452-04ca9ee69c93 // indirect
 	github.com/SENERGY-Platform/permissions-v2 v0.0.41 // indirect
-	github.com/SENERGY-Platform/service-commons v0.0.0-20260330095647-639a135a775c // indirect
+	github.com/SENERGY-Platform/service-commons v0.0.0-20260423104942-3cd90b7ab170 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bradfitz/gomemcache v0.0.0-20230905024940-24af94b03874 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect

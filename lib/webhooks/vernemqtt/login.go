@@ -19,7 +19,6 @@ package vernemqtt
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"log/slog"
 	"net/http"
 	"strconv"
@@ -45,7 +44,7 @@ func login(writer http.ResponseWriter, request *http.Request, config configurati
 	msg := LoginWebhookMsg{}
 	err := json.NewDecoder(request.Body).Decode(&msg)
 	if err != nil {
-		log.Println("ERROR: InitWebhooks::login::jsondecoding", err)
+		logger.Error("unable to decode login webhook message", "err", err)
 		sendError(writer, err.Error(), config.Debug)
 		return
 	}
@@ -77,7 +76,7 @@ func login(writer http.ResponseWriter, request *http.Request, config configurati
 			})
 		}
 		if err != nil {
-			log.Println("ERROR: InitWebhooks::login::GetOpenidPasswordToken", err, fmt.Sprintf("%#v", msg))
+			logger.Error("unable to get user token", "error", err, "msg", fmt.Sprintf("%#v", msg))
 			sendError(writer, err.Error(), config.Debug)
 			return
 		}

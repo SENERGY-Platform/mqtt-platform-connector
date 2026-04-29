@@ -19,11 +19,11 @@ package vernemqtt
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/configuration"
-	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/connectionlog"
-	"log"
 	"net/http"
 	"runtime/debug"
+
+	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/configuration"
+	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/connectionlog"
 )
 
 // online godoc
@@ -53,8 +53,6 @@ func online(writer http.ResponseWriter, request *http.Request, config configurat
 		sendError(writer, err.Error(), config.Debug)
 		return
 	}
-	if config.Debug {
-		log.Println("DEBUG: /online", msg)
-	}
+	config.GetLogger().Debug("/online", "msg", fmt.Sprintf("%#v", msg))
 	connectionLog.Connect(msg.ClientId)
 }

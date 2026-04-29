@@ -21,14 +21,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"net/http"
+
 	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/configuration"
 	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/topic"
 	platform_connector_lib "github.com/SENERGY-Platform/platform-connector-lib"
 	"github.com/SENERGY-Platform/platform-connector-lib/model"
 	"github.com/SENERGY-Platform/platform-connector-lib/statistics"
-	"io"
-	"log"
-	"net/http"
 )
 
 // publish godoc
@@ -51,21 +51,21 @@ func publish(writer http.ResponseWriter, request *http.Request, config configura
 	msg := PublishWebhookMsg{}
 	err = json.Unmarshal(buf, &msg)
 	if err != nil {
-		log.Println("ERROR: InitWebhooks::publish::jsondecoding", err)
+		config.GetLogger().Error("unable to decode publish webhook message", "error", err)
 		sendError(writer, err.Error(), config.Debug)
 		return
 	}
 	if msg.Username != config.AuthClientId {
 		payload, err := base64.StdEncoding.DecodeString(msg.Payload)
 		if err != nil {
-			log.Println("ERROR: InitWebhooks::publish::base64decoding", err)
+			config.GetLogger().Error("unable to decode base64 encoded payload", "error", err)
 			sendError(writer, err.Error(), config.Debug)
 			return
 		}
 		statistics.SourceReceive(msgSize, msg.Username)
 		token, err := connector.Security().GetCachedUserToken(msg.Username, model.RemoteInfo{})
 		if err != nil {
-			log.Println("ERROR: InitWebhooks::publish::GetUserToken", err)
+			config.GetLogger().Error("unable to get user token", "error", err, "username", msg.Username)
 			sendError(writer, err.Error(), config.Debug)
 			return
 		}
@@ -76,7 +76,7 @@ func publish(writer http.ResponseWriter, request *http.Request, config configura
 			return
 		}
 		if err != nil {
-			log.Println("ERROR: InitWebhooks::publish::Parse", err)
+			config.GetLogger().Error("unable to parse topic", "error", err, "topic", msg.Topic)
 			sendError(writer, err.Error(), config.Debug)
 			return
 		}
@@ -88,7 +88,7 @@ func publish(writer http.ResponseWriter, request *http.Request, config configura
 			statistics.DeviceMsgReceive(msgSize, msg.Username, info.DeviceId, info.DeviceTypeId, info.ServiceIds)
 		}
 		if err != nil {
-			log.Println("WARNING: InitWebhooks::publish::HandleDeviceIdentEventWithAuthToken", err, "\n", device.Id, device.LocalId, service.Id, service.LocalId, msg.Topic)
+			config.GetLogger().Error("unable to handle device ident event", "error", err, "device", device.Id, "service", service.Id, "device-local-id", device.LocalId, "service-local-id", service.LocalId, "topic", msg.Topic)
 			fmt.Fprintf(writer, `{"result": "ok"}`)
 			return
 		}

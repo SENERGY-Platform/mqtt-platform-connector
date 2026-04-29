@@ -38,8 +38,8 @@ github.com/SENERGY-Platform/permissions-v2 v0.0.41 h1:AkZi2gc7gabqsrHTQ1AfZwAg7x
 github.com/SENERGY-Platform/permissions-v2 v0.0.41/go.mod h1:QI5IYmoWLVapp34989giU3dHDQ+TIHQEj7sIm8DpX3Q=
 github.com/SENERGY-Platform/platform-connector-lib v0.0.0-20260226054955-4f9f91afcfa1 h1:klyKqZ6EIfg0/QIODQzROAGqLwQVb9MCMXy2IyFnXLU=
 github.com/SENERGY-Platform/platform-connector-lib v0.0.0-20260226054955-4f9f91afcfa1/go.mod h1:M2+ysNIkHATxOqLzN55FABbK7Xt0lV5Mex1aniMkiKk=
-github.com/SENERGY-Platform/service-commons v0.0.0-20260330095647-639a135a775c h1:mbKhnwFf9xOA7sL+zdSwA/KBB7qajofBzpFHnHJmXpA=
-github.com/SENERGY-Platform/service-commons v0.0.0-20260330095647-639a135a775c/go.mod h1:UtsgJbMIt7WDCjZ4bLVJoPaH3tEUZFLiEI7+msUGRL8=
+github.com/SENERGY-Platform/service-commons v0.0.0-20260423104942-3cd90b7ab170 h1:FkATHyvXXenDAfwsPXIP2dkoeNSbE/ToamsDEyIsRJU=
+github.com/SENERGY-Platform/service-commons v0.0.0-20260423104942-3cd90b7ab170/go.mod h1:UtsgJbMIt7WDCjZ4bLVJoPaH3tEUZFLiEI7+msUGRL8=
 github.com/beorn7/perks v1.0.1 h1:VlbKKnNfV8bJzeqoa4cOKqO6bYr3WgKZxO8Z16+hsOM=
 github.com/beorn7/perks v1.0.1/go.mod h1:G2ZrVWU2WbWT9wwq4/hrbKbnv/1ERSJQ0ibhJ6rlkpw=
 github.com/bradfitz/gomemcache v0.0.0-20230905024940-24af94b03874 h1:N7oVaKyGp8bttX0bfZGmcGkjz7DLQXhAn3DNd3T0ous=

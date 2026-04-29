@@ -84,6 +84,8 @@
 
     "init_topics": false,
 
+    "log_level": "info",
+
     "kafka_topic_configs": {
         "device-types": [
             {

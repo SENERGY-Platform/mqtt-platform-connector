@@ -39,6 +39,7 @@ github.com/SENERGY-Platform/platform-connector-lib v0.0.0-20260226054955-4f9f91a
 github.com/SENERGY-Platform/service-commons v0.0.0-20250624131956-6c08be412ea0 h1:Je0qoyHkGOfFLheha6ejD/nIVBaYo1s38of6SiLa9yw=
 github.com/SENERGY-Platform/service-commons v0.0.0-20250624131956-6c08be412ea0/go.mod h1:1p2CQPNtler5leXqNgaOfr7DlgZUydrQlQYA97ycm4k=
 github.com/SENERGY-Platform/service-commons v0.0.0-20260330095647-639a135a775c/go.mod h1:UtsgJbMIt7WDCjZ4bLVJoPaH3tEUZFLiEI7+msUGRL8=
+github.com/SENERGY-Platform/service-commons v0.0.0-20260423104942-3cd90b7ab170/go.mod h1:UtsgJbMIt7WDCjZ4bLVJoPaH3tEUZFLiEI7+msUGRL8=
 github.com/beorn7/perks v1.0.1 h1:VlbKKnNfV8bJzeqoa4cOKqO6bYr3WgKZxO8Z16+hsOM=
 github.com/beorn7/perks v1.0.1/go.mod h1:G2ZrVWU2WbWT9wwq4/hrbKbnv/1ERSJQ0ibhJ6rlkpw=
 github.com/bool64/dev v0.2.20 h1:9eIRGdcg2kQW2NGza++QbOKidNNaK+KfWuUXcZFDejE=

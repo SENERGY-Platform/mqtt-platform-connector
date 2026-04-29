@@ -4,8 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
-	"os"
+	"log/slog"
 	"strings"
 	"time"
 
@@ -37,21 +36,30 @@ func Start(basectx context.Context, config configuration.Config) (err error) {
 		kafka.SlowProducerTimeout = time.Duration(config.KafkaProducerSlowTimeoutSec) * time.Second
 	}
 
+	pahoErrLogger := slog.NewLogLogger(config.GetLogger().Handler(), slog.LevelError)
+	pahoErrLogger.SetPrefix("[paho] ")
+
+	pahoWarnLogger := slog.NewLogLogger(config.GetLogger().Handler(), slog.LevelWarn)
+	pahoWarnLogger.SetPrefix("[paho] ")
+
+	pahoDebugLogger := slog.NewLogLogger(config.GetLogger().Handler(), slog.LevelDebug)
+	pahoDebugLogger.SetPrefix("[paho] ")
+
 	switch config.MqttLogLevel {
 	case "critical":
-		paho.CRITICAL = log.New(os.Stderr, "[paho] ", log.LstdFlags)
+		paho.CRITICAL = pahoErrLogger
 	case "error":
-		paho.CRITICAL = log.New(os.Stderr, "[paho] ", log.LstdFlags)
-		paho.ERROR = log.New(os.Stderr, "[paho] ", log.LstdFlags)
+		paho.CRITICAL = pahoErrLogger
+		paho.ERROR = pahoErrLogger
 	case "warn":
-		paho.CRITICAL = log.New(os.Stderr, "[paho] ", log.LstdFlags)
-		paho.ERROR = log.New(os.Stderr, "[paho] ", log.LstdFlags)
-		paho.WARN = log.New(os.Stderr, "[paho] ", log.LstdFlags)
+		paho.CRITICAL = pahoErrLogger
+		paho.ERROR = pahoErrLogger
+		paho.WARN = pahoWarnLogger
 	case "debug":
-		paho.CRITICAL = log.New(os.Stderr, "[paho] ", log.LstdFlags)
-		paho.ERROR = log.New(os.Stderr, "[paho] ", log.LstdFlags)
-		paho.WARN = log.New(os.Stderr, "[paho] ", log.LstdFlags)
-		paho.DEBUG = log.New(os.Stdout, "[paho] ", log.LstdFlags)
+		paho.CRITICAL = pahoErrLogger
+		paho.ERROR = pahoErrLogger
+		paho.WARN = pahoWarnLogger
+		paho.DEBUG = pahoDebugLogger
 	}
 
 	libConf := platform_connector_lib.Config{
@@ -187,7 +195,7 @@ func CreateQueuedCommandHandler(ctx context.Context, config configuration.Config
 			for msg := range queue {
 				err := handler(msg.commandRequest, msg.requestMsg, msg.t)
 				if err != nil {
-					log.Println("ERROR: ", err)
+					config.GetLogger().Error("unable to handle command", "error", err)
 				}
 			}
 		}()
@@ -236,6 +244,6 @@ func getKafkaCompression(compression string) sarama.CompressionCodec {
 	case "snappy":
 		return sarama.CompressionSnappy
 	}
-	log.Println("WARNING: unknown compression", compression, "fallback to none")
+	slog.Warn("unknown kafka compression --> fallback to none", "compression", compression)
 	return sarama.CompressionNone
 }

@@ -19,16 +19,17 @@ package main
 import (
 	"context"
 	"flag"
-	"github.com/SENERGY-Platform/api-docs-provider/lib/client"
-	"github.com/SENERGY-Platform/mqtt-platform-connector/docs"
-	"github.com/SENERGY-Platform/mqtt-platform-connector/lib"
-	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/configuration"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/SENERGY-Platform/api-docs-provider/lib/client"
+	"github.com/SENERGY-Platform/mqtt-platform-connector/docs"
+	"github.com/SENERGY-Platform/mqtt-platform-connector/lib"
+	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/configuration"
 )
 
 func main() {
@@ -59,7 +60,7 @@ func main() {
 	shutdown := make(chan os.Signal, 1)
 	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL)
 	sig := <-shutdown
-	log.Println("received shutdown signal", sig)
+	config.GetLogger().Info("received shutdown signal", "signal", sig)
 	cancel()
 	time.Sleep(1 * time.Second) //let time for ctx.Done() listener
 }

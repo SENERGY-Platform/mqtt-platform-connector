@@ -18,18 +18,19 @@ package vernemqtt
 
 import (
 	"context"
+	"errors"
+	"log"
+	"log/slog"
+	"net/http"
+	"runtime/debug"
+	"strings"
+	"time"
+
 	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/configuration"
 	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/connectionlog"
 	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/topic"
 	"github.com/SENERGY-Platform/platform-connector-lib"
 	"github.com/swaggo/swag"
-	"log"
-	"log/slog"
-	"net/http"
-	"os"
-	"runtime/debug"
-	"strings"
-	"time"
 )
 
 //go:generate go tool swag init -o ../../../docs --parseDependency -d .. -g vernemqtt/vernemqwebhook.go
@@ -45,7 +46,11 @@ func InitWebhooks(ctx context.Context, config configuration.Config, connector *p
 	topicParser := topic.New(connector.IotCache, config.ActuatorTopicPattern)
 	router := http.NewServeMux()
 
-	logger := GetLogger()
+	logger := config.GetLogger()
+	if info, ok := debug.ReadBuildInfo(); ok {
+		logger = logger.With("go-module", info.Path)
+	}
+	logger = logger.With("snrgy-log-type", "connector-webhook")
 
 	router.HandleFunc("GET /doc", func(writer http.ResponseWriter, request *http.Request) {
 		writer.Header().Set("Content-Type", "application/json; charset=utf-8")
@@ -89,15 +94,15 @@ func InitWebhooks(ctx context.Context, config configuration.Config, connector *p
 	}
 	server := &http.Server{Addr: ":" + config.WebhookPort, Handler: handler, WriteTimeout: 10 * time.Second, ReadTimeout: 2 * time.Second, ReadHeaderTimeout: 2 * time.Second}
 	go func() {
-		log.Println("Listening on ", server.Addr)
-		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Println("ERROR: api server error", err)
+		config.GetLogger().Info("webhook started", "addr", server.Addr)
+		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			config.GetLogger().Error("FATAL: api server error", "error", err)
 			log.Fatal(err)
 		}
 	}()
 	go func() {
 		<-ctx.Done()
-		log.Println("DEBUG: webhook shutdown", server.Shutdown(context.Background()))
+		config.GetLogger().Info("webhook shutdown", "result", server.Shutdown(context.Background()))
 	}()
 }
 
@@ -121,15 +126,5 @@ func (this *LoggerMiddleWare) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 func (this *LoggerMiddleWare) log(request *http.Request) {
 	method := request.Method
 	path := request.URL
-	log.Printf("[%v] %v \n", method, path)
-}
-
-func GetLogger() *slog.Logger {
-	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
-		Level: slog.LevelInfo,
-	}))
-	if info, ok := debug.ReadBuildInfo(); ok {
-		logger = logger.With("go-module", info.Path)
-	}
-	return logger.With("snrgy-log-type", "connector-webhook")
+	slog.Info("webhook request", "method", method, "path", path)
 }
