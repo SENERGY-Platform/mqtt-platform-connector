@@ -71,8 +71,12 @@ func publish(writer http.ResponseWriter, request *http.Request, config configura
 		}
 
 		device, service, err := topicParser.Parse(token, msg.Topic)
-		if errors.Is(err, topic.ErrNoDeviceIdCandidateFound) || errors.Is(err, topic.ErrNoDeviceMatchFound) || errors.Is(err, topic.ErrNoServiceMatchFound) {
+		if errors.Is(err, topic.ErrNoDeviceIdCandidateFound) || errors.Is(err, topic.ErrNoDeviceMatchFound) {
 			sendIgnoreRedirect(writer, msg.Topic, msg.Payload)
+			return
+		}
+		if errors.Is(err, topic.ErrNoServiceMatchFound) {
+			TryCreateService(config, connector, device, msg.Topic, payload)
 			return
 		}
 		if err != nil {

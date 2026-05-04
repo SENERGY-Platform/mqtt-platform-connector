@@ -124,6 +124,7 @@ func Start(basectx context.Context, config configuration.Config) (err error) {
 		DeveloperNotificationUrl:             config.DeveloperNotificationUrl,
 		MutedUserNotificationTitles:          config.MutedUserNotificationTitles,
 		InitTopics:                           config.InitTopics,
+		Logger:                               config.GetLogger(),
 	}
 
 	connector, err := platform_connector_lib.New(libConf)

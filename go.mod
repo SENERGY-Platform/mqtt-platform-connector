@@ -7,7 +7,7 @@ require (
 	github.com/SENERGY-Platform/api-docs-provider/lib/client v0.0.3
 	github.com/SENERGY-Platform/connection-check-v2/lib v0.0.2
 	github.com/SENERGY-Platform/go-service-base/struct-logger v0.6.0
-	github.com/SENERGY-Platform/platform-connector-lib v0.0.0-20260226054955-4f9f91afcfa1
+	github.com/SENERGY-Platform/platform-connector-lib v0.0.0-20260429113812-10648bfc301f
 	github.com/SENERGY-Platform/service-commons v0.0.0-20260423104942-3cd90b7ab170
 	github.com/eclipse/paho.golang v0.21.0
 	github.com/eclipse/paho.mqtt.golang v1.4.3

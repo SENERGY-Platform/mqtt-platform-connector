@@ -18,12 +18,13 @@ package topic
 
 import (
 	"errors"
-	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/shortid"
-	"github.com/SENERGY-Platform/platform-connector-lib/model"
-	"github.com/SENERGY-Platform/platform-connector-lib/security"
 	"regexp"
 	"sort"
 	"strings"
+
+	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/shortid"
+	"github.com/SENERGY-Platform/platform-connector-lib/model"
+	"github.com/SENERGY-Platform/platform-connector-lib/security"
 )
 
 var ErrNoDeviceMatchFound = errors.New("no device match found")
@@ -125,7 +126,7 @@ func (this *Topic) findDeviceCandidates(token security.JwtToken, topic string) (
 		return candidates, err
 	}
 	if len(candidateIds) == 0 {
-		return candidates, ErrNoDeviceIdCandidateFound
+		return this.findDeviceCandidatesByLocalIdPrefix(token, topic)
 	}
 	for _, id := range candidateIds {
 		device, err := this.iotCache.WithToken(token).GetDevice(id)
@@ -136,6 +137,9 @@ func (this *Topic) findDeviceCandidates(token security.JwtToken, topic string) (
 				return candidates, err
 			}
 		}
+	}
+	if len(candidates) == 0 {
+		return this.findDeviceCandidatesByLocalIdPrefix(token, topic)
 	}
 	return candidates, nil
 }
@@ -167,4 +171,23 @@ func findShortDeviceIdCandidates(topic string) (candidates []string) {
 		}
 	}
 	return candidates
+}
+
+func (this *Topic) findDeviceCandidatesByLocalIdPrefix(token security.JwtToken, topic string) ([]model.Device, error) {
+	parts := strings.Split(topic, "/")
+	localIdCandidateParts := []string{}
+	for _, part := range parts {
+		localIdCandidateParts = append(localIdCandidateParts, part)
+		device, err := this.iotCache.GetDeviceByLocalId(token, strings.Join(localIdCandidateParts, "/"))
+		if err == nil {
+			return []model.Device{device}, nil
+		}
+		if errors.Is(err, security.ErrorNotFound) || errors.Is(err, security.ErrorAccessDenied) {
+			continue
+		}
+		if err != nil {
+			return nil, err
+		}
+	}
+	return nil, ErrNoDeviceMatchFound
 }

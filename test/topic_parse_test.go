@@ -115,18 +115,18 @@ func TestParse(t *testing.T) {
 	t.Run(testTopicParse(topics, "cmd/"+longDeviceIdExample+"/"+unknownLongDeviceIdExample+"/void/poweron", longDeviceIdExample, "void/poweron"))
 	t.Run(testTopicParse(topics, "cmd/"+longDeviceIdExample+"/"+unknownLongDeviceIdExample+"/poweron", longDeviceIdExample, "poweron"))
 
-	t.Run(testTopicParserExpectError(topics, "cmd/foo/bar", topic.ErrNoDeviceIdCandidateFound))
+	t.Run(testTopicParserExpectError(topics, "cmd/foo/bar", topic.ErrNoDeviceMatchFound))
 	t.Run(testTopicParserExpectError(topics, "cmd/"+unknownLongDeviceIdExample+"/bar", topic.ErrNoDeviceMatchFound))
 	t.Run(testTopicParserExpectError(topics, unknownLongDeviceIdExample+"/cmd/bar", topic.ErrNoDeviceMatchFound))
 	t.Run(testTopicParserExpectError(topics, "cmd/bar/"+unknownLongDeviceIdExample, topic.ErrNoDeviceMatchFound))
 
-	t.Run(testTopicParserExpectError(topics, "cmd/foo"+shortDeviceIdExample+"/bar", topic.ErrNoDeviceIdCandidateFound))
-	t.Run(testTopicParserExpectError(topics, "cmd/"+shortDeviceIdExample+"foo/bar", topic.ErrNoDeviceIdCandidateFound))
-	t.Run(testTopicParserExpectError(topics, "cmd/foo"+shortDeviceIdExample+"foo/bar", topic.ErrNoDeviceIdCandidateFound))
+	t.Run(testTopicParserExpectError(topics, "cmd/foo"+shortDeviceIdExample+"/bar", topic.ErrNoDeviceMatchFound))
+	t.Run(testTopicParserExpectError(topics, "cmd/"+shortDeviceIdExample+"foo/bar", topic.ErrNoDeviceMatchFound))
+	t.Run(testTopicParserExpectError(topics, "cmd/foo"+shortDeviceIdExample+"foo/bar", topic.ErrNoDeviceMatchFound))
 
-	t.Run(testTopicParserExpectError(topics, "cmd/foo"+longDeviceIdExample+"/bar", topic.ErrNoDeviceIdCandidateFound))
+	t.Run(testTopicParserExpectError(topics, "cmd/foo"+longDeviceIdExample+"/bar", topic.ErrNoDeviceMatchFound))
 	t.Run(testTopicParserExpectError(topics, "cmd/"+longDeviceIdExample+"foo/bar", topic.ErrNoDeviceMatchFound))
-	t.Run(testTopicParserExpectError(topics, "cmd/foo"+longDeviceIdExample+"foo/bar", topic.ErrNoDeviceIdCandidateFound))
+	t.Run(testTopicParserExpectError(topics, "cmd/foo"+longDeviceIdExample+"foo/bar", topic.ErrNoDeviceMatchFound))
 
 	t.Run(testTopicParserExpectError(topics, "cmd/bar/"+longDeviceIdExample2+"/"+longDeviceIdExample, topic.ErrMultipleMatchingDevicesFound))
 	t.Run(testTopicParserExpectError(topics, longDeviceIdExample+"/cmd/bar/"+longDeviceIdExample2, topic.ErrMultipleMatchingDevicesFound))
