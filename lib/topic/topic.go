@@ -23,8 +23,9 @@ import (
 type Topic struct {
 	iotCache               *iot.PreparedCache
 	defaultActuatorPattern string
+	associatedTopics       map[string]string
 }
 
 func New(iotCache *iot.PreparedCache, defaultActuatorPattern string) *Topic {
-	return &Topic{iotCache: iotCache, defaultActuatorPattern: defaultActuatorPattern}
+	return &Topic{iotCache: iotCache, defaultActuatorPattern: defaultActuatorPattern, associatedTopics: map[string]string{}}
 }

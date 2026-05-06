@@ -18,10 +18,14 @@ package topic
 
 import (
 	"errors"
+	"fmt"
+	"log/slog"
 	"regexp"
+	"slices"
 	"sort"
 	"strings"
 
+	"github.com/SENERGY-Platform/models/go/models"
 	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/shortid"
 	"github.com/SENERGY-Platform/platform-connector-lib/model"
 	"github.com/SENERGY-Platform/platform-connector-lib/security"
@@ -49,6 +53,7 @@ func (this *Topic) Parse(token security.JwtToken, topic string) (device model.De
 		return device, service, ErrNoServiceMatchFound
 	}
 	service = candidates[0].services[0]
+	this.storeServiceTopicAssociation(token, device, service.Id, topic)
 	return device, service, nil
 }
 
@@ -68,6 +73,21 @@ func (this *Topic) ParseForCandidates(token security.JwtToken, topic string) (ca
 		if err != nil {
 			return candidates, err
 		}
+
+		services = slices.DeleteFunc(services, func(service model.Service) bool {
+			associatedTopic, ok := this.getServiceTopicAssociation(device.Id, service.Id)
+			if !ok {
+				return false
+			}
+			if associatedTopic == topic {
+				return false
+			}
+			if strings.Contains(topic, associatedTopic) {
+				return true
+			}
+			return false
+		})
+
 		//longest matches first
 		sort.Slice(services, func(i, j int) bool {
 			return len(services[i].LocalId) > len(services[j].LocalId)
@@ -117,7 +137,28 @@ func (this *Topic) findMatchingServices(token security.JwtToken, deviceTypeId st
 }
 
 func (this *Topic) serviceMatchesTopic(topic string, service model.Service) bool {
-	return strings.Contains(topic, service.LocalId)
+	substr := service.LocalId
+	if !strings.HasSuffix(substr, "/") {
+		substr = substr + "/"
+	}
+	if !strings.HasPrefix(substr, "/") {
+		substr = "/" + substr
+	}
+	if strings.Contains(topic, substr) {
+		return true
+	}
+
+	asPrefix := strings.TrimPrefix(substr, "/")
+	if strings.HasPrefix(topic, asPrefix) {
+		return true
+	}
+
+	asSuffix := strings.TrimSuffix(substr, "/")
+	if strings.HasSuffix(topic, asSuffix) {
+		return true
+	}
+
+	return false
 }
 
 func (this *Topic) findDeviceCandidates(token security.JwtToken, topic string) (candidates []model.Device, err error) {
@@ -190,4 +231,28 @@ func (this *Topic) findDeviceCandidatesByLocalIdPrefix(token security.JwtToken, 
 		}
 	}
 	return nil, ErrNoDeviceMatchFound
+}
+
+const GenerateServiceAttr = "senergy/mqtt-generate-services"
+
+func (this *Topic) storeServiceTopicAssociation(token security.JwtToken, device model.Device, serviceId string, topic string) {
+	dt, err := this.iotCache.GetDeviceType(token, device.DeviceTypeId)
+	if err != nil {
+		slog.Error("unable to get device-type", "device_type_id", device.DeviceTypeId, "error", err)
+		err = nil
+		dt = models.DeviceType{
+			Attributes: []models.Attribute{{Key: GenerateServiceAttr, Value: "true"}},
+		}
+	}
+
+	if slices.ContainsFunc(dt.Attributes, func(a models.Attribute) bool {
+		return a.Key == GenerateServiceAttr && strings.ToLower(strings.TrimSpace(a.Value)) == "true"
+	}) {
+		this.associatedTopics[fmt.Sprintf("%s/%s", device.Id, serviceId)] = topic
+	}
+}
+
+func (this *Topic) getServiceTopicAssociation(deviceId string, serviceId string) (topic string, found bool) {
+	topic, found = this.associatedTopics[fmt.Sprintf("%s/%s", deviceId, serviceId)]
+	return topic, found
 }

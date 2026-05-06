@@ -11,13 +11,14 @@ import (
 	"github.com/SENERGY-Platform/models/go/models"
 	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/configuration"
 	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/shortid"
+	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/topic"
 	"github.com/SENERGY-Platform/permissions-v2/pkg/client"
 	platform_connector_lib "github.com/SENERGY-Platform/platform-connector-lib"
 	"github.com/SENERGY-Platform/platform-connector-lib/model"
 	"github.com/SENERGY-Platform/platform-connector-lib/security"
 )
 
-const GenerateServiceAttr = "senergy/mqtt-generate-services"
+const GenerateServiceAttr = topic.GenerateServiceAttr
 
 func TryCreateService(config configuration.Config, connector *platform_connector_lib.Connector, device model.Device, topic string, payload []byte) {
 	token := security.JwtToken(client.InternalAdminToken)

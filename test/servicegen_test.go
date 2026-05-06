@@ -1,7 +1,6 @@
 package test
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http/httptest"
@@ -124,34 +123,68 @@ func TestServiceGen(t *testing.T) {
 	send := func(topic string, payload []byte) {
 		device, _, err := topicParser.Parse(client.InternalAdminToken, topic)
 		if errors.Is(err, ErrNoServiceMatchFound) {
-			err = nil
+			vernemqtt.TryCreateService(config, &connector, device, topic, payload)
+			time.Sleep(100 * time.Millisecond)
+			return
 		}
 		if err != nil {
 			t.Error(err)
 			return
 		}
-		vernemqtt.TryCreateService(config, &connector, device, topic, payload)
-		time.Sleep(100 * time.Millisecond)
 	}
 
-	send(fmt.Sprintf("%v/root/services/plainstr", d.Id), []byte("teststring"))
-	send(fmt.Sprintf("%v/root/services/jsonstr", d.Id), []byte(`"teststring"`))
-	send(fmt.Sprintf("%v/root/services/number", d.Id), []byte("42"))
-	send(fmt.Sprintf("%v/root/services/obj", d.Id), []byte(`{"foo":"bar", "number":42, "sub":{"b":true}}`))
-	send(fmt.Sprintf("%v/root/services/plainstr2", d.LocalId), []byte("teststring"))
-	send(fmt.Sprintf("%v/root/services/jsonstr2", d.LocalId), []byte(`"teststring"`))
-	send(fmt.Sprintf("%v/root/services/number2", d.LocalId), []byte("42"))
-	send(fmt.Sprintf("%v/root/services/obj2", d.LocalId), []byte(`{"foo":"bar", "number":42, "sub":{"b":true}}`))
+	for range 5 {
+		send(fmt.Sprintf("%v/root/services/plainstr", d.Id), []byte("teststring"))
+		send(fmt.Sprintf("%v/root/services/jsonstr", d.Id), []byte(`"teststring"`))
+		send(fmt.Sprintf("%v/root/services/number", d.Id), []byte("42"))
+		send(fmt.Sprintf("%v/root/services/obj", d.Id), []byte(`{"foo":"bar", "number":42, "sub":{"b":true}}`))
+		send(fmt.Sprintf("%v/root/services/plainstr2", d.LocalId), []byte("teststring"))
+		send(fmt.Sprintf("%v/root/services/jsonstr2", d.LocalId), []byte(`"teststring"`))
+		send(fmt.Sprintf("%v/root/services/number2", d.LocalId), []byte("42"))
+		send(fmt.Sprintf("%v/root/services/obj2", d.LocalId), []byte(`{"foo":"bar", "number":42, "sub":{"b":true}}`))
+
+		send(fmt.Sprintf("%v/a/b/c", d.LocalId), []byte("42"))
+		send(fmt.Sprintf("%v/a/b", d.LocalId), []byte(`"foo"`))
+
+		send(fmt.Sprintf("%v/x/y", d.LocalId), []byte("13"))
+		send(fmt.Sprintf("%v/x/y/z", d.LocalId), []byte(`"bar"`))
+	}
 
 	dtAfter, err, _ := ctrl.ReadDeviceType(d.DeviceTypeId, client.InternalAdminToken)
 	if err != nil {
 		t.Error(err)
 		return
 	}
-	if len(dtAfter.Services) != 9 {
-		t.Error("expected 9 services")
+	if len(dtAfter.Services) != 13 {
+		t.Error("expected 13 services, got", len(dtAfter.Services))
 	}
-	t.Logf("%#v", dtAfter.Services)
-	dtJson, _ := json.MarshalIndent(dtAfter, "", "  ")
-	t.Log(string(dtJson))
+	for _, s := range dtAfter.Services {
+		t.Log(s.LocalId)
+	}
+
+	check := func(topic string, p models.Type) {
+		_, service, err := topicParser.Parse(client.InternalAdminToken, topic)
+		if err != nil {
+			t.Error(topic, err)
+			return
+		}
+		if service.Outputs[0].ContentVariable.Type != p {
+			t.Error(topic, service.Outputs[0].ContentVariable.Type, p)
+			return
+		}
+	}
+
+	check(fmt.Sprintf("%v/root/services/plainstr", d.Id), models.String)
+	check(fmt.Sprintf("%v/root/services/jsonstr", d.Id), models.String)
+	check(fmt.Sprintf("%v/root/services/number", d.Id), models.Float)
+	check(fmt.Sprintf("%v/root/services/obj", d.Id), models.Structure)
+	check(fmt.Sprintf("%v/root/services/plainstr2", d.LocalId), models.String)
+	check(fmt.Sprintf("%v/root/services/jsonstr2", d.LocalId), models.String)
+	check(fmt.Sprintf("%v/root/services/number2", d.LocalId), models.Float)
+	check(fmt.Sprintf("%v/root/services/obj2", d.LocalId), models.Structure)
+	check(fmt.Sprintf("%v/a/b/c", d.LocalId), models.Float)
+	check(fmt.Sprintf("%v/a/b", d.LocalId), models.String)
+	check(fmt.Sprintf("%v/x/y", d.LocalId), models.Float)
+	check(fmt.Sprintf("%v/x/y/z", d.LocalId), models.String)
+
 }

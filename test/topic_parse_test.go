@@ -101,7 +101,7 @@ func TestParse(t *testing.T) {
 	t.Run(testTopicParse(topics, shortDeviceIdExample+"/poweron/"+unknownShortDeviceIdExample, longDeviceIdExample, "poweron"))
 
 	t.Run(testTopicParse(topics, unknownLongDeviceIdExample+"/void/poweron/"+shortDeviceIdExample, longDeviceIdExample, "void/poweron"))
-	t.Run(testTopicParse(topics, unknownShortDeviceIdExample+"poweron/"+shortDeviceIdExample, longDeviceIdExample, "poweron"))
+	t.Run(testTopicParse(topics, unknownShortDeviceIdExample+"/poweron/"+shortDeviceIdExample, longDeviceIdExample, "poweron"))
 
 	t.Run(testTopicParse(topics, "cmd/"+shortDeviceIdExample+"/"+unknownShortDeviceIdExample+"/void/poweron", longDeviceIdExample, "void/poweron"))
 	t.Run(testTopicParse(topics, "cmd/"+shortDeviceIdExample+"/"+unknownShortDeviceIdExample+"/poweron", longDeviceIdExample, "poweron"))
@@ -110,7 +110,7 @@ func TestParse(t *testing.T) {
 	t.Run(testTopicParse(topics, longDeviceIdExample+"/poweron/"+unknownLongDeviceIdExample, longDeviceIdExample, "poweron"))
 
 	t.Run(testTopicParse(topics, unknownLongDeviceIdExample+"/void/poweron/"+longDeviceIdExample, longDeviceIdExample, "void/poweron"))
-	t.Run(testTopicParse(topics, unknownLongDeviceIdExample+"poweron/"+longDeviceIdExample, longDeviceIdExample, "poweron"))
+	t.Run(testTopicParse(topics, unknownLongDeviceIdExample+"/poweron/"+longDeviceIdExample, longDeviceIdExample, "poweron"))
 
 	t.Run(testTopicParse(topics, "cmd/"+longDeviceIdExample+"/"+unknownLongDeviceIdExample+"/void/poweron", longDeviceIdExample, "void/poweron"))
 	t.Run(testTopicParse(topics, "cmd/"+longDeviceIdExample+"/"+unknownLongDeviceIdExample+"/poweron", longDeviceIdExample, "poweron"))
