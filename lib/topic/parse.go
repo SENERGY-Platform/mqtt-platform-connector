@@ -214,23 +214,15 @@ func findShortDeviceIdCandidates(topic string) (candidates []string) {
 	return candidates
 }
 
-func (this *Topic) findDeviceCandidatesByLocalIdPrefix(token security.JwtToken, topic string) ([]model.Device, error) {
-	parts := strings.Split(topic, "/")
-	localIdCandidateParts := []string{}
-	for _, part := range parts {
-		localIdCandidateParts = append(localIdCandidateParts, part)
-		device, err := this.iotCache.GetDeviceByLocalId(token, strings.Join(localIdCandidateParts, "/"))
-		if err == nil {
-			return []model.Device{device}, nil
-		}
-		if errors.Is(err, security.ErrorNotFound) || errors.Is(err, security.ErrorAccessDenied) {
-			continue
-		}
-		if err != nil {
-			return nil, err
-		}
+func (this *Topic) findDeviceCandidatesByLocalIdPrefix(token security.JwtToken, topic string) (result []model.Device, err error) {
+	result, err = this.iotCache.GetDevicesByLocalIdList(token, strings.Split(topic, "/"))
+	if err != nil {
+		return result, err
 	}
-	return nil, ErrNoDeviceMatchFound
+	if len(result) == 0 {
+		return result, ErrNoDeviceMatchFound
+	}
+	return result, nil
 }
 
 const GenerateServiceAttr = "senergy/mqtt-generate-services"

@@ -6,9 +6,12 @@ require (
 	github.com/IBM/sarama v1.43.3
 	github.com/SENERGY-Platform/api-docs-provider/lib/client v0.0.3
 	github.com/SENERGY-Platform/connection-check-v2/lib v0.0.2
+	github.com/SENERGY-Platform/device-repository v0.2.43
 	github.com/SENERGY-Platform/go-service-base/struct-logger v0.6.0
-	github.com/SENERGY-Platform/platform-connector-lib v0.0.0-20260429113812-10648bfc301f
-	github.com/SENERGY-Platform/service-commons v0.0.0-20260423104942-3cd90b7ab170
+	github.com/SENERGY-Platform/models/go v0.0.0-20260302084452-04ca9ee69c93
+	github.com/SENERGY-Platform/permissions-v2 v0.0.41
+	github.com/SENERGY-Platform/platform-connector-lib v0.0.0-20260508090001-9ac7472cd726
+	github.com/SENERGY-Platform/service-commons v0.0.0-20260507090252-155b04bb4c46
 	github.com/eclipse/paho.golang v0.21.0
 	github.com/eclipse/paho.mqtt.golang v1.4.3
 	github.com/google/uuid v1.6.0
@@ -29,10 +32,7 @@ require (
 	github.com/SENERGY-Platform/api-docs-provider/lib/models v0.0.3 // indirect
 	github.com/SENERGY-Platform/converter v0.0.11 // indirect
 	github.com/SENERGY-Platform/developer-notifications v0.0.5 // indirect
-	github.com/SENERGY-Platform/device-repository v0.2.43 // indirect
 	github.com/SENERGY-Platform/go-base-http-client v0.1.0 // indirect
-	github.com/SENERGY-Platform/models/go v0.0.0-20260302084452-04ca9ee69c93 // indirect
-	github.com/SENERGY-Platform/permissions-v2 v0.0.41 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bradfitz/gomemcache v0.0.0-20230905024940-24af94b03874 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
@@ -119,7 +119,6 @@ require (
 	github.com/stretchr/testify v1.11.1 // indirect
 	github.com/swaggo/files v1.0.1 // indirect
 	github.com/swaggo/http-swagger v1.3.4 // indirect
-	github.com/testcontainers/testcontainers-go/modules/kafka v0.40.0 // indirect
 	github.com/tklauser/go-sysconf v0.3.16 // indirect
 	github.com/tklauser/numcpus v0.11.0 // indirect
 	github.com/urfave/cli/v2 v2.3.0 // indirect

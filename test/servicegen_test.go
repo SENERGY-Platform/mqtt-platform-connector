@@ -108,7 +108,7 @@ func TestServiceGen(t *testing.T) {
 
 	d, err, _ := ctrl.CreateDevice(client.InternalAdminToken, models.Device{
 		Name:         "d1",
-		LocalId:      "lid/d1",
+		LocalId:      "lid",
 		DeviceTypeId: dt.Id,
 	})
 	if err != nil {
@@ -143,6 +143,16 @@ func TestServiceGen(t *testing.T) {
 		send(fmt.Sprintf("%v/root/services/number2", d.LocalId), []byte("42"))
 		send(fmt.Sprintf("%v/root/services/obj2", d.LocalId), []byte(`{"foo":"bar", "number":42, "sub":{"b":true}}`))
 
+		send(fmt.Sprintf("root/services/plainstr3/%v", d.LocalId), []byte("teststring"))
+		send(fmt.Sprintf("root/services/jsonstr3/%v", d.LocalId), []byte(`"teststring"`))
+		send(fmt.Sprintf("root/services/number3/%v", d.LocalId), []byte("42"))
+		send(fmt.Sprintf("root/services/obj3/%v", d.LocalId), []byte(`{"foo":"bar", "number":42, "sub":{"b":true}}`))
+
+		send(fmt.Sprintf("root/%v/services/plainstr4", d.LocalId), []byte("teststring"))
+		send(fmt.Sprintf("root/%v/services/jsonstr4", d.LocalId), []byte(`"teststring"`))
+		send(fmt.Sprintf("root/%v/services/number4", d.LocalId), []byte("42"))
+		send(fmt.Sprintf("root/%v/services/obj4", d.LocalId), []byte(`{"foo":"bar", "number":42, "sub":{"b":true}}`))
+
 		send(fmt.Sprintf("%v/a/b/c", d.LocalId), []byte("42"))
 		send(fmt.Sprintf("%v/a/b", d.LocalId), []byte(`"foo"`))
 
@@ -155,17 +165,21 @@ func TestServiceGen(t *testing.T) {
 		t.Error(err)
 		return
 	}
-	if len(dtAfter.Services) != 13 {
-		t.Error("expected 13 services, got", len(dtAfter.Services))
+	if len(dtAfter.Services) != 21 {
+		t.Error("expected 21 services, got", len(dtAfter.Services))
 	}
 	for _, s := range dtAfter.Services {
 		t.Log(s.LocalId)
 	}
 
-	check := func(topic string, p models.Type) {
+	check := func(topic string, p models.Type, expectedLocalId string) {
 		_, service, err := topicParser.Parse(client.InternalAdminToken, topic)
 		if err != nil {
 			t.Error(topic, err)
+			return
+		}
+		if service.LocalId != expectedLocalId {
+			t.Error(topic, service.LocalId, expectedLocalId)
 			return
 		}
 		if service.Outputs[0].ContentVariable.Type != p {
@@ -174,17 +188,25 @@ func TestServiceGen(t *testing.T) {
 		}
 	}
 
-	check(fmt.Sprintf("%v/root/services/plainstr", d.Id), models.String)
-	check(fmt.Sprintf("%v/root/services/jsonstr", d.Id), models.String)
-	check(fmt.Sprintf("%v/root/services/number", d.Id), models.Float)
-	check(fmt.Sprintf("%v/root/services/obj", d.Id), models.Structure)
-	check(fmt.Sprintf("%v/root/services/plainstr2", d.LocalId), models.String)
-	check(fmt.Sprintf("%v/root/services/jsonstr2", d.LocalId), models.String)
-	check(fmt.Sprintf("%v/root/services/number2", d.LocalId), models.Float)
-	check(fmt.Sprintf("%v/root/services/obj2", d.LocalId), models.Structure)
-	check(fmt.Sprintf("%v/a/b/c", d.LocalId), models.Float)
-	check(fmt.Sprintf("%v/a/b", d.LocalId), models.String)
-	check(fmt.Sprintf("%v/x/y", d.LocalId), models.Float)
-	check(fmt.Sprintf("%v/x/y/z", d.LocalId), models.String)
+	check(fmt.Sprintf("%v/root/services/plainstr", d.Id), models.String, "/root/services/plainstr")
+	check(fmt.Sprintf("%v/root/services/jsonstr", d.Id), models.String, "/root/services/jsonstr")
+	check(fmt.Sprintf("%v/root/services/number", d.Id), models.Float, "/root/services/number")
+	check(fmt.Sprintf("%v/root/services/obj", d.Id), models.Structure, "/root/services/obj")
+	check(fmt.Sprintf("%v/root/services/plainstr2", d.LocalId), models.String, "/root/services/plainstr2")
+	check(fmt.Sprintf("%v/root/services/jsonstr2", d.LocalId), models.String, "/root/services/jsonstr2")
+	check(fmt.Sprintf("%v/root/services/number2", d.LocalId), models.Float, "/root/services/number2")
+	check(fmt.Sprintf("%v/root/services/obj2", d.LocalId), models.Structure, "/root/services/obj2")
+	check(fmt.Sprintf("root/services/plainstr3/%v", d.LocalId), models.String, "root/services/plainstr3/")
+	check(fmt.Sprintf("root/services/jsonstr3/%v", d.LocalId), models.String, "root/services/jsonstr3/")
+	check(fmt.Sprintf("root/services/number3/%v", d.LocalId), models.Float, "root/services/number3/")
+	check(fmt.Sprintf("root/services/obj3/%v", d.LocalId), models.Structure, "root/services/obj3/")
+	check(fmt.Sprintf("root/%v/services/plainstr4", d.LocalId), models.String, "/services/plainstr4")
+	check(fmt.Sprintf("root/%v/services/jsonstr4", d.LocalId), models.String, "/services/jsonstr4")
+	check(fmt.Sprintf("root/%v/services/number4", d.LocalId), models.Float, "/services/number4")
+	check(fmt.Sprintf("root/%v/services/obj4", d.LocalId), models.Structure, "/services/obj4")
+	check(fmt.Sprintf("%v/a/b/c", d.LocalId), models.Float, "/a/b/c")
+	check(fmt.Sprintf("%v/a/b", d.LocalId), models.String, "/a/b")
+	check(fmt.Sprintf("%v/x/y", d.LocalId), models.Float, "/x/y")
+	check(fmt.Sprintf("%v/x/y/z", d.LocalId), models.String, "/x/y/z")
 
 }
