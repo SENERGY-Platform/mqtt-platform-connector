@@ -2,15 +2,49 @@ package iot
 
 import (
 	"encoding/json"
+	"log"
+	"net/http"
+	"slices"
+	"strings"
+
 	"github.com/SENERGY-Platform/platform-connector-lib/model"
 	"github.com/google/uuid"
 	"github.com/julienschmidt/httprouter"
-	"log"
-	"net/http"
 )
 
 func DevicesEndpoints(control *Controller, router *httprouter.Router) {
 	resource := "/devices"
+
+	router.GET(resource, func(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
+		var localIds []string
+		if request.URL.Query().Get("local_ids") != "" {
+			localIds = strings.Split(request.URL.Query().Get("local_ids"), ",")
+		}
+
+		devices, err, _ := control.ListDevices()
+		if err != nil {
+			http.Error(writer, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		result := []model.Device{}
+		for _, device := range devices {
+			if localIds != nil {
+				if slices.Contains(localIds, device.LocalId) {
+					result = append(result, device)
+				}
+			} else {
+				result = append(result, device)
+			}
+		}
+
+		writer.Header().Set("Content-Type", "application/json; charset=utf-8")
+		err = json.NewEncoder(writer).Encode(result)
+		if err != nil {
+			log.Println("ERROR: unable to encode response", err)
+		}
+		return
+	})
 
 	router.GET(resource+"/:id", func(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
 		id := params.ByName("id")

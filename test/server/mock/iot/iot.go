@@ -153,6 +153,15 @@ func (this *Controller) ReadDevice(id string) (result interface{}, err error, co
 	}
 }
 
+func (this *Controller) ListDevices() (result []model.Device, err error, code int) {
+	this.mux.Lock()
+	defer this.mux.Unlock()
+	for _, d := range this.devices {
+		result = append(result, d)
+	}
+	return result, nil, 200
+}
+
 func (this *Controller) PublishDeviceCreate(device model.Device) (result interface{}, err error, code int) {
 	this.mux.Lock()
 	defer this.mux.Unlock()
