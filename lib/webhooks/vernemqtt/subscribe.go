@@ -21,6 +21,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/configuration"
 	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/connectionlog"
@@ -73,6 +74,10 @@ func subscribe(writer http.ResponseWriter, request *http.Request, config configu
 				config.GetLogger().Warn("unable to parse topic", "error", err, "topic", mqtttopic.Topic)
 				sendError(writer, err.Error(), config.Debug)
 				return
+			}
+			prefix := device.Id + "/"
+			if !strings.HasPrefix(mqtttopic.Topic, prefix) {
+				mqtttopic.Topic = prefix + mqtttopic.Topic
 			}
 			resultTopics = append(resultTopics, mqtttopic)
 		}

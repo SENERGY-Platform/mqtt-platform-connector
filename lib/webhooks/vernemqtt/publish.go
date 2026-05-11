@@ -98,6 +98,8 @@ func publish(writer http.ResponseWriter, request *http.Request, config configura
 		}
 		statistics.SourceReceiveHandled(msgSize, msg.Username)
 		statistics.DeviceMsgHandled(msgSize, msg.Username, info.DeviceId, info.DeviceTypeId, info.ServiceIds)
+		sendWithPrefixRedirect(writer, device.Id, msg.Topic, msg.Payload)
+	} else {
+		fmt.Fprintf(writer, `{"result": "ok"}`)
 	}
-	fmt.Fprintf(writer, `{"result": "ok"}`)
 }

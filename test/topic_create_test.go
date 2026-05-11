@@ -17,8 +17,9 @@
 package test
 
 import (
-	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/topic"
 	"testing"
+
+	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/topic"
 )
 
 const shortDeviceIdExample = "a9B7ddfMShqI26yT9hqnsw"
@@ -29,12 +30,12 @@ func TestCreate(t *testing.T) {
 	topic := topic.New(nil, "{{.DeviceId}}/cmnd/{{.LocalServiceId}}")
 
 	t.Run(testTopicCreate(topic, "{{.DeviceId}}/temperature", longDeviceIdExample+"/temperature"))
-	t.Run(testTopicCreate(topic, "cmd/{{.DeviceId}}/temperature", "cmd/"+longDeviceIdExample+"/temperature"))
-	t.Run(testTopicCreate(topic, "cmd/temperature/{{.DeviceId}}", "cmd/temperature/"+longDeviceIdExample))
+	t.Run(testTopicCreate(topic, "cmd/{{.DeviceId}}/temperature", longDeviceIdExample+"/cmd/"+longDeviceIdExample+"/temperature"))
+	t.Run(testTopicCreate(topic, "cmd/temperature/{{.DeviceId}}", longDeviceIdExample+"/cmd/temperature/"+longDeviceIdExample))
 
-	t.Run(testTopicCreate(topic, "{{.ShortDeviceId}}/temperature", shortDeviceIdExample+"/temperature"))
-	t.Run(testTopicCreate(topic, "cmd/{{.ShortDeviceId}}/temperature", "cmd/"+shortDeviceIdExample+"/temperature"))
-	t.Run(testTopicCreate(topic, "cmd/temperature/{{.ShortDeviceId}}", "cmd/temperature/"+shortDeviceIdExample))
+	t.Run(testTopicCreate(topic, "{{.ShortDeviceId}}/temperature", longDeviceIdExample+"/"+shortDeviceIdExample+"/temperature"))
+	t.Run(testTopicCreate(topic, "cmd/{{.ShortDeviceId}}/temperature", longDeviceIdExample+"/cmd/"+shortDeviceIdExample+"/temperature"))
+	t.Run(testTopicCreate(topic, "cmd/temperature/{{.ShortDeviceId}}", longDeviceIdExample+"/cmd/temperature/"+shortDeviceIdExample))
 
 	t.Run(testTopicCreate(topic, "temperature", longDeviceIdExample+"/cmnd/temperature"))
 	t.Run(testTopicCreate(topic, "temperature/celsius", longDeviceIdExample+"/cmnd/temperature/celsius"))
@@ -44,19 +45,19 @@ func TestCreateDefaultShort(t *testing.T) {
 	topic := topic.New(nil, "{{.ShortDeviceId}}/cmnd/{{.LocalServiceId}}")
 
 	t.Run(testTopicCreate(topic, "{{.DeviceId}}/temperature", longDeviceIdExample+"/temperature"))
-	t.Run(testTopicCreate(topic, "cmd/{{.DeviceId}}/temperature", "cmd/"+longDeviceIdExample+"/temperature"))
-	t.Run(testTopicCreate(topic, "cmd/temperature/{{.DeviceId}}", "cmd/temperature/"+longDeviceIdExample))
+	t.Run(testTopicCreate(topic, "cmd/{{.DeviceId}}/temperature", longDeviceIdExample+"/cmd/"+longDeviceIdExample+"/temperature"))
+	t.Run(testTopicCreate(topic, "cmd/temperature/{{.DeviceId}}", longDeviceIdExample+"/cmd/temperature/"+longDeviceIdExample))
 
-	t.Run(testTopicCreate(topic, "{{.ShortDeviceId}}/temperature", shortDeviceIdExample+"/temperature"))
-	t.Run(testTopicCreate(topic, "cmd/{{.ShortDeviceId}}/temperature", "cmd/"+shortDeviceIdExample+"/temperature"))
-	t.Run(testTopicCreate(topic, "cmd/temperature/{{.ShortDeviceId}}", "cmd/temperature/"+shortDeviceIdExample))
+	t.Run(testTopicCreate(topic, "{{.ShortDeviceId}}/temperature", longDeviceIdExample+"/"+shortDeviceIdExample+"/temperature"))
+	t.Run(testTopicCreate(topic, "cmd/{{.ShortDeviceId}}/temperature", longDeviceIdExample+"/cmd/"+shortDeviceIdExample+"/temperature"))
+	t.Run(testTopicCreate(topic, "cmd/temperature/{{.ShortDeviceId}}", longDeviceIdExample+"/cmd/temperature/"+shortDeviceIdExample))
 
-	t.Run(testTopicCreate(topic, "temperature", shortDeviceIdExample+"/cmnd/temperature"))
-	t.Run(testTopicCreate(topic, "temperature/celsius", shortDeviceIdExample+"/cmnd/temperature/celsius"))
+	t.Run(testTopicCreate(topic, "temperature", longDeviceIdExample+"/"+shortDeviceIdExample+"/cmnd/temperature"))
+	t.Run(testTopicCreate(topic, "temperature/celsius", longDeviceIdExample+"/"+shortDeviceIdExample+"/cmnd/temperature/celsius"))
 }
 
 func testTopicCreate(topic *topic.Topic, localServiceId string, expectedTopic string) (string, func(t *testing.T)) {
-	return localServiceId, func(t *testing.T) {
+	return "create", func(t *testing.T) {
 		defer func() {
 			if r := recover(); r != nil {
 				t.Error("recover", r)

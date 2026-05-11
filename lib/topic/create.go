@@ -18,8 +18,10 @@ package topic
 
 import (
 	"bytes"
-	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/shortid"
+	"strings"
 	"text/template"
+
+	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/shortid"
 )
 
 func (this *Topic) Create(deviceId string, localServiceId string) (topic string, err error) {
@@ -36,6 +38,10 @@ func (this *Topic) Create(deviceId string, localServiceId string) (topic string,
 		if err != nil {
 			return topic, err
 		}
+	}
+	prefix := deviceId + "/"
+	if !strings.HasPrefix(topic, prefix) {
+		topic = prefix + topic
 	}
 	return topic, nil
 }

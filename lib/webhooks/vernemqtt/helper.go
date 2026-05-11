@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
+	"strings"
 
 	platform_connector_lib "github.com/SENERGY-Platform/platform-connector-lib"
 )
@@ -47,6 +48,28 @@ func sendIgnoreRedirect(writer http.ResponseWriter, topic string, base64Msg stri
 	})
 	if err != nil {
 		slog.Error("unable to send ignore redirect", "error", err, "msg", base64Msg)
+	}
+}
+
+func sendWithPrefixRedirect(writer http.ResponseWriter, prefix string, topic string, base64Msg string) {
+	if !strings.HasSuffix(prefix, "/") {
+		prefix += "/"
+	}
+	if !strings.HasPrefix(topic, prefix) {
+		topic = prefix + topic
+	}
+	slog.Debug("send redirect", "topic", topic, "msg", base64Msg)
+	err := json.NewEncoder(writer).Encode(RedirectResponse{
+		Result: "ok",
+		Modifiers: RedirectModifiers{
+			Topic:   topic,
+			Payload: base64Msg,
+			Retain:  false,
+			Qos:     0,
+		},
+	})
+	if err != nil {
+		slog.Error("unable to send redirect", "error", err, "msg", base64Msg)
 	}
 }
 
