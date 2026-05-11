@@ -171,6 +171,14 @@ func Start(basectx context.Context, config configuration.Config) (err error) {
 		return err
 	}
 
+	if config.MqttDocuMsg != "" && config.MqttDocuTopic != "" {
+		err = mqtt.PublishRetained(config.MqttDocuTopic, config.MqttDocuMsg)
+		if err != nil {
+			config.GetLogger().Warn("unable to publish mqtt docu", "error", err)
+			err = nil
+		}
+	}
+
 	statistics.Init() //ensure start of prometheus metrics endpoint
 
 	if config.CommandWorkerCount > 1 {

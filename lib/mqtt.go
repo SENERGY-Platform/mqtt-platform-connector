@@ -33,6 +33,7 @@ import (
 
 type Mqtt interface {
 	Publish(topic, msg string) (err error)
+	PublishRetained(topic, msg string) (err error)
 }
 
 func MqttStart(ctx context.Context, config configuration.Config) (mqtt Mqtt, err error) {
@@ -79,6 +80,20 @@ func (this *Mqtt4) Publish(topic, msg string) (err error) {
 	}
 	slog.Debug("mqtt publish", "topic", topic, "msg", msg)
 	token := this.client.Publish(topic, 2, false, msg)
+	if token.Wait() && token.Error() != nil {
+		slog.Error("Error on Client.Publish()", "error", token.Error())
+		return token.Error()
+	}
+	return err
+}
+
+func (this *Mqtt4) PublishRetained(topic, msg string) (err error) {
+	if !this.client.IsConnected() {
+		slog.Warn("mqtt client not connected")
+		return errors.New("mqtt client not connected")
+	}
+	slog.Debug("mqtt publish", "topic", topic, "msg", msg)
+	token := this.client.Publish(topic, 2, true, msg)
 	if token.Wait() && token.Error() != nil {
 		slog.Error("Error on Client.Publish()", "error", token.Error())
 		return token.Error()
@@ -144,6 +159,22 @@ func (this *Mqtt5) Publish(topic, msg string) (err error) {
 	_, err = this.client.Publish(timeout, &paho.Publish{
 		QoS:     2,
 		Retain:  false,
+		Topic:   topic,
+		Payload: []byte(msg),
+	})
+	if err != nil {
+		slog.Error("Error on Client.Publish()", "error", err)
+		return err
+	}
+	return err
+}
+
+func (this *Mqtt5) PublishRetained(topic, msg string) (err error) {
+	slog.Debug("mqtt publish", "topic", topic, "msg", msg)
+	timeout, _ := context.WithTimeout(context.Background(), time.Minute)
+	_, err = this.client.Publish(timeout, &paho.Publish{
+		QoS:     2,
+		Retain:  true,
 		Topic:   topic,
 		Payload: []byte(msg),
 	})

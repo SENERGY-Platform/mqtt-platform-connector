@@ -134,6 +134,9 @@ type Config struct {
 
 	LogLevel string       `json:"log_level"`
 	logger   *slog.Logger `json:"-"`
+
+	MqttDocuTopic string `json:"mqtt_docu_topic"`
+	MqttDocuMsg   string `json:"mqtt_docu_msg"`
 }
 
 func LoadConfig() (result Config, err error) {

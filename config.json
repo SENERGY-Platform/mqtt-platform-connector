@@ -86,6 +86,9 @@
 
     "log_level": "info",
 
+    "mqtt_docu_topic": "documentation",
+    "mqtt_docu_msg": "ref https://bitnify.atlassian.net/wiki/spaces/SES/pages/578945038/Ger+te+per+MQTT+Connector+anbinden",
+
     "kafka_topic_configs": {
         "device-types": [
             {
