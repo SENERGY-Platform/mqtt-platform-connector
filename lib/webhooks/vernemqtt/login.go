@@ -18,6 +18,7 @@ package vernemqtt
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -76,7 +77,11 @@ func login(writer http.ResponseWriter, request *http.Request, config configurati
 			})
 		}
 		if err != nil {
-			logger.Error("unable to get user token", "error", err, "msg", fmt.Sprintf("%#v", msg))
+			if !errors.Is(err, security.ErrBadLogin) {
+				logger.Error("unable to get user token", "error", err, "message", fmt.Sprintf("%#v", msg))
+			} else {
+				logger.Info("unable to get user token", "error", err, "message", fmt.Sprintf("%#v", msg))
+			}
 			sendError(writer, err.Error(), config.Debug)
 			return
 		}
