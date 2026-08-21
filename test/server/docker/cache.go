@@ -12,10 +12,11 @@ func Memcached(ctx context.Context, wg *sync.WaitGroup) (hostPort string, ipAddr
 	log.Println("start memcached")
 	c, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
 		ContainerRequest: testcontainers.ContainerRequest{
-			Image:           "memcached:1.5.12-alpine",
-			Tmpfs:           map[string]string{},
-			WaitingFor:      wait.ForListeningPort("11211/tcp"),
-			AlwaysPullImage: true,
+			Image:      "memcached:1.5.12-alpine",
+			Tmpfs:      map[string]string{},
+			WaitingFor: wait.ForListeningPort("11211/tcp"),
+			//the tag is immutable, so a cached image is the same image
+			AlwaysPullImage: false,
 		},
 		Started: true,
 	})

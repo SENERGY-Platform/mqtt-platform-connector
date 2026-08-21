@@ -18,6 +18,7 @@ package test
 
 import (
 	"context"
+	"errors"
 	"github.com/SENERGY-Platform/mqtt-platform-connector/lib"
 	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/configuration"
 	"github.com/SENERGY-Platform/mqtt-platform-connector/test/client"
@@ -26,6 +27,7 @@ import (
 	"github.com/SENERGY-Platform/platform-connector-lib/model"
 	"github.com/google/uuid"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 )
@@ -72,17 +74,14 @@ func TestSNRGY4089(t *testing.T) {
 
 	t.Run("create protocol", func(t *testing.T) {
 		protocol = createTestProtocol(t, config)
-		time.Sleep(10 * time.Second) //wait for cqrs
 	})
 
 	t.Run("create device type", func(t *testing.T) {
 		deviceType = createTestDeviceTypeWithTextPayload(t, config, protocol, serviceLocalId, serviceId)
-		time.Sleep(10 * time.Second) //wait for cqrs
 	})
 
 	t.Run("create device", func(t *testing.T) {
 		device = createTestDeviceWithUserToken(t, auth.UserToken, config, deviceType, deviceLocalId, deviceId)
-		time.Sleep(10 * time.Second) //wait for cqrs
 	})
 
 	t.Run("check device/# subscription", func(t *testing.T) {
@@ -92,9 +91,11 @@ func TestSNRGY4089(t *testing.T) {
 			return
 		}
 		defer mqtt.Stop()
-		received := false
+		//the subscription callback runs in the paho client goroutine, so it only
+		//records that a message arrived and the test goroutine asserts it
+		received := &atomic.Bool{}
 		err = mqtt.Subscribe(device.Id+"/#", 2, func(topic string, payload []byte) {
-			received = true
+			received.Store(true)
 		})
 		if err != nil {
 			t.Error(err)
@@ -112,10 +113,12 @@ func TestSNRGY4089(t *testing.T) {
 			t.Error(err)
 			return
 		}
-		time.Sleep(2 * time.Second)
-		if !received {
-			t.Error("message should have been received")
-		}
+		waitFor(t, 30*time.Second, 0, func() error {
+			if !received.Load() {
+				return errors.New("message should have been received")
+			}
+			return nil
+		})
 	})
 
 	t.Run("check # subscription", func(t *testing.T) {
@@ -125,8 +128,9 @@ func TestSNRGY4089(t *testing.T) {
 			return
 		}
 		defer mqtt.Stop()
+		delivered := &atomic.Bool{}
 		err = mqtt.Subscribe("#", 2, func(topic string, payload []byte) {
-			t.Error("access should have been denied")
+			delivered.Store(true)
 		})
 		if err != nil {
 			t.Error(err)
@@ -144,7 +148,12 @@ func TestSNRGY4089(t *testing.T) {
 			t.Error(err)
 			return
 		}
+
+		//nothing arriving is the expectation here, so this stays a fixed wait
 		time.Sleep(2 * time.Second)
+		if delivered.Load() {
+			t.Error("access should have been denied")
+		}
 	})
 
 }

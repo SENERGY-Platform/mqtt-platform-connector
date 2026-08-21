@@ -19,8 +19,11 @@ package test
 import (
 	"context"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"log"
 	"reflect"
+	"slices"
 	"sort"
 	"strconv"
 	"sync"
@@ -35,6 +38,12 @@ import (
 	"github.com/SENERGY-Platform/platform-connector-lib/model"
 	"github.com/google/uuid"
 )
+
+// deviceLogSettle is the grace period the device-log checks require the
+// expectation to keep holding. The checks also assert that no further
+// connect/disconnect was logged, which a snapshot taken the moment the
+// expectation is first met would not cover.
+const deviceLogSettle = 2 * time.Second
 
 func TestConnectionLogDevice1Minimal(t *testing.T) {
 	t.Skip("collection of tests")
@@ -114,17 +123,14 @@ func testConnectionLogDevice1Minimal(t *testing.T, authMethod string, mqttVersio
 
 	t.Run("create protocol", func(t *testing.T) {
 		protocol = createTestProtocol(t, config)
-		time.Sleep(10 * time.Second) //wait for cqrs
 	})
 
 	t.Run("create device type", func(t *testing.T) {
 		deviceType = createTestDeviceType(t, config, protocol, serviceLocalId, serviceId)
-		time.Sleep(10 * time.Second) //wait for cqrs
 	})
 
 	t.Run("create devices", func(t *testing.T) {
 		device = createTestDevice(t, config, deviceType, deviceLocalId+"_1", "")
-		time.Sleep(10 * time.Second) //wait for cqrs
 	})
 
 	expected := []DeviceLog{}
@@ -164,36 +170,25 @@ func testConnectionLogDevice1Minimal(t *testing.T, authMethod string, mqttVersio
 	})
 
 	t.Run("check", func(t *testing.T) {
-		logMessages := []DeviceLog{}
+		state := &deviceLogState{}
 		log.Println("consume", config.DeviceLogTopic)
 		err = kafka.NewConsumer(ctx,
 			kafka.ConsumerConfig{
 				KafkaUrl: config.KafkaUrl,
 				Topic:    config.DeviceLogTopic,
-				GroupId:  "check_consumer",
-			}, func(topic string, msg []byte, time time.Time) error {
-				logmsg := DeviceLog{}
-				err = json.Unmarshal(msg, &logmsg)
-				if err != nil {
-					t.Error(err)
-					return nil
-				}
-				logMessages = append(logMessages, logmsg)
-				return nil
-			}, func(err error) {
-				log.Println("consumer error:", err)
-			})
+				GroupId:  "check_consumer_" + uuid.NewString(),
+				MaxWait:  100 * time.Millisecond,
+				//nothing has produced to the device-log topic yet, and a consumer
+				//group that starts on a topic the broker does not know does not
+				//reliably recover once the topic appears
+				InitTopic:      true,
+				TopicConfigMap: config.KafkaTopicConfigs,
+			}, state.consume, state.handleError)
 		if err != nil {
 			t.Error(err)
 			return
 		}
-		time.Sleep(20 * time.Second)
-
-		if !reflect.DeepEqual(logMessages, expected) {
-			expectedJson, _ := json.Marshal(makeMessagesReadable(expected, []model.Device{device}))
-			actualJson, _ := json.Marshal(makeMessagesReadable(logMessages, []model.Device{device}))
-			t.Error(string(expectedJson), "\n", string(actualJson))
-		}
+		waitFor(t, 60*time.Second, deviceLogSettle, state.matchesInOrder(expected, []model.Device{device}))
 	})
 }
 
@@ -268,12 +263,10 @@ func testConnectionLog(t *testing.T, authMethod string, mqttVersion client.MqttV
 
 	t.Run("create protocol", func(t *testing.T) {
 		protocol = createTestProtocol(t, config)
-		time.Sleep(10 * time.Second) //wait for cqrs
 	})
 
 	t.Run("create device type", func(t *testing.T) {
 		deviceType = createTestDeviceType(t, config, protocol, serviceLocalId, serviceId)
-		time.Sleep(10 * time.Second) //wait for cqrs
 	})
 
 	t.Run("create devices", func(t *testing.T) {
@@ -289,11 +282,9 @@ func testConnectionLog(t *testing.T, authMethod string, mqttVersion client.MqttV
 		devices = append(devices, createTestDevice(t, config, deviceType, deviceLocalId+"_9", ""))
 		devices = append(devices, createTestDevice(t, config, deviceType, deviceLocalId+"_10", ""))
 		devices = append(devices, createTestDevice(t, config, deviceType, deviceLocalId+"_11", ""))
-		time.Sleep(10 * time.Second) //wait for cqrs
 	})
 
-	logMessages := []DeviceLog{}
-	logMessagesMux := sync.Mutex{}
+	state := &deviceLogState{}
 
 	err = kafka.NewConsumer(ctx,
 		kafka.ConsumerConfig{
@@ -301,21 +292,12 @@ func testConnectionLog(t *testing.T, authMethod string, mqttVersion client.MqttV
 			Topic:    config.DeviceLogTopic,
 			GroupId:  "check_consumer" + uuid.NewString(),
 			MaxWait:  100 * time.Millisecond,
-		}, func(topic string, msg []byte, time time.Time) error {
-			logmsg := DeviceLog{}
-			err = json.Unmarshal(msg, &logmsg)
-			if err != nil {
-				t.Error(err)
-				return nil
-			}
-			logMessagesMux.Lock()
-			defer logMessagesMux.Unlock()
-			logMessages = append(logMessages, logmsg)
-			return nil
-		}, func(err error) {
-			log.Println("consumer error:", err)
-			t.Error("consumer error", err)
-		})
+			//nothing has produced to the device-log topic yet, and a consumer
+			//group that starts on a topic the broker does not know does not
+			//reliably recover once the topic appears
+			InitTopic:      true,
+			TopicConfigMap: config.KafkaTopicConfigs,
+		}, state.consume, state.handleError)
 	if err != nil {
 		t.Error(err)
 		return
@@ -348,18 +330,8 @@ func testConnectionLog(t *testing.T, authMethod string, mqttVersion client.MqttV
 			expected = append(expected, DeviceLog{Id: devices[i].Id, Connected: true})
 		}
 
-		time.Sleep(10 * time.Second)
-
 		t.Run("check 1", func(t *testing.T) {
-			logMessagesMux.Lock()
-			defer logMessagesMux.Unlock()
-			sortedReadableExpected := makeMessagesReadable(expected, devices)
-			sortedReadableActual := makeMessagesReadable(logMessages, devices)
-			if !reflect.DeepEqual(sortedReadableExpected, sortedReadableActual) {
-				expectedJson, _ := json.Marshal(sortedReadableExpected)
-				actualJson, _ := json.Marshal(sortedReadableActual)
-				t.Error("\n", string(expectedJson), "\n", string(actualJson))
-			}
+			waitFor(t, 60*time.Second, deviceLogSettle, state.matches(expected, devices))
 		})
 
 		client2, err := client.New(brokerForClients, "bar", "foo", "client2", authMethod, mqttVersion, true, false)
@@ -386,18 +358,8 @@ func testConnectionLog(t *testing.T, authMethod string, mqttVersion client.MqttV
 			expected = append(expected, DeviceLog{Id: devices[i].Id, Connected: true})
 		}
 
-		time.Sleep(10 * time.Second)
-
 		t.Run("check 2", func(t *testing.T) {
-			logMessagesMux.Lock()
-			defer logMessagesMux.Unlock()
-			sortedReadableExpected := makeMessagesReadable(expected, devices)
-			sortedReadableActual := makeMessagesReadable(logMessages, devices)
-			if !reflect.DeepEqual(sortedReadableExpected, sortedReadableActual) {
-				expectedJson, _ := json.Marshal(sortedReadableExpected)
-				actualJson, _ := json.Marshal(sortedReadableActual)
-				t.Error("\n", string(expectedJson), "\n", string(actualJson))
-			}
+			waitFor(t, 60*time.Second, deviceLogSettle, state.matches(expected, devices))
 		})
 
 		//no disconnect because second service is still used
@@ -430,16 +392,7 @@ func testConnectionLog(t *testing.T, authMethod string, mqttVersion client.MqttV
 		}
 
 		t.Run("check 3", func(t *testing.T) {
-			time.Sleep(10 * time.Second)
-			logMessagesMux.Lock()
-			defer logMessagesMux.Unlock()
-			sortedReadableExpected := makeMessagesReadable(expected, devices)
-			sortedReadableActual := makeMessagesReadable(logMessages, devices)
-			if !reflect.DeepEqual(sortedReadableExpected, sortedReadableActual) {
-				expectedJson, _ := json.Marshal(sortedReadableExpected)
-				actualJson, _ := json.Marshal(sortedReadableActual)
-				t.Error("\n", string(expectedJson), "\n", string(actualJson))
-			}
+			waitFor(t, 60*time.Second, deviceLogSettle, state.matches(expected, devices))
 		})
 
 		//disconnect device[10]
@@ -458,16 +411,7 @@ func testConnectionLog(t *testing.T, authMethod string, mqttVersion client.MqttV
 		}
 
 		t.Run("check 4", func(t *testing.T) {
-			time.Sleep(10 * time.Second)
-			logMessagesMux.Lock()
-			defer logMessagesMux.Unlock()
-			sortedReadableExpected := makeMessagesReadable(expected, devices)
-			sortedReadableActual := makeMessagesReadable(logMessages, devices)
-			if !reflect.DeepEqual(sortedReadableExpected, sortedReadableActual) {
-				expectedJson, _ := json.Marshal(sortedReadableExpected)
-				actualJson, _ := json.Marshal(sortedReadableActual)
-				t.Error("\n", string(expectedJson), "\n", string(actualJson))
-			}
+			waitFor(t, 60*time.Second, deviceLogSettle, state.matches(expected, devices))
 		})
 
 		//disconnect client 2 --> disconnect devices 4, 8, 9, 11
@@ -478,16 +422,7 @@ func testConnectionLog(t *testing.T, authMethod string, mqttVersion client.MqttV
 		expected = append(expected, DeviceLog{Id: devices[11].Id, Connected: false})
 
 		t.Run("check 5", func(t *testing.T) {
-			time.Sleep(10 * time.Second)
-			logMessagesMux.Lock()
-			defer logMessagesMux.Unlock()
-			sortedReadableExpected := makeMessagesReadable(expected, devices)
-			sortedReadableActual := makeMessagesReadable(logMessages, devices)
-			if !reflect.DeepEqual(sortedReadableExpected, sortedReadableActual) {
-				expectedJson, _ := json.Marshal(sortedReadableExpected)
-				actualJson, _ := json.Marshal(sortedReadableActual)
-				t.Error("\n", string(expectedJson), "\n", string(actualJson))
-			}
+			waitFor(t, 60*time.Second, deviceLogSettle, state.matches(expected, devices))
 		})
 
 		//disconnect client 1 --> disconnect devices 0, 2, 3, 5, 6, 7
@@ -500,16 +435,7 @@ func testConnectionLog(t *testing.T, authMethod string, mqttVersion client.MqttV
 		expected = append(expected, DeviceLog{Id: devices[7].Id, Connected: false})
 
 		t.Run("check 6", func(t *testing.T) {
-			time.Sleep(10 * time.Second)
-			logMessagesMux.Lock()
-			defer logMessagesMux.Unlock()
-			sortedReadableExpected := makeMessagesReadable(expected, devices)
-			sortedReadableActual := makeMessagesReadable(logMessages, devices)
-			if !reflect.DeepEqual(sortedReadableExpected, sortedReadableActual) {
-				expectedJson, _ := json.Marshal(sortedReadableExpected)
-				actualJson, _ := json.Marshal(sortedReadableActual)
-				t.Error("\n", string(expectedJson), "\n", string(actualJson))
-			}
+			waitFor(t, 60*time.Second, deviceLogSettle, state.matches(expected, devices))
 		})
 
 		//reconnect client2 --> no device connect because clean session = true
@@ -533,16 +459,7 @@ func testConnectionLog(t *testing.T, authMethod string, mqttVersion client.MqttV
 		expected = append(expected, DeviceLog{Id: devices[7].Id, Connected: true})
 
 		t.Run("check 7", func(t *testing.T) {
-			time.Sleep(10 * time.Second)
-			logMessagesMux.Lock()
-			defer logMessagesMux.Unlock()
-			sortedReadableExpected := makeMessagesReadable(expected, devices)
-			sortedReadableActual := makeMessagesReadable(logMessages, devices)
-			if !reflect.DeepEqual(sortedReadableExpected, sortedReadableActual) {
-				expectedJson, _ := json.Marshal(sortedReadableExpected)
-				actualJson, _ := json.Marshal(sortedReadableActual)
-				t.Error("\n", string(expectedJson), "\n", string(actualJson))
-			}
+			waitFor(t, 60*time.Second, deviceLogSettle, state.matches(expected, devices))
 		})
 
 		//disconnect all --> disconnect devices 0, 2, 3, 5, 6, 7
@@ -556,19 +473,90 @@ func testConnectionLog(t *testing.T, authMethod string, mqttVersion client.MqttV
 		expected = append(expected, DeviceLog{Id: devices[7].Id, Connected: false})
 
 		t.Run("final check", func(t *testing.T) {
-			time.Sleep(10 * time.Second)
-			logMessagesMux.Lock()
-			defer logMessagesMux.Unlock()
-			sortedReadableExpected := makeMessagesReadable(expected, devices)
-			sortedReadableActual := makeMessagesReadable(logMessages, devices)
-			if !reflect.DeepEqual(sortedReadableExpected, sortedReadableActual) {
-				expectedJson, _ := json.Marshal(sortedReadableExpected)
-				actualJson, _ := json.Marshal(sortedReadableActual)
-				t.Error("\n", string(expectedJson), "\n", string(actualJson))
-			}
+			waitFor(t, 60*time.Second, deviceLogSettle, state.matches(expected, devices))
 		})
 	})
 
+}
+
+// deviceLogState collects what the device-log consumer received. The consumer
+// runs in its own goroutine and outlives the test, so it records messages and
+// errors instead of asserting: t.Error from a goroutine that keeps running after
+// the test has finished panics the whole test binary.
+type deviceLogState struct {
+	mux      sync.Mutex
+	messages []DeviceLog
+	errs     []error
+}
+
+func (this *deviceLogState) consume(_ string, msg []byte, _ time.Time) error {
+	logmsg := DeviceLog{}
+	err := json.Unmarshal(msg, &logmsg)
+	this.mux.Lock()
+	defer this.mux.Unlock()
+	if err != nil {
+		this.errs = append(this.errs, err)
+		return err
+	}
+	this.messages = append(this.messages, logmsg)
+	return nil
+}
+
+func (this *deviceLogState) handleError(err error) {
+	log.Println("consumer error:", err)
+	this.mux.Lock()
+	defer this.mux.Unlock()
+	this.errs = append(this.errs, err)
+}
+
+func (this *deviceLogState) snapshot() ([]DeviceLog, error) {
+	this.mux.Lock()
+	defer this.mux.Unlock()
+	if len(this.errs) > 0 {
+		return nil, errors.Join(this.errs...)
+	}
+	return slices.Clone(this.messages), nil
+}
+
+// matchesInOrder returns a check for waitFor that compares the received
+// device-logs to expected in the order they were produced.
+func (this *deviceLogState) matchesInOrder(expected []DeviceLog, devices []model.Device) func() error {
+	return func() error {
+		actual, err := this.snapshot()
+		if err != nil {
+			return err
+		}
+		if reflect.DeepEqual(actual, expected) {
+			return nil
+		}
+		return deviceLogDiff(makeMessagesReadable(expected, devices), makeMessagesReadable(actual, devices))
+	}
+}
+
+// matches returns a check for waitFor that compares the received device-logs to
+// expected ignoring their order, because they come from several mqtt clients
+// whose webhooks are handled concurrently.
+func (this *deviceLogState) matches(expected []DeviceLog, devices []model.Device) func() error {
+	return func() error {
+		actual, err := this.snapshot()
+		if err != nil {
+			return err
+		}
+		expectedReadable := makeMessagesReadable(expected, devices)
+		actualReadable := makeMessagesReadable(actual, devices)
+		if reflect.DeepEqual(expectedReadable, actualReadable) {
+			return nil
+		}
+		return deviceLogDiff(expectedReadable, actualReadable)
+	}
+}
+
+// deviceLogDiff renders the difference so a run that never matches prints what
+// was missing instead of only the fact that it timed out.
+func deviceLogDiff(expected []DeviceLog, actual []DeviceLog) error {
+	expectedJson, _ := json.Marshal(expected)
+	actualJson, _ := json.Marshal(actual)
+	return fmt.Errorf("expected %s\ngot      %s", expectedJson, actualJson)
 }
 
 func makeMessagesReadable(messages []DeviceLog, devices []model.Device) (result []DeviceLog) {

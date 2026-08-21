@@ -69,7 +69,6 @@ func Vernemqtt(ctx context.Context, wg *sync.WaitGroup, connecorUrl string, cert
 		}
 
 		env = map[string]string{
-			"DOCKER_VERNEMQ_ACCEPT_EULA":                             "yes",
 			"DOCKER_VERNEMQ_LOG__CONSOLE__LEVEL":                     "debug",
 			"DOCKER_VERNEMQ_SHARED_SUBSCRIPTION_POLICY":              "random",
 			"DOCKER_VERNEMQ_PLUGINS__VMQ_WEBHOOKS":                   "on",
@@ -98,7 +97,6 @@ func Vernemqtt(ctx context.Context, wg *sync.WaitGroup, connecorUrl string, cert
 		}
 	} else {
 		env = map[string]string{
-			"DOCKER_VERNEMQ_ACCEPT_EULA":                           "yes",
 			"DOCKER_VERNEMQ_LOG__CONSOLE__LEVEL":                   "debug",
 			"DOCKER_VERNEMQ_SHARED_SUBSCRIPTION_POLICY":            "random",
 			"DOCKER_VERNEMQ_PLUGINS__VMQ_WEBHOOKS":                 "on",
@@ -145,10 +143,16 @@ func Vernemqtt(ctx context.Context, wg *sync.WaitGroup, connecorUrl string, cert
 
 	c, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
 		ContainerRequest: testcontainers.ContainerRequest{
-			Image:           "erlio/docker-vernemq:latest",
-			Tmpfs:           map[string]string{},
-			WaitingFor:      wait.ForListeningPort("1883/tcp"),
-			AlwaysPullImage: true,
+			//vernemq 2.x dropped the accept_eula setting, so DOCKER_VERNEMQ_ACCEPT_EULA
+			//must not be passed: the entrypoint writes it into vernemq.conf and
+			//cuttlefish rejects the unknown variable, which exits the container
+			Image:      "ghcr.io/senergy-platform/vernemq:v2.1.2",
+			Tmpfs:      map[string]string{},
+			WaitingFor: wait.ForListeningPort("1883/tcp"),
+			//the tag is immutable, so a cached image is the same image; pulling it
+			//once per test run instead of once per test keeps the registry out of
+			//the failure modes
+			AlwaysPullImage: false,
 			Env:             env,
 			Files:           files,
 		},

@@ -3,6 +3,7 @@ package test
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"github.com/SENERGY-Platform/mqtt-platform-connector/lib"
 	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/configuration"
 	"github.com/SENERGY-Platform/mqtt-platform-connector/test/client"
@@ -79,22 +80,18 @@ func testEventWithoutProvisioning(t *testing.T, authMethod string, mqttVersion c
 
 	t.Run("create protocol", func(t *testing.T) {
 		protocol = createTestProtocol(t, config)
-		time.Sleep(10 * time.Second) //wait for cqrs
 	})
 
 	t.Run("create device type", func(t *testing.T) {
 		deviceType = createTestDeviceType(t, config, protocol, serviceLocalId, serviceId)
-		time.Sleep(10 * time.Second) //wait for cqrs
 	})
 
 	t.Run("create device", func(t *testing.T) {
 		device = createTestDevice(t, config, deviceType, deviceLocalId, deviceId)
-		time.Sleep(10 * time.Second) //wait for cqrs
 	})
 
 	t.Run("send mqtt message", func(t *testing.T) {
 		sendMqttEvent(t, clientBroker, "senergy/"+device.Id+"/"+serviceLocalId, msg, authMethod, mqttVersion)
-		time.Sleep(10 * time.Second) //wait for cqrs
 	})
 
 	t.Run("check kafka event", func(t *testing.T) {
@@ -172,22 +169,18 @@ func testEventPlainText(t *testing.T, authMethod string, mqttVersion client.Mqtt
 
 	t.Run("create protocol", func(t *testing.T) {
 		protocol = createTestProtocol(t, config)
-		time.Sleep(10 * time.Second) //wait for cqrs
 	})
 
 	t.Run("create device type", func(t *testing.T) {
 		deviceType = createTestDeviceTypeWithTextPayload(t, config, protocol, serviceLocalId, serviceId)
-		time.Sleep(10 * time.Second) //wait for cqrs
 	})
 
 	t.Run("create device", func(t *testing.T) {
 		device = createTestDevice(t, config, deviceType, deviceLocalId, deviceId)
-		time.Sleep(10 * time.Second) //wait for cqrs
 	})
 
 	t.Run("send mqtt message", func(t *testing.T) {
 		sendMqttEvent(t, clientBroker, "senergy/"+device.Id+"/"+serviceLocalId, msg, authMethod, mqttVersion)
-		time.Sleep(10 * time.Second) //wait for cqrs
 	})
 
 	t.Run("check kafka event", func(t *testing.T) {
@@ -217,8 +210,13 @@ func trySensorFromDevice(t *testing.T, config configuration.Config, ctx context.
 			break
 		}
 	}
+	//the consumer runs in its own goroutine and outlives this function, so it
+	//records what it saw instead of asserting: t.Fatal from another goroutine
+	//does not stop the test, and t.Error after the test has finished panics the
+	//whole test binary
 	mux := sync.Mutex{}
 	events := []model.Envelope{}
+	consumerErrs := []error{}
 	log.Println("DEBUG CONSUME:", model.ServiceIdToTopic(service.Id))
 	err := kafka.NewConsumer(ctx, kafka.ConsumerConfig{
 		KafkaUrl: config.KafkaUrl,
@@ -227,44 +225,68 @@ func trySensorFromDevice(t *testing.T, config configuration.Config, ctx context.
 		MinBytes: 1000,
 		MaxBytes: 1000000,
 		MaxWait:  100 * time.Millisecond,
+		//a consumer group that starts on a topic the broker does not know does
+		//not reliably recover once the topic appears
+		InitTopic:      true,
+		TopicConfigMap: config.KafkaTopicConfigs,
 	}, func(topic string, msg []byte, _ time.Time) error {
-		mux.Lock()
-		defer mux.Unlock()
 		resp := model.Envelope{}
 		err := json.Unmarshal(msg, &resp)
+		mux.Lock()
+		defer mux.Unlock()
 		if err != nil {
-			t.Fatal(err)
+			consumerErrs = append(consumerErrs, err)
 			return err
 		}
 		events = append(events, resp)
 		return nil
 	}, func(err error) {
-		t.Error(err)
+		mux.Lock()
+		defer mux.Unlock()
+		consumerErrs = append(consumerErrs, err)
 	})
-
-	time.Sleep(20 * time.Second)
-
-	mux.Lock()
-	defer mux.Unlock()
-	if len(events) == 0 {
-		t.Fatal("unexpected event count", events)
+	if err != nil {
+		t.Error(err)
+		return
 	}
-	event := events[0]
+
+	//the mqtt message has already been sent and nothing else produces to this
+	//topic, so the first event to arrive is the one under test
+	var event model.Envelope
+	ok := waitFor(t, 60*time.Second, 0, func() error {
+		mux.Lock()
+		defer mux.Unlock()
+		if len(consumerErrs) > 0 {
+			return errors.Join(consumerErrs...)
+		}
+		if len(events) == 0 {
+			return errors.New("no event received")
+		}
+		event = events[0]
+		return nil
+	})
+	if !ok {
+		return
+	}
 	if event.DeviceId != device.Id {
-		t.Fatal("unexpected envelope", event)
+		t.Error("unexpected envelope", event)
+		return
 	}
 	if event.ServiceId != service.Id {
-		t.Fatal("unexpected envelope", event)
+		t.Error("unexpected envelope", event)
+		return
 	}
 
 	var expected interface{}
 	err = json.Unmarshal([]byte("{\"payload\":"+msg+"}"), &expected)
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
+		return
 	}
 
 	if !reflect.DeepEqual(event.Value, expected) {
-		t.Fatal(event.Value, "\n\n!=\n\n", expected)
+		t.Error(event.Value, "\n\n!=\n\n", expected)
+		return
 	}
 	t.Log(event.Value, "\n\n!=\n\n", expected)
 }
