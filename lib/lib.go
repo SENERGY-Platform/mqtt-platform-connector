@@ -8,7 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/IBM/sarama"
 	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/configuration"
 	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/connectionlog"
 	"github.com/SENERGY-Platform/mqtt-platform-connector/lib/topic"
@@ -17,6 +16,7 @@ import (
 	"github.com/SENERGY-Platform/platform-connector-lib/model"
 	"github.com/SENERGY-Platform/platform-connector-lib/statistics"
 	paho "github.com/eclipse/paho.mqtt.golang"
+	"github.com/segmentio/kafka-go/compress"
 )
 
 func Start(basectx context.Context, config configuration.Config) (err error) {
@@ -240,19 +240,23 @@ func CreateCommandHandler(config configuration.Config, mqtt Mqtt) platform_conne
 	}
 }
 
-func getKafkaCompression(compression string) sarama.CompressionCodec {
+// getKafkaCompression maps the configured compression name to the codec the
+// connector-lib producer expects. The codecs are named through kafka-go's
+// compress package because this file already imports the connector-lib's own
+// kafka package; kafka.Compression is an alias for compress.Compression.
+func getKafkaCompression(compression string) compress.Compression {
 	switch strings.ToLower(compression) {
 	case "":
-		return sarama.CompressionNone
+		return compress.None
 	case "-":
-		return sarama.CompressionNone
+		return compress.None
 	case "none":
-		return sarama.CompressionNone
+		return compress.None
 	case "gzip":
-		return sarama.CompressionGZIP
+		return compress.Gzip
 	case "snappy":
-		return sarama.CompressionSnappy
+		return compress.Snappy
 	}
 	slog.Warn("unknown kafka compression --> fallback to none", "compression", compression)
-	return sarama.CompressionNone
+	return compress.None
 }
