@@ -14,10 +14,13 @@ github.com/RyanCarrier/dijkstra v1.4.0 h1:wkEVdTBLUiXjeBvDrSuagr72pOt36rUQoIfnnG
 github.com/RyanCarrier/dijkstra v1.4.0/go.mod h1:9egjhC7eVsfREX6NrYS+1wHzk9C/9v2Cz26/bqpjjTc=
 github.com/SENERGY-Platform/converter v0.0.11 h1:hpWjV2niD8kWepr9VkJVzarA2C8hSZIpSZdY2AQ+g9g=
 github.com/SENERGY-Platform/converter v0.0.11/go.mod h1:bOh79WBa7vYxjaHNVmqO9JiFw39YajEPL9t327rO2IM=
+github.com/SENERGY-Platform/converter v0.0.12/go.mod h1:Z4TQ7LuBK9QAKGONHrzo051i9trq4j9WuYN1sW5PDGg=
 github.com/SENERGY-Platform/developer-notifications v0.0.5 h1:x66XZgLxiwzWTaUXE9xcWI2zlW9reS6Moizc93nuQSs=
 github.com/SENERGY-Platform/developer-notifications v0.0.5/go.mod h1:4zJM5bicd+k3cijxUz81U63dyRqtBWQpHAkcXb2KWSw=
+github.com/SENERGY-Platform/developer-notifications v0.0.6/go.mod h1:DwfWoj00UUN4v9fCi60frXbFycFUIIvXeKzmABcgHK8=
 github.com/SENERGY-Platform/device-repository v0.2.53 h1:KMXrOAxvnsm7/rYkcKaYUmqKcxsJa9CpFoI7L6aEI2M=
 github.com/SENERGY-Platform/device-repository v0.2.53/go.mod h1:spl0q/hV2pIR5jJqa0/lp1wS+cNLzJebPl5p9l/dJ2o=
+github.com/SENERGY-Platform/device-repository v0.3.2/go.mod h1:ivupMEo/4WnaL8KBuE4xhIbJufMx31Qb/uh8D8miyqc=
 github.com/SENERGY-Platform/gin-middleware v0.14.1 h1:o2le7do9++e377ixtnFXbobAJP5CSMQXW7d1dUSAwFU=
 github.com/SENERGY-Platform/gin-middleware v0.14.1/go.mod h1:+9dhC08w9tpnjnFC8gYO0+0Po5TKfeUGt+5a1jUVfqI=
 github.com/SENERGY-Platform/go-service-base/struct-logger v0.8.0 h1:CxfCO1t2ADa0mHjm2BM/Owev0489V+jMmcRbFiOAxNY=
@@ -28,9 +31,11 @@ github.com/SENERGY-Platform/models/go v0.0.0-20260710115411-5b8e00d6e038 h1:7yEu
 github.com/SENERGY-Platform/models/go v0.0.0-20260710115411-5b8e00d6e038/go.mod h1:5B2cSnYKuAmeco4mJPhY5eVO+oMqXLmnl9wxh1G7e9E=
 github.com/SENERGY-Platform/permissions-v2 v0.0.45 h1:o8w+6zA8lRH00fXYxrMs2EEX9vR5BSO7T+e3dJXbwhI=
 github.com/SENERGY-Platform/permissions-v2 v0.0.45/go.mod h1:TTM/9lOE9d+JHhnEQR7aFgWRGOtYBRZIyA9v12/ofjA=
+github.com/SENERGY-Platform/permissions-v2 v0.0.47/go.mod h1:O0DTzApbQnXzDmyQ3KzievzjRF44xQ7n6qdbfQ36Qw8=
 github.com/SENERGY-Platform/platform-connector-lib v0.0.0-20260821115949-234601cb5436 h1:5UjQ2BQOru/wbvh64GLI0XR939pZBc1vPDSx3QzVlfI=
 github.com/SENERGY-Platform/platform-connector-lib v0.0.0-20260821115949-234601cb5436/go.mod h1:sbMBGfJCkxvZh6BTplbMDkX3sMPwQauFKI6ORvs+F98=
 github.com/SENERGY-Platform/platform-connector-lib v0.0.0-20260824085938-afad12d1d4ed/go.mod h1:sbMBGfJCkxvZh6BTplbMDkX3sMPwQauFKI6ORvs+F98=
+github.com/SENERGY-Platform/platform-connector-lib v0.0.0-20260826082643-802ca9df203c/go.mod h1:UJXPIeUhtaXd2XXRgh1OX4j434BIjThiXHKv6MCNztg=
 github.com/SENERGY-Platform/service-commons v0.0.0-20260821114734-3e4578ac2358 h1:RGgwqd2PKoBCbW2aBdl43OO5O7JNC2LKE452Ihi4TdM=
 github.com/SENERGY-Platform/service-commons v0.0.0-20260821114734-3e4578ac2358/go.mod h1:k1Jia3JItpaM26/SY1ZGyoGhBE8EA5zQrkwSaiFZKGQ=
 github.com/beorn7/perks v1.0.1 h1:VlbKKnNfV8bJzeqoa4cOKqO6bYr3WgKZxO8Z16+hsOM=

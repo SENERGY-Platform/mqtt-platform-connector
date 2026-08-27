@@ -5,11 +5,11 @@ go 1.26
 require (
 	github.com/SENERGY-Platform/api-docs-provider/lib/client v0.0.3
 	github.com/SENERGY-Platform/connection-check-v2/lib v0.0.2
-	github.com/SENERGY-Platform/device-repository v0.3.2
+	github.com/SENERGY-Platform/device-repository v0.3.5
 	github.com/SENERGY-Platform/go-service-base/struct-logger v0.8.0
 	github.com/SENERGY-Platform/models/go v0.0.0-20260710115411-5b8e00d6e038
 	github.com/SENERGY-Platform/permissions-v2 v0.0.47
-	github.com/SENERGY-Platform/platform-connector-lib v0.0.0-20260826082643-802ca9df203c
+	github.com/SENERGY-Platform/platform-connector-lib v0.0.0-20260827082232-c8133d0f997d
 	github.com/SENERGY-Platform/service-commons v0.0.0-20260821114734-3e4578ac2358
 	github.com/eclipse/paho.golang v0.21.0
 	github.com/eclipse/paho.mqtt.golang v1.5.1
