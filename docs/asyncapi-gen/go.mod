@@ -4,7 +4,7 @@ go 1.26
 
 require (
 	github.com/SENERGY-Platform/mqtt-platform-connector v0.2.8
-	github.com/SENERGY-Platform/platform-connector-lib v0.0.0-20260826082643-802ca9df203c
+	github.com/SENERGY-Platform/platform-connector-lib v0.0.0-20260828065855-71864a1d0fe3
 	github.com/swaggest/go-asyncapi v0.8.0
 )
 
@@ -14,7 +14,7 @@ require (
 	github.com/RyanCarrier/dijkstra v1.4.0 // indirect
 	github.com/SENERGY-Platform/converter v0.0.12 // indirect
 	github.com/SENERGY-Platform/developer-notifications v0.0.6 // indirect
-	github.com/SENERGY-Platform/device-repository v0.3.2 // indirect
+	github.com/SENERGY-Platform/device-repository v0.3.6 // indirect
 	github.com/SENERGY-Platform/gin-middleware v0.14.1 // indirect
 	github.com/SENERGY-Platform/go-service-base/struct-logger v0.8.0 // indirect
 	github.com/SENERGY-Platform/mgw-cloud-proxy/cert-manager/lib v0.0.4 // indirect
