@@ -76,7 +76,10 @@ func publish(writer http.ResponseWriter, request *http.Request, config configura
 			return
 		}
 		if errors.Is(err, topic.ErrNoServiceMatchFound) {
+			// TryCreateService cannot answer the webhook, and on an empty body
+			// the broker rejects the publish and drops the connection.
 			TryCreateService(config, connector, device, msg.Topic, payload)
+			sendIgnoreRedirect(writer, msg.Topic, msg.Payload)
 			return
 		}
 		if err != nil {
