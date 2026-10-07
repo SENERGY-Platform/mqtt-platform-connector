@@ -106,7 +106,7 @@ type Config struct {
 
 	CommandWorkerCount int64 `json:"command_worker_count"`
 
-	SubscriptionDbConStr string `json:"subscription_db_con_str"`
+	SubscriptionDbConStr string `json:"subscription_db_con_str" config:"secret"`
 	DeviceLogTopic       string `json:"device_log_topic"`
 
 	DeviceTypeTopic string `json:"device_type_topic"`
