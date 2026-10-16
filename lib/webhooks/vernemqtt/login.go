@@ -78,9 +78,9 @@ func login(writer http.ResponseWriter, request *http.Request, config configurati
 		}
 		if err != nil {
 			if !errors.Is(err, security.ErrBadLogin) {
-				logger.Error("unable to get user token", "error", err, "message", fmt.Sprintf("%#v", msg))
+				logger.Error("unable to get user token", "error", err, "username", msg.Username, "clientId", msg.ClientId, "peerAddr", msg.PeerAddr, "peerPort", msg.PeerPort)
 			} else {
-				logger.Info("unable to get user token", "error", err, "message", fmt.Sprintf("%#v", msg))
+				logger.Info("unable to get user token", "error", err, "username", msg.Username, "clientId", msg.ClientId, "peerAddr", msg.PeerAddr, "peerPort", msg.PeerPort)
 			}
 			sendError(writer, err.Error(), config.Debug)
 			return
