@@ -4,7 +4,7 @@ go 1.26
 
 require (
 	github.com/SENERGY-Platform/mqtt-platform-connector v0.2.8
-	github.com/SENERGY-Platform/platform-connector-lib v0.0.0-20260828065855-71864a1d0fe3
+	github.com/SENERGY-Platform/platform-connector-lib v0.0.0-20261016111927-8b8b183a7008
 	github.com/swaggest/go-asyncapi v0.8.0
 )
 
