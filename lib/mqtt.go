@@ -147,7 +147,8 @@ func Mqtt5Start(ctx context.Context, config configuration.Config) (mqtt *Mqtt5, 
 	}
 	go func() {
 		<-ctx.Done()
-		disconnecttimeout, _ := context.WithTimeout(context.Background(), 10*time.Second)
+		disconnecttimeout, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
 		config.GetLogger().Info("mqtt client disconnected", "result", mqtt.client.Disconnect(disconnecttimeout))
 	}()
 	return mqtt, mqtt.client.AwaitConnection(timeout)
@@ -155,7 +156,8 @@ func Mqtt5Start(ctx context.Context, config configuration.Config) (mqtt *Mqtt5, 
 
 func (this *Mqtt5) Publish(topic, msg string) (err error) {
 	slog.Debug("mqtt publish", "topic", topic, "msg", msg)
-	timeout, _ := context.WithTimeout(context.Background(), time.Minute)
+	timeout, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
 	_, err = this.client.Publish(timeout, &paho.Publish{
 		QoS:     2,
 		Retain:  false,
@@ -171,7 +173,8 @@ func (this *Mqtt5) Publish(topic, msg string) (err error) {
 
 func (this *Mqtt5) PublishRetained(topic, msg string) (err error) {
 	slog.Debug("mqtt publish", "topic", topic, "msg", msg)
-	timeout, _ := context.WithTimeout(context.Background(), time.Minute)
+	timeout, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
 	_, err = this.client.Publish(timeout, &paho.Publish{
 		QoS:     2,
 		Retain:  true,

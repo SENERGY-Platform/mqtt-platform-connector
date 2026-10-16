@@ -66,6 +66,7 @@ func main() {
 }
 
 func PublishAsyncApiDoc(conf configuration.Config) error {
-	ctx, _ := context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
 	return client.New(http.DefaultClient, conf.ApiDocsProviderBaseUrl).AsyncapiPutDoc(ctx, "github_com_SENERGY-Platform_mqtt-platform-connector", docs.AsyncApiDoc)
 }

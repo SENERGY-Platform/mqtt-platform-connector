@@ -57,7 +57,8 @@ func (this *ConnectionLogImpl) removeClient(client string) (err error) {
 }
 
 func (this *ConnectionLogImpl) loadSubscriptions(client string) (devices []string, err error) {
-	ctx, _ := context.WithTimeout(context.Background(), Timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), Timeout)
+	defer cancel()
 	resp, err := this.db.QueryContext(ctx, SqlSelectDeviceByClient, client)
 	if err != nil {
 		return devices, err
@@ -74,7 +75,8 @@ func (this *ConnectionLogImpl) loadSubscriptions(client string) (devices []strin
 }
 
 func (this *ConnectionLogImpl) noDeviceSubscriptionStored(device string) (result bool, err error) {
-	ctx, _ := context.WithTimeout(context.Background(), Timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), Timeout)
+	defer cancel()
 	row := this.db.QueryRowContext(ctx, SqlCheckDeviceSubscriptionExists, device)
 	err = row.Err()
 	if err != nil {
@@ -92,7 +94,8 @@ func (this *ConnectionLogImpl) noDeviceSubscriptionStored(device string) (result
 //returns devices that are in input but not subscribed to
 func (this *ConnectionLogImpl) filterByStoredDevices(devices []string) (result []string, err error) {
 	subscribed := map[string]bool{}
-	ctx, _ := context.WithTimeout(context.Background(), Timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), Timeout)
+	defer cancel()
 	rows, err := this.db.QueryContext(ctx, SqlAnyDeviceSubscription, pq.Array(devices), len(devices))
 	if err != nil {
 		return result, err
@@ -119,7 +122,8 @@ func (this *ConnectionLogImpl) setCleanSession(client string, clean bool) (err e
 }
 
 func (this *ConnectionLogImpl) isCleanSession(client string) (isCleanSession bool, err error) {
-	ctx, _ := context.WithTimeout(context.Background(), Timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), Timeout)
+	defer cancel()
 	row := this.db.QueryRowContext(ctx, SqlQueryCleanSession, client)
 	err = row.Err()
 	if err == sql.ErrNoRows {

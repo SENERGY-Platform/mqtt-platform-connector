@@ -66,7 +66,8 @@ func (this *Client) Stop() {
 		this.mqtt.Disconnect(200)
 	}
 	if this.mqttVersion == MQTT5 {
-		disconnecttimeout, _ := context.WithTimeout(context.Background(), 1*time.Second)
+		disconnecttimeout, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+		defer cancel()
 		this.mqtt5.Disconnect(disconnecttimeout)
 	}
 }

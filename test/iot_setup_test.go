@@ -179,7 +179,8 @@ func checkDevice(t *testing.T, config configuration.Config, deviceLocalId string
 	if err != nil {
 		t.Fatal(err)
 	}
-	ctx, _ := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 	req.WithContext(ctx)
 	req.Header.Set("Authorization", string(helper.AdminJwt))
 	req.Header.Set("Accept", "application/json")

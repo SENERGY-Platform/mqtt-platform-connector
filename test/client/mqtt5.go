@@ -98,7 +98,8 @@ func (this *Client) SubscribeMqtt5(topic string, qos byte, callback func(topic s
 	})
 	this.registerSubscription(topic, qos, nil)
 
-	timeout, _ := context.WithTimeout(context.Background(), time.Minute)
+	timeout, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
 	_, err := this.mqtt5.Subscribe(timeout, &paho.Subscribe{
 		Subscriptions: []paho.SubscribeOptions{{Topic: topic, QoS: qos}},
 	})
@@ -110,7 +111,8 @@ func (this *Client) SubscribeMqtt5(topic string, qos byte, callback func(topic s
 }
 
 func (this *Client) UnsubscribeMqtt5(topic ...string) (err error) {
-	timeout, _ := context.WithTimeout(context.Background(), time.Minute)
+	timeout, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
 	_, err = this.mqtt5.Unsubscribe(timeout, &paho.Unsubscribe{
 		Topics: topic,
 	})
@@ -122,7 +124,8 @@ func (this *Client) UnsubscribeMqtt5(topic ...string) (err error) {
 }
 
 func (this *Client) PublishMqtt5(topic string, payload []byte, qos byte) (err error) {
-	timeout, _ := context.WithTimeout(context.Background(), time.Minute)
+	timeout, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
 	_, err = this.mqtt5.Publish(timeout, &paho.Publish{
 		QoS:     qos,
 		Retain:  false,
@@ -144,7 +147,8 @@ func (this *Client) loadOldSubscriptionsMqtt5() (err error) {
 		mqtt5Subs = append(mqtt5Subs, paho.SubscribeOptions{Topic: sub.Topic, QoS: sub.Qos})
 	}
 	if len(mqtt5Subs) > 0 {
-		timeout, _ := context.WithTimeout(context.Background(), time.Minute)
+		timeout, cancel := context.WithTimeout(context.Background(), time.Minute)
+		defer cancel()
 		_, err = this.mqtt5.Subscribe(timeout, &paho.Subscribe{
 			Subscriptions: mqtt5Subs,
 		})
