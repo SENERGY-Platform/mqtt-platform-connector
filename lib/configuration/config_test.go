@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-
 package configuration
 
 import (
@@ -43,5 +42,21 @@ func TestHandleEnvironmentVarsHidesSecrets(t *testing.T) {
 	}
 	if !strings.Contains(buf.String(), "WEBHOOK_PORT") {
 		t.Fatalf("non-secret not logged: %s", buf.String())
+	}
+}
+
+func TestHandleEnvironmentVarsSetsKafkaTopicSettings(t *testing.T) {
+	t.Setenv("KAFKA_REPLICATION_FACTOR", "2")
+	t.Setenv("KAFKA_TOPIC_CONFIGS", `{"urn_infai_ses_service_":[{"ConfigName":"retention.ms","ConfigValue":"604800000"}]}`)
+
+	config := &Config{KafkaReplicationFactor: 1}
+	handleEnvironmentVars(config)
+
+	if config.KafkaReplicationFactor != 2 {
+		t.Fatalf("replication factor not applied: %d", config.KafkaReplicationFactor)
+	}
+	entries := config.KafkaTopicConfigs["urn_infai_ses_service_"]
+	if len(entries) != 1 || entries[0].ConfigName != "retention.ms" || entries[0].ConfigValue != "604800000" {
+		t.Fatalf("topic configs not applied: %#v", config.KafkaTopicConfigs)
 	}
 }

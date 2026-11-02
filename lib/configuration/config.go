@@ -193,7 +193,7 @@ func handleEnvironmentVars(config interface{}) {
 			if !strings.Contains(fieldConfig, "secret") {
 				log.Println("use environment variable: ", envName, " = ", envValue)
 			}
-			if configValue.FieldByName(fieldName).Kind() == reflect.Int64 {
+			if kind := configValue.FieldByName(fieldName).Kind(); kind >= reflect.Int && kind <= reflect.Int64 {
 				i, _ := strconv.ParseInt(envValue, 10, 64)
 				configValue.FieldByName(fieldName).SetInt(i)
 			}
@@ -211,7 +211,14 @@ func handleEnvironmentVars(config interface{}) {
 				}
 				configValue.FieldByName(fieldName).Set(reflect.ValueOf(val))
 			}
-			if configValue.FieldByName(fieldName).Kind() == reflect.Map {
+			// maps other than map[string]string, such as KafkaTopicConfigs, are read as JSON
+			if field := configValue.FieldByName(fieldName); field.Kind() == reflect.Map && field.Type() != reflect.TypeOf(map[string]string{}) {
+				value := reflect.New(field.Type())
+				if err := json.Unmarshal([]byte(envValue), value.Interface()); err != nil {
+					log.Fatal("ERROR: invalid json in ", envName, ": ", err)
+				}
+				field.Set(value.Elem())
+			} else if field.Kind() == reflect.Map {
 				value := map[string]string{}
 				for _, element := range strings.Split(envValue, ",") {
 					keyVal := strings.Split(element, ":")
